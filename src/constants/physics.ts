@@ -26,6 +26,8 @@ export const PHYSICS_CONFIG = {
   SHOW_FORCE_ARROWS: true,
   CONSTANT_FORCE_X: 0,
   CONSTANT_FORCE_Y: 0,
+  SOLID_BOUNDARIES: true,
+  ELASTICITY: 0.8,
 } as const;
 
 export const SETTINGS_METADATA: Record<
@@ -80,6 +82,17 @@ export const SETTINGS_METADATA: Record<
     isDev: false,
     min: -10,
     max: 10,
+    step: 0.1,
+  },
+  SOLID_BOUNDARIES: {
+    type: "boolean",
+    isDev: false,
+  },
+  ELASTICITY: {
+    type: "slider",
+    isDev: false,
+    min: 0,
+    max: 1,
     step: 0.1,
   },
 };

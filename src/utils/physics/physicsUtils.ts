@@ -1,4 +1,4 @@
-import { Point2D, Force, GravityPoint } from '../types/physics';
+import { Point2D, Force, GravityPoint } from "../types/physics";
 
 // Basic physics calculations
 export const calculateDistance = (p1: Point2D, p2: Point2D): number => {
@@ -155,3 +155,40 @@ export const calculateNewPosition = (
     ? currentPosition.y + velocity.y * deltaTime
     : currentPosition.y,
 });
+
+export const handleBoundaryCollision = (
+  position: Point2D,
+  velocity: Point2D,
+  containerRef: React.RefObject<HTMLDivElement>,
+  elasticity: number
+): { position: Point2D; velocity: Point2D } => {
+  if (!containerRef.current) return { position, velocity };
+
+  const bounds = containerRef.current.getBoundingClientRect();
+  const newPosition = { ...position };
+  const newVelocity = { ...velocity };
+
+  // Calculate relative position within the container
+  const relativeX = position.x - bounds.left;
+  const relativeY = position.y - bounds.top;
+
+  // Check horizontal boundaries using relative position
+  if (relativeX <= 0) {
+    newPosition.x = bounds.left; // Set to container's left edge
+    newVelocity.x = Math.abs(velocity.x) * elasticity;
+  } else if (relativeX >= bounds.width) {
+    newPosition.x = bounds.left + bounds.width; // Set to container's right edge
+    newVelocity.x = -Math.abs(velocity.x) * elasticity;
+  }
+
+  // Check vertical boundaries using relative position
+  if (relativeY <= 0) {
+    newPosition.y = bounds.top; // Set to container's top edge
+    newVelocity.y = Math.abs(velocity.y) * elasticity;
+  } else if (relativeY >= bounds.height) {
+    newPosition.y = bounds.top + bounds.height; // Set to container's bottom edge
+    newVelocity.y = -Math.abs(velocity.y) * elasticity;
+  }
+
+  return { position: newPosition, velocity: newVelocity };
+};

@@ -9,6 +9,7 @@ import {
   calculateAcceleration,
   calculateNewVelocity,
   calculateNewPosition,
+  handleBoundaryCollision,
 } from "../../utils/physics/physicsUtils";
 import { getContainerOffset } from "../../utils/dom/domUtils";
 import { INITIAL_GRAVITY_POINTS } from "../../constants/physics";
@@ -143,17 +144,29 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       };
 
       const acceleration = calculateAcceleration(force, particle.mass);
-      const newVelocity = calculateNewVelocity(
+      let newVelocity = calculateNewVelocity(
         particle.velocity,
         acceleration,
         physicsConfig.DELTA_TIME,
         physicsConfig.FRICTION
       );
-      const newPosition = calculateNewPosition(
+      let newPosition = calculateNewPosition(
         particle.position,
         newVelocity,
         physicsConfig.DELTA_TIME
       );
+
+      // Handle boundary collisions if enabled
+      if (physicsConfig.SOLID_BOUNDARIES) {
+        const collision = handleBoundaryCollision(
+          newPosition,
+          newVelocity,
+          gravityRef,
+          physicsConfig.ELASTICITY
+        );
+        newPosition = collision.position;
+        newVelocity = collision.velocity;
+      }
 
       const now = Date.now();
       const newTrails = [
@@ -169,7 +182,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         trails: newTrails,
       };
     },
-    [throttledPointerPos, gravityPoints, offset, physicsConfig]
+    [throttledPointerPos, gravityPoints, offset, physicsConfig, gravityRef]
   );
 
   useEffect(() => {
