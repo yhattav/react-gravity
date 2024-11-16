@@ -46,10 +46,15 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
     return !isDevSetting || (isDevelopment && showDevSettings);
   };
 
+  const handleButtonClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsOpen(!isOpen);
+  };
+
   return (
     <>
       <motion.button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleButtonClick}
         style={{
           position: "absolute",
           bottom: 20,
@@ -93,7 +98,7 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
             animate={{ opacity: 1, y: 20 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ type: "spring", damping: 20, stiffness: 300 }}
-            onClick={handleClick}
+            onClick={(e) => e.stopPropagation()}
             style={{
               position: "absolute",
               bottom: 80,
