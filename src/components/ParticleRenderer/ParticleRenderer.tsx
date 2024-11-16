@@ -14,6 +14,8 @@ interface ParticleRenderParams {
   color?: string;
   size?: number;
   showVectors?: boolean;
+  showVelocityArrows?: boolean;
+  showForceArrows?: boolean;
   trails?: TrailPoint[];
   onDelete?: () => void;
 }
@@ -25,6 +27,8 @@ export const ParticleRenderer: React.FC<ParticleRenderParams> = ({
   color = "#BADA55",
   size = 10,
   showVectors = true,
+  showVelocityArrows = true,
+  showForceArrows = true,
   trails = [],
   onDelete,
 }) => {
@@ -80,24 +84,27 @@ export const ParticleRenderer: React.FC<ParticleRenderParams> = ({
           }}
         >
           {/* Velocity vector */}
-          {drawArrow(
-            position.x,
-            position.y,
-            velocity.x,
-            velocity.y,
-            "#4CAF50",
-            40
-          )}
+
+          {showVelocityArrows &&
+            drawArrow(
+              position.x,
+              position.y,
+              velocity.x,
+              velocity.y,
+              "#4CAF50",
+              40
+            )}
 
           {/* Force/Acceleration vector */}
-          {drawArrow(
-            position.x,
-            position.y,
-            force.fx,
-            force.fy,
-            "#FF4081",
-            200
-          )}
+          {showForceArrows &&
+            drawArrow(
+              position.x,
+              position.y,
+              force.fx,
+              force.fy,
+              "#FF4081",
+              200
+            )}
         </svg>
       )}
 

@@ -1,15 +1,17 @@
-import { useState, useEffect } from 'react';
-import { PHYSICS_CONFIG, SETTINGS_METADATA } from '../constants/physics';
+import { useState, useEffect } from "react";
+import { PHYSICS_CONFIG, SETTINGS_METADATA } from "../constants/physics";
 
 const STORAGE_KEYS = {
-  SETTINGS: 'simulatorSettings',
-  SHOW_DEV: 'showDevSettings',
+  SETTINGS: "simulatorSettings",
+  SHOW_DEV: "showDevSettings",
 } as const;
 
 export const useSettings = () => {
   const [settings, setSettings] = useState(() => {
     const savedSettings = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-    return savedSettings ? JSON.parse(savedSettings) : PHYSICS_CONFIG;
+    return savedSettings
+      ? { ...PHYSICS_CONFIG, ...JSON.parse(savedSettings) }
+      : PHYSICS_CONFIG;
   });
 
   const [showDevSettings, setShowDevSettings] = useState(() => {
@@ -42,6 +44,6 @@ export const useSettings = () => {
     updateSettings,
     updateShowDevSettings,
     resetSettings,
-    isDevelopment: process.env.NODE_ENV === 'development',
+    isDevelopment: process.env.NODE_ENV === "development",
   };
 };

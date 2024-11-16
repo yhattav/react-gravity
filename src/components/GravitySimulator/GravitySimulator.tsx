@@ -1,20 +1,20 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { Point2D, GravityPoint, Force } from '../../utils/types/physics';
-import { GravityPointComponent } from '../GravityPoint/GravityPoint';
-import { ParticleRenderer } from '../ParticleRenderer/ParticleRenderer';
-import { StarPalette } from '../StarPalette/StarPalette';
-import { StarTemplate } from '../../types/star';
+import React, { useState, useCallback, useEffect } from "react";
+import { Point2D, GravityPoint, Force } from "../../utils/types/physics";
+import { GravityPointComponent } from "../GravityPoint/GravityPoint";
+import { ParticleRenderer } from "../ParticleRenderer/ParticleRenderer";
+import { StarPalette } from "../StarPalette/StarPalette";
+import { StarTemplate } from "../../types/star";
 import {
   calculateTotalForce,
   calculateAcceleration,
   calculateNewVelocity,
   calculateNewPosition,
-} from '../../utils/physics/physicsUtils';
-import { getContainerOffset } from '../../utils/dom/domUtils';
-import { INITIAL_GRAVITY_POINTS } from '../../constants/physics';
-import { SimulatorSettings } from '../SimulatorSettings/SimulatorSettings';
-import { useSettings } from '../../hooks/useSettings';
-import { throttle } from 'lodash';
+} from "../../utils/physics/physicsUtils";
+import { getContainerOffset } from "../../utils/dom/domUtils";
+import { INITIAL_GRAVITY_POINTS } from "../../constants/physics";
+import { SimulatorSettings } from "../SimulatorSettings/SimulatorSettings";
+import { useSettings } from "../../hooks/useSettings";
+import { throttle } from "lodash";
 
 interface ParticleMechanics {
   position: Point2D;
@@ -65,7 +65,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   const { settings: physicsConfig, updateSettings } = useSettings();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [throttledPointerPos, setThrottledPointerPos] = useState(pointerPos);
-
+  console.log(physicsConfig);
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
       gravityRef.current?.requestFullscreen();
@@ -81,9 +81,9 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       setIsFullscreen(!!document.fullscreenElement);
     };
 
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
     return () =>
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
   const handleDrag = throttle(() => {
@@ -200,7 +200,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   const createParticle = useCallback(
     (
       position: Point2D,
-      options: Partial<Omit<Particle, 'position' | 'id'>> = {}
+      options: Partial<Omit<Particle, "position" | "id">> = {}
     ): Particle => ({
       id: Math.random().toString(36).substr(2, 9),
       position,
@@ -256,9 +256,9 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       if (gravityRef.current) {
         const rect = gravityRef.current.getBoundingClientRect();
         const clientX =
-          'clientX' in e ? e.clientX : (e as TouchEvent).touches[0].clientX;
+          "clientX" in e ? e.clientX : (e as TouchEvent).touches[0].clientX;
         const clientY =
-          'clientY' in e ? e.clientY : (e as TouchEvent).touches[0].clientY;
+          "clientY" in e ? e.clientY : (e as TouchEvent).touches[0].clientY;
 
         const x = clientX - rect.left;
         const y = clientY - rect.top;
@@ -317,12 +317,12 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         onClick={handleContainerClick}
         className={className}
         style={{
-          position: 'absolute',
+          position: "absolute",
           top: 0,
           left: 0,
-          width: '100%',
-          height: '100%',
-          background: 'linear-gradient(45deg, #1a1a1a, #2a2a2a)',
+          width: "100%",
+          height: "100%",
+          background: "linear-gradient(45deg, #1a1a1a, #2a2a2a)",
 
           zIndex: 1,
         }}
@@ -333,19 +333,19 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             toggleFullscreen();
           }}
           style={{
-            position: 'absolute',
-            top: '1rem',
-            right: '1rem',
+            position: "absolute",
+            top: "1rem",
+            right: "1rem",
             zIndex: 2,
-            padding: '0.5rem',
-            cursor: 'pointer',
-            background: 'rgba(255, 255, 255, 0.2)',
-            border: 'none',
-            borderRadius: '4px',
-            color: 'white',
+            padding: "0.5rem",
+            cursor: "pointer",
+            background: "rgba(255, 255, 255, 0.2)",
+            border: "none",
+            borderRadius: "4px",
+            color: "white",
           }}
         >
-          {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+          {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
         </button>
 
         <StarPalette
@@ -378,6 +378,8 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
               size={particle.size}
               showVectors={particle.showVectors}
               trails={particle.trails}
+              showVelocityArrows={physicsConfig.SHOW_VELOCITY_ARROWS}
+              showForceArrows={physicsConfig.SHOW_FORCE_ARROWS}
               onDelete={() => {
                 setParticles(particles.filter((p) => p.id !== particle.id));
               }}

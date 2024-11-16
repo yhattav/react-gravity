@@ -1,55 +1,105 @@
-import { StarTemplate, GravityPoint } from '../types/star';
+import { StarTemplate, GravityPoint } from "../types/star";
 
-// Split settings into production and dev
+type SettingType = "slider" | "boolean";
+
+interface SliderSettingMetadata {
+  type: "slider";
+  isDev: boolean;
+  min: number;
+  max: number;
+  step: number;
+}
+
+interface BooleanSettingMetadata {
+  type: "boolean";
+  isDev: boolean;
+}
+
+type SettingMetadata = SliderSettingMetadata | BooleanSettingMetadata;
+
 export const PHYSICS_CONFIG = {
-  // Production settings
   NEW_PARTICLE_MASS: 0.1,
-  FRICTION: 0.999,
-  POINTER_MASS: 50000,
-  // Dev settings
+  FRICTION: 0.001,
   DELTA_TIME: 1 / 60,
+  POINTER_MASS: 100000,
+  SHOW_VELOCITY_ARROWS: true,
+  SHOW_FORCE_ARROWS: true,
 } as const;
 
-// Metadata about which settings are dev-only
-export const SETTINGS_METADATA = {
-  NEW_PARTICLE_MASS: { isDev: false },
-  FRICTION: { isDev: false },
-  POINTER_MASS: { isDev: false },
-  DELTA_TIME: { isDev: true },
-} as const;
+export const SETTINGS_METADATA: Record<
+  keyof typeof PHYSICS_CONFIG,
+  SettingMetadata
+> = {
+  NEW_PARTICLE_MASS: {
+    type: "slider",
+    isDev: false,
+    min: 0.001,
+    max: 0.5,
+    step: 0.001,
+  },
+  FRICTION: {
+    type: "slider",
+    isDev: false,
+    min: 0.0,
+    max: 1,
+    step: 0.001,
+  },
+  DELTA_TIME: {
+    type: "slider",
+    isDev: true,
+    min: 1 / 120,
+    max: 1 / 30,
+    step: 1 / 120,
+  },
+  POINTER_MASS: {
+    type: "slider",
+    isDev: false,
+    min: 10000,
+    max: 1000000,
+    step: 10000,
+  },
+  SHOW_VELOCITY_ARROWS: {
+    type: "boolean",
+    isDev: false,
+  },
+  SHOW_FORCE_ARROWS: {
+    type: "boolean",
+    isDev: false,
+  },
+};
 
 export const PARTICLE_MODES = {
-  NORMAL: { mass: 0.1, size: 20, color: '#666' },
-  HEAVY: { mass: 1.0, size: 30, color: '#FF5252' },
-  LIGHT: { mass: 0.05, size: 15, color: '#4CAF50' },
+  NORMAL: { mass: 0.1, size: 20, color: "#666" },
+  HEAVY: { mass: 1.0, size: 30, color: "#FF5252" },
+  LIGHT: { mass: 0.05, size: 15, color: "#4CAF50" },
 } as const;
 
 export const STAR_TEMPLATES: StarTemplate[] = [
   {
-    label: 'Supergiant',
+    label: "Supergiant",
     mass: 50000,
-    color: '#FF6B6B',
+    color: "#FF6B6B",
     size: 24,
-    icon: '★',
+    icon: "★",
   },
   {
-    label: 'Giant',
+    label: "Giant",
     mass: 30000,
-    color: '#4ECDC4',
+    color: "#4ECDC4",
     size: 20,
-    icon: '⭐',
+    icon: "⭐",
   },
   {
-    label: 'Dwarf',
+    label: "Dwarf",
     mass: 10000,
-    color: '#45B7D1',
+    color: "#45B7D1",
     size: 16,
-    icon: '✦',
+    icon: "✦",
   },
 ];
 
 export const INITIAL_GRAVITY_POINTS: GravityPoint[] = [
-  { x: 700, y: 700, label: 'Heavy', mass: 50000, color: '#FF6B6B' },
-  { x: 500, y: 150, label: 'Medium', mass: 30000, color: '#4ECDC4' },
-  { x: 350, y: 250, label: 'Light', mass: 10000, color: '#45B7D1' },
+  { x: 700, y: 700, label: "Heavy", mass: 50000, color: "#FF6B6B" },
+  { x: 500, y: 150, label: "Medium", mass: 30000, color: "#4ECDC4" },
+  { x: 350, y: 250, label: "Light", mass: 10000, color: "#45B7D1" },
 ];
