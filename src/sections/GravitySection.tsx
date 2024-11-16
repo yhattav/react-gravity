@@ -1,8 +1,8 @@
-import React, { useRef, useState, useCallback } from 'react';
-import { CustomCursor } from '@yhattav/react-component-cursor';
-import { Card } from 'antd';
-import { Point2D } from '../utils/types/physics';
-import { GravitySimulator } from '../components/GravitySimulator/GravitySimulator';
+import React, { useRef, useState, useCallback } from "react";
+import { CustomCursor } from "@yhattav/react-component-cursor";
+import { Card } from "antd";
+import { Point2D } from "../utils/types/physics";
+import { GravitySimulator } from "../components/GravitySimulator/GravitySimulator";
 
 interface GravitySectionProps {
   onDebugData?: (data: any) => void;
@@ -25,10 +25,10 @@ export const GravitySection: React.FC<GravitySectionProps> = ({
       <Card
         onDragOver={(e) => e.preventDefault()}
         style={{
-          height: '100%',
-          position: 'relative',
-          border: 'none',
-          overflow: 'hidden',
+          height: "100%",
+          position: "relative",
+          border: "none",
+          overflow: "hidden",
         }}
       >
         <CustomCursor
@@ -37,7 +37,7 @@ export const GravitySection: React.FC<GravitySectionProps> = ({
           onMove={handleCursorMove}
           hideNativeCursor={false}
         >
-          <div style={{ width: '100vw', height: '100vh' }} />
+          <div style={{ width: "100vw", height: "100vh" }} />
         </CustomCursor>
 
         <GravitySimulator

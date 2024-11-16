@@ -24,6 +24,8 @@ export const PHYSICS_CONFIG = {
   POINTER_MASS: 100000,
   SHOW_VELOCITY_ARROWS: true,
   SHOW_FORCE_ARROWS: true,
+  CONSTANT_FORCE_X: 0,
+  CONSTANT_FORCE_Y: 0,
 } as const;
 
 export const SETTINGS_METADATA: Record<
@@ -65,6 +67,20 @@ export const SETTINGS_METADATA: Record<
   SHOW_FORCE_ARROWS: {
     type: "boolean",
     isDev: false,
+  },
+  CONSTANT_FORCE_X: {
+    type: "slider",
+    isDev: false,
+    min: -10,
+    max: 10,
+    step: 0.1,
+  },
+  CONSTANT_FORCE_Y: {
+    type: "slider",
+    isDev: false,
+    min: -10,
+    max: 10,
+    step: 0.1,
   },
 };
 

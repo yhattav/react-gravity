@@ -129,13 +129,18 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     (
       particle: ParticleMechanics & { trails: TrailPoint[] }
     ): ParticleMechanics => {
-      const force = calculateTotalForce(
+      const calculatedForce = calculateTotalForce(
         particle.position,
         throttledPointerPos,
         gravityPoints,
         offset,
         physicsConfig.POINTER_MASS
       );
+
+      const force = {
+        fx: calculatedForce.fx + physicsConfig.CONSTANT_FORCE_X,
+        fy: calculatedForce.fy + physicsConfig.CONSTANT_FORCE_Y,
+      };
 
       const acceleration = calculateAcceleration(force, particle.mass);
       const newVelocity = calculateNewVelocity(
