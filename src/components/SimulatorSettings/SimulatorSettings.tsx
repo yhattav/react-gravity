@@ -1,17 +1,10 @@
-import React from 'react';
-import { SETTINGS_METADATA } from '../../constants/physics';
-import { useSettings } from '../../hooks/useSettings';
+import React from "react";
+import { PHYSICS_CONFIG, SETTINGS_METADATA } from "../../constants/physics";
+import { useSettings } from "../../hooks/useSettings";
 
 interface SimulatorSettingsProps {
   onSettingsChange: (settings: typeof PHYSICS_CONFIG) => void;
 }
-
-const SLIDER_RANGES = {
-  NEW_PARTICLE_MASS: { min: 0.001, max: 0.5, step: 0.001 },
-  FRICTION: { min: 0.0, max: 1, step: 0.001 },
-  DELTA_TIME: { min: 1 / 120, max: 1 / 30, step: 1 / 120 },
-  POINTER_MASS: { min: 10000, max: 1000000, step: 10000 },
-};
 
 export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
   onSettingsChange,
@@ -40,6 +33,12 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
     updateShowDevSettings(e.target.checked);
   };
 
+  const handleCheckboxChange = (key: keyof typeof settings) => {
+    const newSettings = { [key]: !settings[key] };
+    updateSettings(newSettings);
+    onSettingsChange({ ...settings, ...newSettings });
+  };
+
   const shouldShowSetting = (key: keyof typeof PHYSICS_CONFIG) => {
     const isDevSetting = SETTINGS_METADATA[key].isDev;
     return !isDevSetting || (isDevelopment && showDevSettings);
@@ -49,22 +48,22 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
     <div
       onClick={handleClick}
       style={{
-        position: 'absolute',
+        position: "absolute",
         bottom: 20,
         left: 20,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        padding: '15px',
-        borderRadius: '8px',
-        color: 'white',
+        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        padding: "15px",
+        borderRadius: "8px",
+        color: "white",
         zIndex: 1000,
-        minWidth: '250px',
+        minWidth: "250px",
       }}
     >
-      <h3 style={{ margin: '0 0 15px 0' }}>Simulator Settings</h3>
+      <h3 style={{ margin: "0 0 15px 0" }}>Simulator Settings</h3>
 
       {isDevelopment && (
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ marginBottom: "15px" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <input
               type="checkbox"
               checked={showDevSettings}
@@ -77,33 +76,71 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
 
       {Object.entries(settings).map(([key, value]) =>
         shouldShowSetting(key as keyof typeof PHYSICS_CONFIG) ? (
-          <div key={key} style={{ marginBottom: '10px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <label>
-                {key.replace(/_/g, ' ')}
-                {SETTINGS_METADATA[key as keyof typeof SETTINGS_METADATA]
-                  .isDev && (
-                  <span style={{ color: '#ff6b6b', marginLeft: '4px' }}>
-                    (dev)
-                  </span>
-                )}
+          <div key={key} style={{ marginBottom: "10px" }}>
+            {SETTINGS_METADATA[key as keyof typeof PHYSICS_CONFIG].type ===
+            "boolean" ? (
+              <label
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                <input
+                  type="checkbox"
+                  checked={value as boolean}
+                  onChange={() =>
+                    handleCheckboxChange(key as keyof typeof settings)
+                  }
+                />
+                {key.replace(/_/g, " ")}
               </label>
-              <span>{Number(value).toFixed(3)}</span>
-            </div>
-            <input
-              type="range"
-              min={SLIDER_RANGES[key as keyof typeof SLIDER_RANGES].min}
-              max={SLIDER_RANGES[key as keyof typeof SLIDER_RANGES].max}
-              step={SLIDER_RANGES[key as keyof typeof SLIDER_RANGES].step}
-              value={value}
-              onChange={(e) =>
-                handleSettingChange(
-                  key as keyof typeof PHYSICS_CONFIG,
-                  Number(e.target.value)
-                )
-              }
-              style={{ width: '100%' }}
-            />
+            ) : (
+              <>
+                <div
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
+                  <label>
+                    {key.replace(/_/g, " ")}
+                    {SETTINGS_METADATA[key as keyof typeof SETTINGS_METADATA]
+                      .isDev && (
+                      <span style={{ color: "#ff6b6b", marginLeft: "4px" }}>
+                        (dev)
+                      </span>
+                    )}
+                  </label>
+                  <span>{Number(value).toFixed(3)}</span>
+                </div>
+                <input
+                  type="range"
+                  min={
+                    SETTINGS_METADATA[key as keyof typeof SETTINGS_METADATA]
+                      .type === "slider"
+                      ? SETTINGS_METADATA[key as keyof typeof SETTINGS_METADATA]
+                          .min
+                      : undefined
+                  }
+                  max={
+                    SETTINGS_METADATA[key as keyof typeof SETTINGS_METADATA]
+                      .type === "slider"
+                      ? SETTINGS_METADATA[key as keyof typeof SETTINGS_METADATA]
+                          .max
+                      : undefined
+                  }
+                  step={
+                    SETTINGS_METADATA[key as keyof typeof SETTINGS_METADATA]
+                      .type === "slider"
+                      ? SETTINGS_METADATA[key as keyof typeof SETTINGS_METADATA]
+                          .step
+                      : undefined
+                  }
+                  value={value as number}
+                  onChange={(e) =>
+                    handleSettingChange(
+                      key as keyof typeof PHYSICS_CONFIG,
+                      Number(e.target.value)
+                    )
+                  }
+                  style={{ width: "100%" }}
+                />
+              </>
+            )}
           </div>
         ) : null
       )}
