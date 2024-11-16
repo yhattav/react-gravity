@@ -22,6 +22,7 @@ interface ParticleMechanics {
   velocity: Point2D;
   force: Force;
   mass: number;
+  elasticity: number;
 }
 
 interface Particle extends ParticleMechanics {
@@ -162,7 +163,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           newPosition,
           newVelocity,
           gravityRef,
-          physicsConfig.ELASTICITY
+          particle.elasticity
         );
         newPosition = collision.position;
         newVelocity = collision.velocity;
@@ -179,6 +180,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         velocity: newVelocity,
         force,
         mass: particle.mass,
+        elasticity: particle.elasticity,
         trails: newTrails,
       };
     },
@@ -225,6 +227,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       velocity: { x: 0, y: 0 },
       force: { fx: 0, fy: 0 },
       mass: physicsConfig.NEW_PARTICLE_MASS,
+      elasticity: physicsConfig.NEW_PARTICLE_ELASTICITY,
       color: generatePastelColor(),
       size: 10,
       showVectors: true,

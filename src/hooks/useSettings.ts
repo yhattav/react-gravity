@@ -9,9 +9,18 @@ const STORAGE_KEYS = {
 export const useSettings = () => {
   const [settings, setSettings] = useState(() => {
     const savedSettings = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-    return savedSettings
-      ? { ...PHYSICS_CONFIG, ...JSON.parse(savedSettings) }
-      : PHYSICS_CONFIG;
+    if (savedSettings) {
+      const parsedSettings = JSON.parse(savedSettings);
+      const validSettings = Object.keys(parsedSettings).reduce((acc, key) => {
+        if (key in PHYSICS_CONFIG) {
+          acc[key] = parsedSettings[key];
+        }
+        return acc;
+      }, {} as Partial<typeof PHYSICS_CONFIG>);
+
+      return { ...PHYSICS_CONFIG, ...validSettings };
+    }
+    return PHYSICS_CONFIG;
   });
 
   const [showDevSettings, setShowDevSettings] = useState(() => {
@@ -20,7 +29,14 @@ export const useSettings = () => {
   });
 
   const updateSettings = (newSettings: Partial<typeof PHYSICS_CONFIG>) => {
-    const updatedSettings = { ...settings, ...newSettings };
+    const validNewSettings = Object.keys(newSettings).reduce((acc, key) => {
+      if (key in PHYSICS_CONFIG) {
+        acc[key] = newSettings[key as keyof typeof PHYSICS_CONFIG];
+      }
+      return acc;
+    }, {} as Partial<typeof PHYSICS_CONFIG>);
+
+    const updatedSettings = { ...settings, ...validNewSettings };
     setSettings(updatedSettings);
     localStorage.setItem(
       STORAGE_KEYS.SETTINGS,

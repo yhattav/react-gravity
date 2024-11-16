@@ -19,6 +19,7 @@ type SettingMetadata = SliderSettingMetadata | BooleanSettingMetadata;
 
 export const PHYSICS_CONFIG = {
   NEW_PARTICLE_MASS: 0.1,
+  NEW_PARTICLE_ELASTICITY: 0.8,
   FRICTION: 0.001,
   DELTA_TIME: 1 / 60,
   POINTER_MASS: 100000,
@@ -27,7 +28,6 @@ export const PHYSICS_CONFIG = {
   CONSTANT_FORCE_X: 0,
   CONSTANT_FORCE_Y: 0,
   SOLID_BOUNDARIES: true,
-  ELASTICITY: 0.8,
 } as const;
 
 export const SETTINGS_METADATA: Record<
@@ -40,6 +40,13 @@ export const SETTINGS_METADATA: Record<
     min: 0.001,
     max: 0.5,
     step: 0.001,
+  },
+  NEW_PARTICLE_ELASTICITY: {
+    type: "slider",
+    isDev: false,
+    min: 0,
+    max: 1,
+    step: 0.1,
   },
   FRICTION: {
     type: "slider",
@@ -88,14 +95,7 @@ export const SETTINGS_METADATA: Record<
     type: "boolean",
     isDev: false,
   },
-  ELASTICITY: {
-    type: "slider",
-    isDev: false,
-    min: 0,
-    max: 1,
-    step: 0.1,
-  },
-};
+} as const;
 
 export const PARTICLE_MODES = {
   NORMAL: { mass: 0.1, size: 20, color: "#666" },
