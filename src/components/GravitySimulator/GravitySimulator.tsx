@@ -9,6 +9,7 @@ import {
   calculateAcceleration,
   calculateNewVelocity,
   calculateNewPosition,
+  handleBoundaryCollision,
 } from "../../utils/physics/physicsUtils";
 import { getContainerOffset } from "../../utils/dom/domUtils";
 import { INITIAL_GRAVITY_POINTS } from "../../constants/physics";
@@ -21,6 +22,7 @@ interface ParticleMechanics {
   velocity: Point2D;
   force: Force;
   mass: number;
+  elasticity: number;
 }
 
 interface Particle extends ParticleMechanics {
@@ -143,17 +145,29 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       };
 
       const acceleration = calculateAcceleration(force, particle.mass);
-      const newVelocity = calculateNewVelocity(
+      let newVelocity = calculateNewVelocity(
         particle.velocity,
         acceleration,
         physicsConfig.DELTA_TIME,
         physicsConfig.FRICTION
       );
-      const newPosition = calculateNewPosition(
+      let newPosition = calculateNewPosition(
         particle.position,
         newVelocity,
         physicsConfig.DELTA_TIME
       );
+
+      // Handle boundary collisions if enabled
+      if (physicsConfig.SOLID_BOUNDARIES) {
+        const collision = handleBoundaryCollision(
+          newPosition,
+          newVelocity,
+          gravityRef,
+          particle.elasticity
+        );
+        newPosition = collision.position;
+        newVelocity = collision.velocity;
+      }
 
       const now = Date.now();
       const newTrails = [
@@ -166,10 +180,11 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         velocity: newVelocity,
         force,
         mass: particle.mass,
+        elasticity: particle.elasticity,
         trails: newTrails,
       };
     },
-    [throttledPointerPos, gravityPoints, offset, physicsConfig]
+    [throttledPointerPos, gravityPoints, offset, physicsConfig, gravityRef]
   );
 
   useEffect(() => {
@@ -212,6 +227,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       velocity: { x: 0, y: 0 },
       force: { fx: 0, fy: 0 },
       mass: physicsConfig.NEW_PARTICLE_MASS,
+      elasticity: physicsConfig.NEW_PARTICLE_ELASTICITY,
       color: generatePastelColor(),
       size: 10,
       showVectors: true,
