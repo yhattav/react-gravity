@@ -348,26 +348,69 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           zIndex: 1,
         }}
       >
-        <button
-          onClick={(e) => {
-            e.stopPropagation(); // Prevent particle creation
-            toggleFullscreen();
-          }}
+        <div
           style={{
             position: "absolute",
             top: "1rem",
             right: "1rem",
             zIndex: 2,
-            padding: "0.5rem",
-            cursor: "pointer",
-            background: "rgba(255, 255, 255, 0.2)",
-            border: "none",
-            borderRadius: "4px",
-            color: "white",
+            display: "flex",
+            gap: "0.5rem",
           }}
         >
-          {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
-        </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setParticles([]); // Clear only particles
+              setIsSimulationStarted(false);
+            }}
+            style={{
+              padding: "0.5rem 1rem",
+              cursor: "pointer",
+              background: "rgba(255, 255, 255, 0.2)",
+              border: "none",
+              borderRadius: "4px",
+              color: "white",
+              transition: "background 0.2s ease",
+            }}
+          >
+            Clear Particles
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setGravityPoints([]); // Clear only the gravity points/stars
+            }}
+            style={{
+              padding: "0.5rem 1rem",
+              cursor: "pointer",
+              background: "rgba(255, 255, 255, 0.2)",
+              border: "none",
+              borderRadius: "4px",
+              color: "white",
+              transition: "background 0.2s ease",
+            }}
+          >
+            Clear Stars
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleFullscreen();
+            }}
+            style={{
+              padding: "0.5rem 1rem",
+              cursor: "pointer",
+              background: "rgba(255, 255, 255, 0.2)",
+              border: "none",
+              borderRadius: "4px",
+              color: "white",
+              transition: "background 0.2s ease",
+            }}
+          >
+            {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+          </button>
+        </div>
 
         <StarPalette
           onStarDragStart={handleStarDragStart}
