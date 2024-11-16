@@ -1,15 +1,8 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { Layout, Tabs } from 'antd';
-import {
-  DemoSection,
-  GravitySection,
-  PaintSection,
-  ContentRevealSection,
-  EntryAnimationSection,
-  GallerySection,
-} from './sections';
-import { Section } from './types/Section';
-import { DebugInfo } from './components/DebugInfo';
+import React, { useEffect, useState, useCallback } from "react";
+import { Layout, Tabs } from "antd";
+import { GravitySection } from "./sections/GravitySection";
+import { Section } from "./types/Section";
+import { DebugInfo } from "./components/DebugInfo";
 
 const { Content, Header } = Layout;
 const { TabPane } = Tabs;
@@ -17,40 +10,10 @@ const { TabPane } = Tabs;
 // Define all sections
 const sections: Section[] = [
   {
-    id: 'demo',
-    title: 'Basic Demo',
-    component: DemoSection,
-    height: '100vh',
-  },
-  {
-    id: 'entry-animation',
-    title: 'Entry Animation',
-    component: EntryAnimationSection,
-    height: '100vh',
-  },
-  {
-    id: 'gravity',
-    title: 'Gravity',
+    id: "gravity",
+    title: "Gravity",
     component: GravitySection,
-    height: '100vh',
-  },
-  {
-    id: 'paint',
-    title: 'Paint',
-    component: PaintSection,
-    height: '100vh',
-  },
-  {
-    id: 'content-reveal',
-    title: 'Content Reveal',
-    component: ContentRevealSection,
-    height: '100vh',
-  },
-  {
-    id: 'gallery',
-    title: 'Gallery',
-    component: GallerySection,
-    height: '100vh',
+    height: "100vh",
   },
 ];
 
@@ -61,14 +24,14 @@ interface DebugData {
 
 function App() {
   const [activeSection, setActiveSection] = useState(() => {
-    const saved = localStorage.getItem('activeSection');
-    return saved || 'gravity';
+    const saved = localStorage.getItem("activeSection");
+    return saved || "gravity";
   });
 
   const [debugData, setDebugData] = useState<DebugData | null>(null);
 
   useEffect(() => {
-    localStorage.setItem('activeSection', activeSection);
+    localStorage.setItem("activeSection", activeSection);
   }, [activeSection]);
 
   const CurrentSection = sections.find(
@@ -81,19 +44,19 @@ function App() {
 
   useEffect(() => {
     // Create a container for cursors if it doesn't exist
-    if (!document.getElementById('cursor-container')) {
-      const cursorContainer = document.createElement('div');
-      cursorContainer.id = 'cursor-container';
-      cursorContainer.style.position = 'fixed';
-      cursorContainer.style.top = '0';
-      cursorContainer.style.left = '0';
-      cursorContainer.style.pointerEvents = 'none';
-      cursorContainer.style.zIndex = '9999';
+    if (!document.getElementById("cursor-container")) {
+      const cursorContainer = document.createElement("div");
+      cursorContainer.id = "cursor-container";
+      cursorContainer.style.position = "fixed";
+      cursorContainer.style.top = "0";
+      cursorContainer.style.left = "0";
+      cursorContainer.style.pointerEvents = "none";
+      cursorContainer.style.zIndex = "9999";
       document.body.appendChild(cursorContainer);
     }
 
     return () => {
-      const container = document.getElementById('cursor-container');
+      const container = document.getElementById("cursor-container");
       if (container) {
         document.body.removeChild(container);
       }
@@ -101,13 +64,13 @@ function App() {
   }, []);
 
   return (
-    <Layout style={{ height: '100vh' }}>
+    <Layout style={{ height: "100vh" }}>
       <Header
         style={{
-          background: '#fff',
-          padding: '0 16px',
-          height: 'auto',
-          lineHeight: 'normal',
+          background: "#fff",
+          padding: "0 16px",
+          height: "auto",
+          lineHeight: "normal",
         }}
       >
         <Tabs
@@ -123,9 +86,9 @@ function App() {
       <Layout>
         <Content
           style={{
-            position: 'relative',
-            height: 'calc(100vh - 64px)',
-            overflow: 'hidden',
+            position: "relative",
+            height: "calc(100vh - 64px)",
+            overflow: "hidden",
           }}
         >
           {CurrentSection && <CurrentSection onDebugData={handleDebugData} />}
@@ -133,10 +96,10 @@ function App() {
         <Layout.Sider
           width="20%"
           style={{
-            background: '#fff',
-            minWidth: '300px',
-            height: 'calc(100vh - 64px)',
-            overflow: 'auto',
+            background: "#fff",
+            minWidth: "300px",
+            height: "calc(100vh - 64px)",
+            overflow: "auto",
           }}
         >
           {debugData && <DebugInfo data={debugData} />}
