@@ -132,8 +132,18 @@ export const STAR_TEMPLATES: StarTemplate[] = [
     size: 60,
   },
   {
+    label: "Blue Hypergiant",
+    mass: 1000000,
+    size: 70,
+  },
+  {
+    label: "Neutron Star",
+    mass: 500000,
+    size: 25,
+  },
+  {
     label: "Black Hole",
-    mass: 10000000,
+    mass: 2500000,
     size: 45,
   },
 ];

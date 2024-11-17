@@ -51,8 +51,8 @@ const getAccretionDiskStyle = (mass: number) => {
 // Size calculation function based on mass
 const calculateSize = (mass: number): number => {
   // Constants for our size calculation
-  const MIN_SIZE = 10;
-  const MAX_SIZE = 30;
+  const MIN_SIZE = 5;
+  const MAX_SIZE = 15;
   const PEAK_MASS = 20; // Mass at which stars reach their maximum size
   const BLACK_HOLE_MASS = 50;
 
