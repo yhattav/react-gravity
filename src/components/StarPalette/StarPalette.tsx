@@ -24,6 +24,9 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
 
   return (
     <div
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
       style={{
         position: "absolute",
         left: 20,
@@ -83,6 +86,7 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
 
       <MassSlider
         value={sliderValue}
+        length={300} // or whatever height you want
         onChange={(value) => {
           setSliderValue(value);
           console.log("###Mass multiplier:", value);
