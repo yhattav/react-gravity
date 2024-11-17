@@ -5,7 +5,6 @@ import { StarTemplate } from "../../types/star";
 const interpolateColor = (mass: number): string => {
   // Temperature scale (roughly maps stellar mass to temperature)
   const temp = Math.min(Math.pow(mass, 0.5) * 3000 + 2000, 40000);
-  console.log(temp, mass);
   // Simplified blackbody radiation approximation
   if (mass >= 50) return "#000000"; // Black hole
 
