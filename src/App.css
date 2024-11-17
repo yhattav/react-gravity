@@ -30,8 +30,6 @@
 .ant-card {
   background: rgba(51, 46, 46, 0.94) !important;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1) !important;
-  backdrop-filter: blur(19.1px) !important;
-  -webkit-backdrop-filter: blur(19.1px) !important;
 }
 
 /* Make nested layouts transparent to avoid stacking effects */
