@@ -6,7 +6,7 @@ import { STAR_TEMPLATES } from "../../constants/physics";
 interface MassSliderProps {
   value: number;
   onChange: (value: number) => void;
-  length: number; // Height in pixels
+  length: number;
 }
 
 export const MassSlider: React.FC<MassSliderProps> = ({
@@ -15,8 +15,26 @@ export const MassSlider: React.FC<MassSliderProps> = ({
   length,
 }) => {
   const sliderRef = React.useRef<HTMLDivElement>(null);
-  const padding = 20; // Padding for top and bottom
-  const innerLength = length - padding * 2; // Actual draggable area length
+  const padding = 20;
+  const innerLength = length - padding * 2;
+
+  // Constants for mass calculation
+  const MIN_MASS = 1;
+  const MAX_MASS = 2500000;
+  const EXPONENT = 4; // Adjust this to change the curve of the exponential
+
+  // Convert percentage to mass using exponential scaling
+  const percentageToMass = (percentage: number): number => {
+    // Use exponential function to create non-linear scaling
+    const exponentialValue = Math.pow(percentage, EXPONENT);
+    return MIN_MASS + (MAX_MASS - MIN_MASS) * exponentialValue;
+  };
+
+  // Convert mass back to percentage for slider position
+  const massToPercentage = (mass: number): number => {
+    const normalizedMass = (mass - MIN_MASS) / (MAX_MASS - MIN_MASS);
+    return Math.pow(normalizedMass, 1 / EXPONENT);
+  };
 
   return (
     <div
@@ -32,7 +50,6 @@ export const MassSlider: React.FC<MassSliderProps> = ({
         justifyContent: "center",
       }}
     >
-      {/* Inner track line */}
       <div
         ref={sliderRef}
         style={{
@@ -52,15 +69,18 @@ export const MassSlider: React.FC<MassSliderProps> = ({
           if (sliderRef.current) {
             const sliderRect = sliderRef.current.getBoundingClientRect();
             const relativeY = info.point.y - (sliderRect.top + padding);
-
-            // Convert to percentage using inner track length
             const percentage =
               Math.max(0, Math.min(innerLength, relativeY)) / innerLength;
 
-            console.log("##percentage:", percentage);
-            onChange(percentage);
+            // Convert percentage to mass value
+            const mass = percentageToMass(percentage); // Invert percentage so top = max mass
+
+            console.log("##percentage:", 1 - percentage);
+            console.log("##mass:", mass);
+            onChange(mass);
           }
         }}
+        // Position the star based on the current mass value
         style={{
           position: "absolute",
           cursor: "grab",
@@ -70,7 +90,7 @@ export const MassSlider: React.FC<MassSliderProps> = ({
           justifyContent: "center",
         }}
       >
-        <StarRenderer mass={STAR_TEMPLATES[0].mass} />
+        <StarRenderer mass={value} />
       </motion.div>
     </div>
   );
