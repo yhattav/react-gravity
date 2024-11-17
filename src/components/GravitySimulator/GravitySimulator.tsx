@@ -317,6 +317,8 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     <>
       <style>
         {`
+          @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap');
+          
           @keyframes pulse {
             0% { transform: translate(-50%, -50%) scale(1); }
             50% { transform: translate(-50%, -50%) scale(1.1); }
@@ -331,6 +333,26 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           div:hover .star-label {
             opacity: 1;
           }
+
+          .signature {
+            position: absolute;
+            bottom: 15px;
+            left: 20px;
+            font-family: 'Dancing Script', cursive;
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.40);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            user-select: none;
+            z-index: 1;
+            letter-spacing: 1px;
+            text-decoration: none;
+            transition: color 0.2s ease, text-shadow 0.2s ease;
+          }
+
+          .signature:hover {
+            color: rgba(255, 255, 255, 0.6);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          }
         `}
       </style>
       <div
@@ -344,7 +366,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           width: "100%",
           height: "100%",
           background: "linear-gradient(45deg, #1a1a1a, #2a2a2a)",
-
           zIndex: 1,
         }}
       >
@@ -451,6 +472,16 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           ))}
 
         <SimulatorSettings onSettingsChange={updateSettings} />
+
+        <a
+          href="https://github.com/yhattav"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="signature"
+          onClick={(e) => e.stopPropagation()}
+        >
+          Y·Hattav
+        </a>
       </div>
     </>
   );
