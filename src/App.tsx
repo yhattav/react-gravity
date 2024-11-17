@@ -1,49 +1,29 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Layout, Tabs } from "antd";
+import { Layout } from "antd";
+import {
+  GithubOutlined,
+  QuestionCircleOutlined,
+  SettingOutlined,
+  BugOutlined,
+} from "@ant-design/icons";
 import { GravitySection } from "./sections/GravitySection";
-import { Section } from "./types/Section";
 import { DebugInfo } from "./components/DebugInfo";
+import "./App.css";
 
 const { Content, Header } = Layout;
-const { TabPane } = Tabs;
 
-// Define all sections
-const sections: Section[] = [
-  {
-    id: "gravity",
-    title: "Gravity",
-    component: GravitySection,
-    height: "100vh",
-  },
-];
-
-// Add type for debug data
 interface DebugData {
   [key: string]: any;
 }
 
 function App() {
-  const [activeSection, setActiveSection] = useState(() => {
-    const saved = localStorage.getItem("activeSection");
-    return saved || "gravity";
-  });
-
   const [debugData, setDebugData] = useState<DebugData | null>(null);
-
-  useEffect(() => {
-    localStorage.setItem("activeSection", activeSection);
-  }, [activeSection]);
-
-  const CurrentSection = sections.find(
-    (section) => section.id === activeSection
-  )?.component;
 
   const handleDebugData = useCallback((data: DebugData) => {
     setDebugData(data);
   }, []);
 
   useEffect(() => {
-    // Create a container for cursors if it doesn't exist
     if (!document.getElementById("cursor-container")) {
       const cursorContainer = document.createElement("div");
       cursorContainer.id = "cursor-container";
@@ -64,44 +44,55 @@ function App() {
   }, []);
 
   return (
-    <Layout style={{ height: "100vh" }}>
-      <Header
-        style={{
-          background: "#fff",
-          padding: "0 16px",
-          height: "auto",
-          lineHeight: "normal",
-        }}
-      >
-        <Tabs
-          activeKey={activeSection}
-          onChange={setActiveSection}
-          style={{ marginBottom: 0 }}
-        >
-          {sections.map(({ id, title }) => (
-            <TabPane tab={title} key={id} />
-          ))}
-        </Tabs>
+    <Layout className="app-layout">
+      <Header className="app-header">
+        <div className="header-content">
+          <h1 className="app-title">Gravity Simulator</h1>
+          <div className="header-icons">
+            <a
+              href="https://github.com/yhattav/react-gravity"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="header-icon"
+              title="View Source Code"
+            >
+              <GithubOutlined />
+            </a>
+            <a
+              href="https://github.com/yhattav/react-gravity/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="header-icon"
+              title="Report Issues"
+            >
+              <BugOutlined />
+            </a>
+            <a
+              href="https://github.com/yhattav/react-gravity/wiki"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="header-icon"
+              title="Documentation"
+            >
+              <QuestionCircleOutlined />
+            </a>
+            <a
+              href="https://github.com/yhattav/react-gravity/blob/main/README.md#configuration"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="header-icon"
+              title="Configuration Guide"
+            >
+              <SettingOutlined />
+            </a>
+          </div>
+        </div>
       </Header>
       <Layout>
-        <Content
-          style={{
-            position: "relative",
-            height: "calc(100vh - 64px)",
-            overflow: "hidden",
-          }}
-        >
-          {CurrentSection && <CurrentSection onDebugData={handleDebugData} />}
+        <Content className="app-content">
+          <GravitySection onDebugData={handleDebugData} />
         </Content>
-        <Layout.Sider
-          width="20%"
-          style={{
-            background: "#fff",
-            minWidth: "300px",
-            height: "calc(100vh - 64px)",
-            overflow: "auto",
-          }}
-        >
+        <Layout.Sider className="app-sider" width="20%">
           {debugData && <DebugInfo data={debugData} />}
         </Layout.Sider>
       </Layout>
