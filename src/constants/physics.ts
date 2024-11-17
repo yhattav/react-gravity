@@ -108,32 +108,32 @@ export const SimulatedSolarMass = 30000;
 export const STAR_TEMPLATES: StarTemplate[] = [
   {
     label: "Brown Dwarf",
-    mass: 0.05,
+    mass: 5000,
     size: 30,
   },
   {
     label: "Red Dwarf",
-    mass: 0.2,
+    mass: 20000,
     size: 35,
   },
   {
     label: "Yellow Dwarf",
-    mass: 1.0,
+    mass: 50000,
     size: 40,
   },
   {
     label: "Blue Giant",
-    mass: 10.0,
+    mass: 100000,
     size: 50,
   },
   {
     label: "Blue Supergiant",
-    mass: 30.0,
+    mass: 500000,
     size: 60,
   },
   {
     label: "Black Hole",
-    mass: 60.0,
+    mass: 10000000,
     size: 45,
   },
 ];

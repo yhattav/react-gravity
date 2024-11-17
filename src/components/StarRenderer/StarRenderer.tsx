@@ -72,15 +72,24 @@ const calculateSize = (mass: number): number => {
   return Math.round(MIN_SIZE + bellCurve);
 };
 
+// Convert simulator mass units to solar masses
+const convertToSolarMasses = (simulatorMass: number): number => {
+  const MASS_CONVERSION_FACTOR = 50000; // 50000 simulator units = 1 solar mass
+  return simulatorMass / MASS_CONVERSION_FACTOR;
+};
+
 interface StarRendererProps {
   mass: number; // in solar masses
 }
 
 export const StarRenderer: React.FC<StarRendererProps> = ({ mass }) => {
-  const color = interpolateColor(mass);
-  const glow = calculateGlow(mass);
-  const accretionStyle = getAccretionDiskStyle(mass);
-  const size = calculateSize(mass);
+  // Convert the mass before using it in visual calculations
+  const solarMass = convertToSolarMasses(mass);
+
+  const color = interpolateColor(solarMass);
+  const glow = calculateGlow(solarMass);
+  const accretionStyle = getAccretionDiskStyle(solarMass);
+  const size = calculateSize(solarMass);
 
   return (
     <>
@@ -103,7 +112,7 @@ export const StarRenderer: React.FC<StarRendererProps> = ({ mass }) => {
           backgroundColor: color,
           borderRadius: "50%",
           boxShadow:
-            mass >= 50
+            solarMass >= 50
               ? `0 0 ${glow}px 5px rgba(0, 0, 0, 0.8)`
               : `0 0 ${glow}px ${color}`,
           transition: "all 0.3s ease",
