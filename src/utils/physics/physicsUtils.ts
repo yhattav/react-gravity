@@ -168,25 +168,21 @@ export const handleBoundaryCollision = (
   const newPosition = { ...position };
   const newVelocity = { ...velocity };
 
-  // Calculate relative position within the container
-  const relativeX = position.x - bounds.left;
-  const relativeY = position.y - bounds.top;
-
-  // Check horizontal boundaries using relative position
-  if (relativeX <= 0) {
-    newPosition.x = bounds.left; // Set to container's left edge
+  // Check horizontal boundaries
+  if (position.x <= 0) {
+    newPosition.x = 0;
     newVelocity.x = Math.abs(velocity.x) * elasticity;
-  } else if (relativeX >= bounds.width) {
-    newPosition.x = bounds.left + bounds.width; // Set to container's right edge
+  } else if (position.x >= bounds.width) {
+    newPosition.x = bounds.width;
     newVelocity.x = -Math.abs(velocity.x) * elasticity;
   }
 
-  // Check vertical boundaries using relative position
-  if (relativeY <= 0) {
-    newPosition.y = bounds.top; // Set to container's top edge
+  // Check vertical boundaries
+  if (position.y <= 0) {
+    newPosition.y = 0;
     newVelocity.y = Math.abs(velocity.y) * elasticity;
-  } else if (relativeY >= bounds.height) {
-    newPosition.y = bounds.top + bounds.height; // Set to container's bottom edge
+  } else if (position.y >= bounds.height) {
+    newPosition.y = bounds.height;
     newVelocity.y = -Math.abs(velocity.y) * elasticity;
   }
 

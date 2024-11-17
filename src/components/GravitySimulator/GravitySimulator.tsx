@@ -67,7 +67,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   const { settings: physicsConfig, updateSettings } = useSettings();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [throttledPointerPos, setThrottledPointerPos] = useState(pointerPos);
-  console.log(physicsConfig);
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
       gravityRef.current?.requestFullscreen();
@@ -116,8 +115,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     }, 0);
   };
 
-  const offset = getContainerOffset(gravityRef);
-
   useEffect(() => {
     const throttledUpdate = throttle((newPos: Point2D) => {
       setThrottledPointerPos(newPos);
@@ -135,7 +132,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         particle.position,
         throttledPointerPos,
         gravityPoints,
-        offset,
+        { x: 0, y: 0 },
         physicsConfig.POINTER_MASS
       );
 
@@ -184,7 +181,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         trails: newTrails,
       };
     },
-    [throttledPointerPos, gravityPoints, offset, physicsConfig, gravityRef]
+    [throttledPointerPos, gravityPoints, physicsConfig, gravityRef]
   );
 
   useEffect(() => {
@@ -305,11 +302,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   );
 
   const handlePointDelete = useCallback((index: number) => {
-    console.log(
-      index,
-      gravityPoints,
-      gravityPoints.filter((_, i) => i !== index)
-    );
     setGravityPoints((points) => points.filter((_, i) => i !== index));
   }, []);
 
