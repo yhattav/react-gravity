@@ -103,27 +103,48 @@ export const PARTICLE_MODES = {
   LIGHT: { mass: 0.05, size: 15, color: "#4CAF50" },
 } as const;
 
+export const SimulatedSolarMass = 30000;
+
 export const STAR_TEMPLATES: StarTemplate[] = [
   {
-    label: "Supergiant",
+    label: "Brown Dwarf",
+    mass: 5000,
+    size: 30,
+  },
+  {
+    label: "Red Dwarf",
+    mass: 20000,
+    size: 35,
+  },
+  {
+    label: "Yellow Dwarf",
     mass: 50000,
-    color: "#FF6B6B",
-    size: 24,
-    icon: "★",
+    size: 40,
   },
   {
-    label: "Giant",
-    mass: 30000,
-    color: "#4ECDC4",
-    size: 20,
-    icon: "⭐",
+    label: "Blue Giant",
+    mass: 100000,
+    size: 50,
   },
   {
-    label: "Dwarf",
-    mass: 10000,
-    color: "#45B7D1",
-    size: 16,
-    icon: "✦",
+    label: "Blue Supergiant",
+    mass: 500000,
+    size: 60,
+  },
+  {
+    label: "Blue Hypergiant",
+    mass: 1000000,
+    size: 70,
+  },
+  {
+    label: "Neutron Star",
+    mass: 500000,
+    size: 25,
+  },
+  {
+    label: "Black Hole",
+    mass: 2500000,
+    size: 45,
   },
 ];
 
