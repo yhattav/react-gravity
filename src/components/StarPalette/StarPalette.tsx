@@ -1,7 +1,8 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { StarTemplate } from '../../types/star';
-import { STAR_TEMPLATES } from '../../constants/physics';
+import React from "react";
+import { motion } from "framer-motion";
+import { StarTemplate } from "../../types/star";
+import { STAR_TEMPLATES } from "../../constants/physics";
+import { StarRenderer } from "../StarRenderer/StarRenderer";
 
 interface StarPaletteProps {
   onStarDragStart: (template: StarTemplate) => void;
@@ -21,17 +22,17 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
     <>
       <div
         style={{
-          position: 'absolute',
+          position: "absolute",
           left: 20,
-          top: '50%',
-          transform: 'translateY(-50%)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '20px',
-          background: 'rgba(0, 0, 0, 0.3)',
-          padding: '15px',
-          borderRadius: '12px',
-          backdropFilter: 'blur(8px)',
+          top: "50%",
+          transform: "translateY(-50%)",
+          display: "flex",
+          flexDirection: "column",
+          gap: "20px",
+          background: "rgba(0, 0, 0, 0.3)",
+          padding: "15px",
+          borderRadius: "12px",
+          backdropFilter: "blur(8px)",
           zIndex: 100,
         }}
       >
@@ -45,36 +46,28 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
             onDragStart={() => onStarDragStart(template)}
             onDragEnd={(e) => onStarDragEnd(template, e)}
             style={{
-              width: '40px',
-              height: '40px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'grab',
-              position: 'relative',
-              touchAction: 'none',
+              width: "40px",
+              height: "40px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "grab",
+              position: "relative",
+              touchAction: "none",
             }}
           >
+            <StarRenderer template={template} />
             <div
               style={{
-                width: template.size,
-                height: template.size,
-                backgroundColor: template.color,
-                borderRadius: '50%',
-                boxShadow: `0 0 15px ${template.color}`,
-              }}
-            />
-            <div
-              style={{
-                position: 'absolute',
-                left: '100%',
-                marginLeft: '10px',
+                position: "absolute",
+                left: "100%",
+                marginLeft: "10px",
                 color: template.color,
-                fontSize: '12px',
-                whiteSpace: 'nowrap',
+                fontSize: "12px",
+                whiteSpace: "nowrap",
                 opacity: 0,
-                transition: 'opacity 0.2s',
-                pointerEvents: 'none',
+                transition: "opacity 0.2s",
+                pointerEvents: "none",
               }}
               className="star-label"
             >
