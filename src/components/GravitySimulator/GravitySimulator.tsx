@@ -335,20 +335,23 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           }
 
           .signature {
-          
             position: absolute;
             bottom: 15px;
             left: 20px;
-
             font-family: 'Dancing Script', cursive;
-
             font-size: 24px;
             color: rgba(255, 255, 255, 0.40);
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-            pointer-events: none;
             user-select: none;
             z-index: 1;
             letter-spacing: 1px;
+            text-decoration: none;
+            transition: color 0.2s ease, text-shadow 0.2s ease;
+          }
+
+          .signature:hover {
+            color: rgba(255, 255, 255, 0.6);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
           }
         `}
       </style>
@@ -470,7 +473,15 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
         <SimulatorSettings onSettingsChange={updateSettings} />
 
-        <div className="signature">Y·Hattav</div>
+        <a
+          href="https://github.com/yhattav"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="signature"
+          onClick={(e) => e.stopPropagation()}
+        >
+          Y·Hattav
+        </a>
       </div>
     </>
   );
