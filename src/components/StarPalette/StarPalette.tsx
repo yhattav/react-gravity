@@ -20,13 +20,23 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
   onStarDragEnd,
   containerRef,
 }) => {
-  const [sliderValue, setSliderValue] = useState(100);
+  const [starMasses, setStarMasses] = useState<{ [key: number]: number }>({});
+  const [isPaletteHovered, setIsPaletteHovered] = useState(false);
+
+  const handleStarMassChange = (index: number, mass: number) => {
+    setStarMasses((prev) => ({
+      ...prev,
+      [index]: mass,
+    }));
+  };
 
   return (
     <div
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
+      onMouseEnter={() => setIsPaletteHovered(true)}
+      onMouseLeave={() => setIsPaletteHovered(false)}
       style={{
         position: "absolute",
         left: 20,
@@ -44,54 +54,69 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
     >
       <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
         {STAR_TEMPLATES.map((template, index) => (
-          <motion.div
+          <div
             key={index}
-            drag
-            dragSnapToOrigin
-            dragConstraints={containerRef}
-            whileDrag={{ scale: 1.1, zIndex: 1000 }}
-            onDragStart={() => onStarDragStart(template)}
-            onDragEnd={(e) => onStarDragEnd(template, e)}
             style={{
-              width: "40px",
-              height: "40px",
               display: "flex",
+              flexDirection: "row",
               alignItems: "center",
-              justifyContent: "center",
-              cursor: "grab",
               position: "relative",
-              touchAction: "none",
             }}
           >
-            <StarRenderer mass={template.mass} />
-            <div
+            <motion.div
+              drag
+              dragSnapToOrigin
+              dragConstraints={containerRef}
+              whileDrag={{ scale: 1.1, zIndex: 1000 }}
+              onDragStart={() =>
+                onStarDragStart({
+                  ...template,
+                  mass: starMasses[index] || template.mass,
+                })
+              }
+              onDragEnd={(e) =>
+                onStarDragEnd(
+                  {
+                    ...template,
+                    mass: starMasses[index] || template.mass,
+                  },
+                  e
+                )
+              }
               style={{
-                position: "absolute",
-                left: "100%",
-                marginLeft: "10px",
-                color: "white",
-                fontSize: "12px",
-                whiteSpace: "nowrap",
-                opacity: 0,
-                transition: "opacity 0.2s",
-                pointerEvents: "none",
+                width: "40px",
+                height: "40px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "grab",
+                position: "relative",
+                touchAction: "none",
               }}
-              className="star-label"
             >
-              {template.label}
-            </div>
-          </motion.div>
+              <StarRenderer mass={starMasses[index] || template.mass} />
+              <div className="star-label">{template.label}</div>
+            </motion.div>
+            {isPaletteHovered && (
+              <div
+                style={{
+                  marginLeft: "20px",
+                  height: "40px",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <MassSlider
+                  value={starMasses[index] || template.mass}
+                  length={300}
+                  orientation="horizontal"
+                  onChange={(value) => handleStarMassChange(index, value)}
+                />
+              </div>
+            )}
+          </div>
         ))}
       </div>
-
-      <MassSlider
-        value={sliderValue}
-        length={300} // or whatever height you want
-        onChange={(value) => {
-          setSliderValue(value);
-          console.log("###Mass multiplier:", value);
-        }}
-      />
     </div>
   );
 };
