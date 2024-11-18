@@ -40,12 +40,11 @@
 .star-palette {
   position: absolute;
   left: 2%;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 2%;
+  transform: none;
   display: flex;
   flex-direction: row;
   gap: 20px;
-  padding: 5px;
 }
 
 .action-button {

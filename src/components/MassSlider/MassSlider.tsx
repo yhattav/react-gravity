@@ -68,12 +68,13 @@ export const MassSlider: React.FC<MassSliderProps> = ({
   return (
     <div
       style={{
-        width: isVertical ? "30px" : `${length}px`,
-        height: isVertical ? `${length}px` : "30px",
+        width: isVertical ? "20px" : `${length}px`,
+        height: isVertical ? `${length}px` : "20px",
         background: "rgba(255, 255, 255, 0.1)",
-        borderRadius: "30px",
+        borderRadius: "20px",
         position: "relative",
         display: "flex",
+        margin: "5px",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
