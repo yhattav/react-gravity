@@ -40,7 +40,7 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
       onMouseLeave={() => setIsPaletteHovered(false)}
       style={{
         position: "absolute",
-        left: 20,
+        left: "2%",
         top: "50%",
         transform: "translateY(-50%)",
         display: "flex",
