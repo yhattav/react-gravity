@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { StarTemplate } from "../../types/star";
 import { STAR_TEMPLATES } from "../../constants/physics";
 import { StarRenderer } from "../StarRenderer/StarRenderer";
 import { MassSlider } from "../MassSlider/MassSlider";
+import { formatMass, getStarType } from "../../utils/mass/massUtils";
 
 interface StarPaletteProps {
   onStarDragStart: (template: StarTemplate) => void;
@@ -32,15 +33,18 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
   };
 
   return (
-    <div
+    <motion.div
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
       onMouseEnter={() => setIsPaletteHovered(true)}
       onMouseLeave={() => setIsPaletteHovered(false)}
       className="floating-panel star-palette"
+      animate={{ height: isPaletteHovered ? "60px" : "40px" }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      style={{ overflow: "hidden" }}
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+      <div style={{ padding: "0 10px" }}>
         {STAR_TEMPLATES.map((template, index) => (
           <div
             key={index}
@@ -48,6 +52,7 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
               display: "flex",
               flexDirection: "row",
               alignItems: "center",
+              height: "40px",
               position: "relative",
             }}
           >
@@ -97,10 +102,9 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
                     mass: 1,
                   }}
                   style={{
-                    height: "40px",
                     display: "flex",
-                    alignItems: "center",
-                    overflow: "hidden",
+                    flexDirection: "column",
+                    gap: "10px",
                   }}
                 >
                   <MassSlider
@@ -109,12 +113,26 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
                     orientation="horizontal"
                     onChange={(value) => handleStarMassChange(index, value)}
                   />
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    style={{
+                      fontSize: "12px",
+                      color: "rgba(255, 255, 255, 0.8)",
+                      fontFamily: "monospace",
+                      textAlign: "left",
+                    }}
+                  >
+                    {formatMass(starMasses[index] || template.mass)}
+                    <div>{getStarType(starMasses[index] || template.mass)}</div>
+                  </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 };
