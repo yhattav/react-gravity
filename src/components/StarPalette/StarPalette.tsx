@@ -1,9 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { StarTemplate } from "../../types/star";
 import { STAR_TEMPLATES } from "../../constants/physics";
 import { StarRenderer } from "../StarRenderer/StarRenderer";
-import { useState } from "react";
 import { MassSlider } from "../MassSlider/MassSlider";
 
 interface StarPaletteProps {
@@ -13,15 +12,17 @@ interface StarPaletteProps {
     e: MouseEvent | TouchEvent | PointerEvent
   ) => void;
   containerRef: React.RefObject<HTMLElement>;
+  forceHover?: boolean;
 }
 
 export const StarPalette: React.FC<StarPaletteProps> = ({
   onStarDragStart,
   onStarDragEnd,
   containerRef,
+  forceHover = false,
 }) => {
   const [starMasses, setStarMasses] = useState<{ [key: number]: number }>({});
-  const [isPaletteHovered, setIsPaletteHovered] = useState(false);
+  const [isPaletteHovered, setIsPaletteHovered] = useState(forceHover);
 
   const handleStarMassChange = (index: number, mass: number) => {
     setStarMasses((prev) => ({
@@ -46,10 +47,12 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
         flexDirection: "row",
         gap: "20px",
         background: "rgba(0, 0, 0, 0.3)",
-        padding: "15px",
-        borderRadius: "12px",
+        padding: "5px",
+        borderRadius: "10px",
+        border: "1px solid rgba(255, 255, 255, 0.1)",
         backdropFilter: "blur(8px)",
-        zIndex: 100,
+        zIndex: 1001,
+        color: "white",
       }}
     >
       <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -95,9 +98,8 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
               }}
             >
               <StarRenderer mass={starMasses[index] || template.mass} />
-              <div className="star-label">{template.label}</div>
             </motion.div>
-            {isPaletteHovered && (
+            {(forceHover || isPaletteHovered) && (
               <div
                 style={{
                   marginLeft: "20px",
