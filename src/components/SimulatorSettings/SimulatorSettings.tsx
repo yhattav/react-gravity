@@ -57,6 +57,7 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
         onClick={handleButtonClick}
         className="floating-panel floating-button"
         style={{
+          position: "absolute",
           bottom: 20,
           right: 20,
         }}
