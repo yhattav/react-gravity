@@ -38,22 +38,7 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
       onTouchStart={(e) => e.stopPropagation()}
       onMouseEnter={() => setIsPaletteHovered(true)}
       onMouseLeave={() => setIsPaletteHovered(false)}
-      style={{
-        position: "absolute",
-        left: "2%",
-        top: "50%",
-        transform: "translateY(-50%)",
-        display: "flex",
-        flexDirection: "row",
-        gap: "20px",
-        background: "rgba(0, 0, 0, 0.3)",
-        padding: "5px",
-        borderRadius: "10px",
-        border: "1px solid rgba(255, 255, 255, 0.1)",
-        backdropFilter: "blur(8px)",
-        zIndex: 1001,
-        color: "white",
-      }}
+      className="floating-panel star-palette"
     >
       <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
         {STAR_TEMPLATES.map((template, index) => (

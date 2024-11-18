@@ -9,6 +9,7 @@ import {
 import { GravitySection } from "./sections/GravitySection";
 import { DebugInfo } from "./components/DebugInfo";
 import "./App.css";
+import "./styles/theme.scss";
 
 const { Content, Header } = Layout;
 

@@ -1,0 +1,101 @@
+// Variables
+$background-dark: rgba(0, 0, 0, 0.3);
+$border-light: rgba(255, 255, 255, 0.1);
+$text-color: white;
+$blur-amount: 8px;
+
+// Common Components
+.floating-panel {
+  background: $background-dark;
+  border-radius: 10px;
+  border: 1px solid $border-light;
+  backdrop-filter: blur($blur-amount);
+  color: $text-color;
+  z-index: 1001;
+}
+
+.floating-button {
+  width: 40px;
+  height: 40px;
+  position: absolute;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-panel {
+  position: absolute;
+  bottom: 80px;
+  right: 20px;
+  max-height: calc(100vh - 100px);
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+
+  .panel-header {
+    padding: 20px 20px 0 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.2);
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+  }
+}
+
+.action-button {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+}
+
+// Input Styles
+.slider-input {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  cursor: pointer;
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 14px;
+    width: 14px;
+    border-radius: 50%;
+    background: #fff;
+    cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    transition: all 0.15s ease;
+
+    &:hover {
+      transform: scale(1.1);
+    }
+  }
+
+  &::-moz-range-thumb {
+    // ... similar styles for Firefox ...
+  }
+}
+
+// Star Palette Specific
+.star-palette {
+  position: absolute;
+  left: 2%;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  padding: 5px;
+}
