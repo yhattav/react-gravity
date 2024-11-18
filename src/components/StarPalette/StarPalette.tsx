@@ -23,7 +23,7 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
   forceHover = false,
 }) => {
   const [starMasses, setStarMasses] = useState<{ [key: number]: number }>({});
-  // const [isPaletteHovered, setIsPaletteHovered] = useState(forceHover);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleStarMassChange = (index: number, mass: number) => {
     setStarMasses((prev) => ({
@@ -37,13 +37,14 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
-      // onMouseEnter={() => setIsPaletteHovered(true)}
-      // onMouseLeave={() => setIsPaletteHovered(false)}
       className="floating-panel star-palette"
-      // animate={{
-      //   height: isPaletteHovered ? "60px" : "40px",
-      //   width: isPaletteHovered ? "400px" : "40px",
-      // }}
+      animate={
+        isDragging
+          ? {
+              overflow: "visible",
+            }
+          : {}
+      }
       whileHover={{
         width: "400px",
         height: "60px",
@@ -76,21 +77,25 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
                 dragSnapToOrigin
                 dragConstraints={containerRef}
                 whileDrag={{ scale: 1.1, zIndex: 1000 }}
-                onDragStart={() =>
+                onDragStart={() => {
+                  setIsDragging(true);
                   onStarDragStart({
                     ...template,
                     mass: starMasses[index] || template.mass,
-                  })
-                }
-                onDragEnd={(e) =>
+                  });
+                }}
+                onDragEnd={(e) => {
+                  setTimeout(() => {
+                    setIsDragging(false);
+                  }, 900);
                   onStarDragEnd(
                     {
                       ...template,
                       mass: starMasses[index] || template.mass,
                     },
                     e
-                  )
-                }
+                  );
+                }}
                 style={{
                   width: "40px",
                   height: "40px",
