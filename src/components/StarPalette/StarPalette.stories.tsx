@@ -7,7 +7,15 @@ const meta: Meta<typeof StarPalette> = {
   title: "Components/StarPalette",
   component: StarPalette,
   parameters: {
-    layout: "centered",
+    backgrounds: {
+      default: "dark",
+      values: [
+        {
+          name: "dark",
+          value: "#1a1a1a",
+        },
+      ],
+    },
   },
 };
 
@@ -20,10 +28,10 @@ const StarPaletteWrapper = (args: any) => {
   return (
     <div
       ref={containerRef}
+      className="storybook-container"
       style={{
         width: "800px",
         height: "600px",
-        background: "#1a1a1a",
         position: "relative",
       }}
     >
