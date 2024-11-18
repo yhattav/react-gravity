@@ -17,6 +17,9 @@ import { SimulatorSettings } from "../SimulatorSettings/SimulatorSettings";
 import { useSettings } from "../../hooks/useSettings";
 import { throttle } from "lodash";
 import "../../styles/global.scss";
+import { MdFullscreen, MdFullscreenExit } from "react-icons/md";
+import { BiReset } from "react-icons/bi";
+import { motion } from "framer-motion";
 
 interface ParticleMechanics {
   position: Point2D;
@@ -367,65 +370,46 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         <div
           style={{
             position: "absolute",
-            top: "1rem",
-            right: "1rem",
-            zIndex: 2,
+            top: 20,
+            right: 20,
             display: "flex",
-            gap: "0.5rem",
+            gap: "10px",
+            zIndex: 1001,
+            width: "fit-content",
+            height: "40px",
+            alignItems: "center",
           }}
         >
-          <button
+          <motion.button
             onClick={(e) => {
               e.stopPropagation();
-              setParticles([]); // Clear only particles
+              setParticles([]);
               setIsSimulationStarted(false);
             }}
-            style={{
-              padding: "0.5rem 1rem",
-              cursor: "pointer",
-              background: "rgba(255, 255, 255, 0.2)",
-              border: "none",
-              borderRadius: "4px",
-              color: "white",
-              transition: "background 0.2s ease",
-            }}
+            className="floating-panel floating-button"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            title="Reset Simulation"
           >
-            Clear Particles
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setGravityPoints([]); // Clear only the gravity points/stars
-            }}
-            style={{
-              padding: "0.5rem 1rem",
-              cursor: "pointer",
-              background: "rgba(255, 255, 255, 0.2)",
-              border: "none",
-              borderRadius: "4px",
-              color: "white",
-              transition: "background 0.2s ease",
-            }}
-          >
-            Clear Stars
-          </button>
-          <button
+            <BiReset size={20} />
+          </motion.button>
+
+          <motion.button
             onClick={(e) => {
               e.stopPropagation();
               toggleFullscreen();
             }}
-            style={{
-              padding: "0.5rem 1rem",
-              cursor: "pointer",
-              background: "rgba(255, 255, 255, 0.2)",
-              border: "none",
-              borderRadius: "4px",
-              color: "white",
-              transition: "background 0.2s ease",
-            }}
+            className="floating-panel floating-button"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
           >
-            {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
-          </button>
+            {isFullscreen ? (
+              <MdFullscreenExit size={20} />
+            ) : (
+              <MdFullscreen size={20} />
+            )}
+          </motion.button>
         </div>
 
         <StarPalette
