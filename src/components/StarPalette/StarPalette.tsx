@@ -38,19 +38,16 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
       onMouseDown={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
       className="floating-panel star-palette"
-      animate={
-        isDragging
-          ? {
-              overflow: "visible",
-            }
-          : {}
-      }
       whileHover={{
         width: "400px",
         height: "60px",
       }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      style={{ overflow: "hidden", width: "40px", height: "40px" }}
+      style={{
+        overflow: isDragging ? "visible" : "hidden",
+        width: isDragging ? "400px" : "40px",
+        height: isDragging ? "60px" : "40px",
+      }}
     >
       <div>
         {STAR_TEMPLATES.map((template, index) => (
