@@ -24,6 +24,7 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
 }) => {
   const [starMasses, setStarMasses] = useState<{ [key: number]: number }>({});
   const [isDragging, setIsDragging] = useState(false);
+  const shouldLookHovered = forceHover || isDragging;
 
   const handleStarMassChange = (index: number, mass: number) => {
     setStarMasses((prev) => ({
@@ -44,9 +45,9 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
       }}
       transition={{ duration: 0.3, ease: "easeOut" }}
       style={{
-        overflow: isDragging ? "visible" : "hidden",
-        width: isDragging ? "400px" : "40px",
-        height: isDragging ? "60px" : "40px",
+        overflow: shouldLookHovered ? "visible" : "hidden",
+        width: shouldLookHovered ? "400px" : "40px",
+        height: shouldLookHovered ? "60px" : "40px",
       }}
     >
       <div>
@@ -132,11 +133,20 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
                       style={{
                         minWidth: "50px",
                         textAlign: "left",
+                        lineHeight: "1.5",
                       }}
                     >
                       {formatMass(starMasses[index] || template.mass)}
                     </span>
-                    <span>{getStarType(starMasses[index])}</span>
+                    <span
+                      style={{
+                        minWidth: "50px",
+                        textAlign: "left",
+                        lineHeight: "1.5",
+                      }}
+                    >
+                      {getStarType(starMasses[index])}
+                    </span>
                   </motion.div>
                 }
               </AnimatePresence>
