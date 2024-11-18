@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { StarTemplate } from "../../types/star";
 import { STAR_TEMPLATES } from "../../constants/physics";
 import { StarRenderer } from "../StarRenderer/StarRenderer";
@@ -99,23 +99,34 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
             >
               <StarRenderer mass={starMasses[index] || template.mass} />
             </motion.div>
-            {(forceHover || isPaletteHovered) && (
-              <div
-                style={{
-                  marginLeft: "20px",
-                  height: "40px",
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <MassSlider
-                  value={starMasses[index] || template.mass}
-                  length={300}
-                  orientation="horizontal"
-                  onChange={(value) => handleStarMassChange(index, value)}
-                />
-              </div>
-            )}
+            <AnimatePresence>
+              {(forceHover || isPaletteHovered) && (
+                <motion.div
+                  initial={{ opacity: 0, width: 0, marginLeft: 0 }}
+                  animate={{ opacity: 1, width: "auto", marginLeft: "20px" }}
+                  exit={{ opacity: 0, width: 0, marginLeft: 0 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 30,
+                    mass: 1,
+                  }}
+                  style={{
+                    height: "40px",
+                    display: "flex",
+                    alignItems: "center",
+                    overflow: "hidden",
+                  }}
+                >
+                  <MassSlider
+                    value={starMasses[index] || template.mass}
+                    length={300}
+                    orientation="horizontal"
+                    onChange={(value) => handleStarMassChange(index, value)}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         ))}
       </div>
