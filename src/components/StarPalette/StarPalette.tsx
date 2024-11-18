@@ -111,15 +111,30 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
                     animate={{ opacity: 1, height: "20px" }}
                     exit={{ opacity: 0, height: 0 }}
                     style={{
-                      fontSize: "10px",
+                      padding: "0px 10px",
+                      fontSize: "0.8rem",
                       color: "rgba(255, 255, 255, 0.8)",
-                      fontFamily: "monospace",
+                      fontFamily:
+                        "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans',sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji'",
                       textAlign: "center",
                       overflow: "hidden",
                       whiteSpace: "nowrap",
+                      position: "absolute",
+                      top: "35px",
+                      left: "0px",
+                      display: "flex",
+                      gap: "10px",
                     }}
                   >
-                    {formatMass(starMasses[index] || template.mass)}
+                    <span
+                      style={{
+                        minWidth: "50px",
+                        textAlign: "left",
+                      }}
+                    >
+                      {formatMass(starMasses[index] || template.mass)}
+                    </span>
+                    <span>{getStarType(starMasses[index])}</span>
                   </motion.div>
                 }
               </AnimatePresence>
