@@ -23,7 +23,7 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
   forceHover = false,
 }) => {
   const [starMasses, setStarMasses] = useState<{ [key: number]: number }>({});
-  const [isPaletteHovered, setIsPaletteHovered] = useState(forceHover);
+  // const [isPaletteHovered, setIsPaletteHovered] = useState(forceHover);
 
   const handleStarMassChange = (index: number, mass: number) => {
     setStarMasses((prev) => ({
@@ -37,64 +37,100 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
-      onMouseEnter={() => setIsPaletteHovered(true)}
-      onMouseLeave={() => setIsPaletteHovered(false)}
+      // onMouseEnter={() => setIsPaletteHovered(true)}
+      // onMouseLeave={() => setIsPaletteHovered(false)}
       className="floating-panel star-palette"
-      animate={{ height: isPaletteHovered ? "60px" : "40px" }}
+      // animate={{
+      //   height: isPaletteHovered ? "60px" : "40px",
+      //   width: isPaletteHovered ? "400px" : "40px",
+      // }}
+      whileHover={{
+        width: "400px",
+        height: "60px",
+      }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      style={{ overflow: "hidden" }}
+      style={{ overflow: "hidden", width: "40px", height: "40px" }}
     >
-      <div style={{ padding: "0 10px" }}>
+      <div>
         {STAR_TEMPLATES.map((template, index) => (
           <div
             key={index}
             style={{
               display: "flex",
               flexDirection: "row",
-              alignItems: "center",
-              height: "40px",
+              alignItems: "flex-start",
+              gap: "20px",
               position: "relative",
             }}
           >
-            <motion.div
-              drag
-              dragSnapToOrigin
-              dragConstraints={containerRef}
-              whileDrag={{ scale: 1.1, zIndex: 1000 }}
-              onDragStart={() =>
-                onStarDragStart({
-                  ...template,
-                  mass: starMasses[index] || template.mass,
-                })
-              }
-              onDragEnd={(e) =>
-                onStarDragEnd(
-                  {
-                    ...template,
-                    mass: starMasses[index] || template.mass,
-                  },
-                  e
-                )
-              }
+            <div
               style={{
-                width: "40px",
-                height: "40px",
                 display: "flex",
+                flexDirection: "column",
                 alignItems: "center",
-                justifyContent: "center",
-                cursor: "grab",
-                position: "relative",
-                touchAction: "none",
+                transition: "height 0.3s ease-out",
               }}
             >
-              <StarRenderer mass={starMasses[index] || template.mass} />
-            </motion.div>
+              <motion.div
+                drag
+                dragSnapToOrigin
+                dragConstraints={containerRef}
+                whileDrag={{ scale: 1.1, zIndex: 1000 }}
+                onDragStart={() =>
+                  onStarDragStart({
+                    ...template,
+                    mass: starMasses[index] || template.mass,
+                  })
+                }
+                onDragEnd={(e) =>
+                  onStarDragEnd(
+                    {
+                      ...template,
+                      mass: starMasses[index] || template.mass,
+                    },
+                    e
+                  )
+                }
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "grab",
+                  position: "relative",
+                  touchAction: "none",
+                }}
+              >
+                <StarRenderer mass={starMasses[index] || template.mass} />
+              </motion.div>
+              <AnimatePresence>
+                {
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "20px" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    style={{
+                      fontSize: "10px",
+                      color: "rgba(255, 255, 255, 0.8)",
+                      fontFamily: "monospace",
+                      textAlign: "center",
+                      overflow: "hidden",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {formatMass(starMasses[index] || template.mass)}
+                  </motion.div>
+                }
+              </AnimatePresence>
+            </div>
+
             <AnimatePresence>
-              {(forceHover || isPaletteHovered) && (
+              {
                 <motion.div
-                  initial={{ opacity: 0, width: 0, marginLeft: 0 }}
-                  animate={{ opacity: 1, width: "auto", marginLeft: "20px" }}
-                  exit={{ opacity: 0, width: 0, marginLeft: 0 }}
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: "auto" }}
+                  exit={{ opacity: 0, width: 0 }}
                   transition={{
                     type: "spring",
                     stiffness: 300,
@@ -102,9 +138,9 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
                     mass: 1,
                   }}
                   style={{
+                    height: "40px",
                     display: "flex",
-                    flexDirection: "column",
-                    gap: "10px",
+                    alignItems: "center",
                   }}
                 >
                   <MassSlider
@@ -113,22 +149,8 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
                     orientation="horizontal"
                     onChange={(value) => handleStarMassChange(index, value)}
                   />
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    style={{
-                      fontSize: "12px",
-                      color: "rgba(255, 255, 255, 0.8)",
-                      fontFamily: "monospace",
-                      textAlign: "left",
-                    }}
-                  >
-                    {formatMass(starMasses[index] || template.mass)}
-                    <div>{getStarType(starMasses[index] || template.mass)}</div>
-                  </motion.div>
                 </motion.div>
-              )}
+              }
             </AnimatePresence>
           </div>
         ))}
