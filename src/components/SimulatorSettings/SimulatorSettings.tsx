@@ -55,22 +55,10 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
     <>
       <motion.button
         onClick={handleButtonClick}
+        className="floating-panel floating-button"
         style={{
-          position: "absolute",
           bottom: 20,
           right: 20,
-          width: "40px",
-          height: "40px",
-          borderRadius: "10px",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-          background: "rgba(0, 0, 0, 0.3)",
-          backdropFilter: "blur(8px)",
-          color: "white",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1001,
         }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
@@ -99,22 +87,7 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
             exit={{ opacity: 0, y: 20 }}
             transition={{ type: "spring", damping: 20, stiffness: 300 }}
             onClick={(e) => e.stopPropagation()}
-            style={{
-              position: "absolute",
-              bottom: 80,
-              right: 20,
-              maxHeight: "calc(100vh - 100px)",
-              background: "rgba(0, 0, 0, 0.3)",
-              borderRadius: "12px",
-              color: "white",
-              zIndex: 1000,
-              width: "280px",
-              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
-              backdropFilter: "blur(8px)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-              display: "flex",
-              flexDirection: "column",
-            }}
+            className="floating-panel settings-panel"
           >
             <div
               style={{

@@ -16,6 +16,7 @@ import { INITIAL_GRAVITY_POINTS } from "../../constants/physics";
 import { SimulatorSettings } from "../SimulatorSettings/SimulatorSettings";
 import { useSettings } from "../../hooks/useSettings";
 import { throttle } from "lodash";
+import "../../styles/global.scss";
 
 interface ParticleMechanics {
   position: Point2D;
