@@ -315,7 +315,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     <>
       <style>
         {`
-          @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap');
+          @import url('https://fonts.googleapis.com/css2?family=Homemade+Apple&display=swap');
           
           @keyframes pulse {
             0% { transform: translate(-50%, -50%) scale(1); }
@@ -336,13 +336,13 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             position: absolute;
             bottom: 15px;
             left: 20px;
-            font-family: 'Dancing Script', cursive;
-            font-size: 24px;
+            font-family: 'Homemade Apple', cursive;
+            font-size: 21px;
             color: rgba(255, 255, 255, 0.40);
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
             user-select: none;
             z-index: 1;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
             text-decoration: none;
             transition: color 0.2s ease, text-shadow 0.2s ease;
           }
