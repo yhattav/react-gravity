@@ -70,6 +70,18 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
                 transition: "height 0.3s ease-out",
               }}
             >
+              <span
+                style={{
+                  position: "absolute",
+                  top: "16px",
+                  left: "24px",
+                  fontSize: "16px",
+                  color: "rgba(255, 255, 255, 0.8)",
+                  pointerEvents: "none",
+                }}
+              >
+                +
+              </span>
               <motion.div
                 drag
                 dragSnapToOrigin
