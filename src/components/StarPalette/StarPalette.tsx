@@ -5,6 +5,7 @@ import { STAR_TEMPLATES } from "../../constants/physics";
 import { StarRenderer } from "../StarRenderer/StarRenderer";
 import { MassSlider } from "../MassSlider/MassSlider";
 import { formatMass, getStarType } from "../../utils/mass/massUtils";
+import { BsPlusCircle } from "react-icons/bs";
 
 interface StarPaletteProps {
   onStarDragStart: (template: StarTemplate) => void;
@@ -24,8 +25,8 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
 }) => {
   const [starMasses, setStarMasses] = useState<{ [key: number]: number }>({});
   const [isDragging, setIsDragging] = useState(false);
-  const shouldLookHovered = forceHover || isDragging;
-
+  const [isHovered, setIsHovered] = useState(false);
+  const shouldLookHovered = forceHover || isDragging || isHovered;
   const handleStarMassChange = (index: number, mass: number) => {
     setStarMasses((prev) => ({
       ...prev,
@@ -38,6 +39,8 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       className="floating-panel star-palette"
       whileHover={{
         width: "400px",
@@ -48,6 +51,7 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
         overflow: shouldLookHovered ? "visible" : "hidden",
         width: shouldLookHovered ? "400px" : "40px",
         height: shouldLookHovered ? "60px" : "40px",
+        position: "relative",
       }}
     >
       <div>
@@ -71,6 +75,9 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
               }}
             >
               <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: shouldLookHovered ? 1 : 0 }}
+                transition={{ duration: 0 }}
                 drag
                 dragSnapToOrigin
                 dragConstraints={containerRef}
@@ -182,6 +189,32 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
           </div>
         ))}
       </div>
+
+      <motion.div
+        initial={{ display: "flex" }}
+        animate={{ display: shouldLookHovered ? "none" : "flex" }}
+        transition={{ duration: 0 }}
+        style={{
+          position: "absolute",
+          transform: "translate(50%, 50%)",
+          zIndex: 1000,
+        }}
+      >
+        <motion.div
+          className="floating-panel floating-button"
+          style={{
+            width: "20px",
+            height: "20px",
+            padding: 0,
+            alignItems: "center",
+            justifyContent: "center",
+            pointerEvents: "none",
+            display: "flex",
+          }}
+        >
+          <BsPlusCircle size={24} />
+        </motion.div>
+      </motion.div>
     </motion.div>
   );
 };
