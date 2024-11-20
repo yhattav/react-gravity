@@ -196,7 +196,7 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
         transition={{ duration: 0 }}
         style={{
           position: "absolute",
-          transform: "translate(50%, 50%)",
+          transform: "translate(calc(50% - 1px), calc(50% - 1px))",
           zIndex: 1000,
         }}
       >
