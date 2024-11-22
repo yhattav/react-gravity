@@ -18,11 +18,11 @@ interface BooleanSettingMetadata {
 type SettingMetadata = SliderSettingMetadata | BooleanSettingMetadata;
 
 export const PHYSICS_CONFIG = {
-  NEW_PARTICLE_MASS: 0.1,
+  NEW_PARTICLE_MASS: 0.01,
   NEW_PARTICLE_ELASTICITY: 0.8,
-  FRICTION: 0.001,
+  FRICTION: 0.999,
   DELTA_TIME: 1 / 60,
-  POINTER_MASS: 100000,
+  POINTER_MASS: 250000,
   SHOW_VELOCITY_ARROWS: true,
   SHOW_FORCE_ARROWS: true,
   CONSTANT_FORCE_X: 0,
@@ -65,7 +65,7 @@ export const SETTINGS_METADATA: Record<
   POINTER_MASS: {
     type: "slider",
     isDev: false,
-    min: 10000,
+    min: 0,
     max: 1000000,
     step: 10000,
   },
