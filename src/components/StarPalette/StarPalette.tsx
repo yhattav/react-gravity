@@ -51,7 +51,6 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
         overflow: shouldLookHovered ? "visible" : "hidden",
         width: shouldLookHovered ? "400px" : "40px",
         height: shouldLookHovered ? "60px" : "40px",
-        position: "relative",
       }}
     >
       <div>
