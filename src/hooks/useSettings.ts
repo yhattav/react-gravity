@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { PHYSICS_CONFIG, SETTINGS_METADATA } from "../constants/physics";
+import { useState } from "react";
+import { PHYSICS_CONFIG } from "../constants/physics";
 
 const STORAGE_KEYS = {
   SETTINGS: "simulatorSettings",

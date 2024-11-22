@@ -21,6 +21,7 @@ import { MdFullscreen, MdFullscreenExit } from "react-icons/md";
 import { BiReset } from "react-icons/bi";
 import { motion } from "framer-motion";
 import { BsPlayFill, BsPauseFill } from "react-icons/bs";
+import { DebugData } from "../../types/Debug";
 
 interface ParticleMechanics {
   position: Point2D;
@@ -45,7 +46,7 @@ interface TrailPoint extends Point2D {
 interface GravitySimulatorProps {
   gravityRef: React.RefObject<HTMLDivElement>;
   pointerPos: Point2D;
-  onDebugData?: (data: any) => void;
+  onDebugData?: (data: DebugData) => void;
   className?: string;
 }
 
@@ -199,7 +200,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     //const lastTime = performance.now();
     // let accumulator = 0;
 
-    const updateParticles = (currentTime: number) => {
+    const updateParticles = () => {
       // const frameTime = (currentTime - lastTime) / 1000;
       // lastTime = currentTime;
       // accumulator += frameTime;
@@ -311,7 +312,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
       setIsDraggingNewStar(false);
     },
-    []
+    [gravityRef]
   );
 
   const handlePointDelete = useCallback((index: number) => {

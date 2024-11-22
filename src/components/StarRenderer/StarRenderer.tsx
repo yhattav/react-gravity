@@ -1,5 +1,4 @@
 import React from "react";
-import { StarTemplate } from "../../types/star";
 
 // Color interpolation function
 const interpolateColor = (mass: number): string => {

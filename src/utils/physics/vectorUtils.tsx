@@ -1,5 +1,3 @@
-import { Point2D } from '../types/physics';
-
 export const drawArrow = (
   x: number,
   y: number,
@@ -15,7 +13,7 @@ export const drawArrow = (
     !isFinite(vectorX) ||
     !isFinite(vectorY)
   ) {
-    console.warn('Invalid coordinates in drawArrow:', {
+    console.warn("Invalid coordinates in drawArrow:", {
       x,
       y,
       vectorX,
@@ -42,7 +40,7 @@ export const drawArrow = (
 
   // Validate calculated points
   if (!isFinite(endX) || !isFinite(endY)) {
-    console.warn('Invalid end points in drawArrow:', { endX, endY });
+    console.warn("Invalid end points in drawArrow:", { endX, endY });
     return null;
   }
 
@@ -61,7 +59,7 @@ export const drawArrow = (
     !isFinite(arrowPoint2X) ||
     !isFinite(arrowPoint2Y)
   ) {
-    console.warn('Invalid arrow points:', {
+    console.warn("Invalid arrow points:", {
       arrowPoint1X,
       arrowPoint1Y,
       arrowPoint2X,

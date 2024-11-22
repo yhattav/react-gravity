@@ -1,7 +1,5 @@
 import { StarTemplate, GravityPoint } from "../types/star";
 
-type SettingType = "slider" | "boolean";
-
 interface SliderSettingMetadata {
   type: "slider";
   isDev: boolean;
