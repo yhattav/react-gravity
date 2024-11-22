@@ -20,6 +20,7 @@ import "../../styles/global.scss";
 import { MdFullscreen, MdFullscreenExit } from "react-icons/md";
 import { BiReset } from "react-icons/bi";
 import { motion } from "framer-motion";
+import { BsPlayFill, BsPauseFill } from "react-icons/bs";
 
 interface ParticleMechanics {
   position: Point2D;
@@ -71,6 +72,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   const { settings: physicsConfig, updateSettings } = useSettings();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [throttledPointerPos, setThrottledPointerPos] = useState(pointerPos);
+  const [isPaused, setIsPaused] = useState(false);
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
       gravityRef.current?.requestFullscreen();
@@ -191,7 +193,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   );
 
   useEffect(() => {
-    if (!isSimulationStarted) return;
+    if (!isSimulationStarted || isPaused) return;
 
     let animationFrameId: number;
     //const lastTime = performance.now();
@@ -218,7 +220,12 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
     animationFrameId = requestAnimationFrame(updateParticles);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [isSimulationStarted, updateParticleMechanics, physicsConfig.DELTA_TIME]);
+  }, [
+    isSimulationStarted,
+    isPaused,
+    updateParticleMechanics,
+    physicsConfig.DELTA_TIME,
+  ]);
 
   const createParticle = useCallback(
     (
@@ -380,6 +387,19 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             alignItems: "center",
           }}
         >
+          <motion.button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsPaused(!isPaused);
+            }}
+            className="floating-panel floating-button"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            title={isPaused ? "Resume Simulation" : "Pause Simulation"}
+          >
+            {isPaused ? <BsPlayFill size={20} /> : <BsPauseFill size={20} />}
+          </motion.button>
+
           <motion.button
             onClick={(e) => {
               e.stopPropagation();
