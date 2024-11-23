@@ -22,6 +22,7 @@ import { BiReset } from "react-icons/bi";
 import { motion } from "framer-motion";
 import { BsPlayFill, BsPauseFill } from "react-icons/bs";
 import { DebugData } from "../../types/Debug";
+import { AiOutlineExport } from "react-icons/ai";
 
 interface ParticleMechanics {
   position: Point2D;
@@ -48,6 +49,12 @@ interface GravitySimulatorProps {
   pointerPos: Point2D;
   onDebugData?: (data: DebugData) => void;
   className?: string;
+}
+
+interface SimulationScenario {
+  settings: typeof physicsConfig;
+  gravityPoints: GravityPoint[];
+  particles: Array<Omit<Particle, "trails" | "force">>;
 }
 
 const generatePastelColor = () => {
@@ -319,6 +326,19 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     setGravityPoints((points) => points.filter((_, i) => i !== index));
   }, []);
 
+  const exportScenario = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      const scenario: SimulationScenario = {
+        settings: physicsConfig,
+        gravityPoints,
+        particles: particles.map(({ trails, force, ...particle }) => particle),
+      };
+      console.log(JSON.stringify(scenario, null, 2));
+    },
+    [physicsConfig, gravityPoints, particles]
+  );
+
   return (
     <>
       <style>
@@ -430,6 +450,16 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             ) : (
               <MdFullscreen size={20} />
             )}
+          </motion.button>
+
+          <motion.button
+            onClick={exportScenario}
+            className="floating-panel floating-button"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            title="Export Scenario"
+          >
+            <AiOutlineExport size={20} />
           </motion.button>
         </div>
 
