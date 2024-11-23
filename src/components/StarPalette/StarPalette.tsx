@@ -7,7 +7,7 @@ import { MassSlider } from "../MassSlider/MassSlider";
 import { formatMass, getStarType } from "../../utils/mass/massUtils";
 import { BsPlusCircle } from "react-icons/bs";
 
-interface StarPaletteProps {
+export interface StarPaletteProps {
   onStarDragStart: (template: StarTemplate) => void;
   onStarDragEnd: (
     template: StarTemplate,

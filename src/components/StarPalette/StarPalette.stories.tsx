@@ -1,7 +1,7 @@
 import React from "react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { StarPalette } from "./StarPalette";
-import { useRef, useState, useEffect } from "react";
+import { StarPalette, StarPaletteProps } from "./StarPalette";
+import { useRef } from "react";
 
 const meta: Meta<typeof StarPalette> = {
   title: "Components/StarPalette",
@@ -22,7 +22,7 @@ const meta: Meta<typeof StarPalette> = {
 export default meta;
 type Story = StoryObj<typeof StarPalette>;
 
-const StarPaletteWrapper = (args: any) => {
+const StarPaletteWrapper = (args: StarPaletteProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -32,38 +32,6 @@ const StarPaletteWrapper = (args: any) => {
       style={{
         width: "800px",
         height: "600px",
-        position: "relative",
-      }}
-    >
-      <StarPalette {...args} containerRef={containerRef} />
-    </div>
-  );
-};
-
-const HoveredStarPaletteWrapper = (args: any) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // Trigger the hover effect immediately when component mounts
-  useEffect(() => {
-    const palette = containerRef.current?.querySelector(
-      'div[style*="position: absolute"]'
-    );
-    if (palette) {
-      const event = new MouseEvent("mouseenter", {
-        bubbles: true,
-        cancelable: true,
-      });
-      palette.dispatchEvent(event);
-    }
-  }, []);
-
-  return (
-    <div
-      ref={containerRef}
-      style={{
-        width: "800px",
-        height: "600px",
-        background: "#1a1a1a",
         position: "relative",
       }}
     >

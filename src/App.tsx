@@ -8,13 +8,10 @@ import {
 } from "@ant-design/icons";
 import { GravitySection } from "./sections/GravitySection";
 import { DebugInfo } from "./components/DebugInfo";
+import { DebugData } from "./types/Debug";
 import "./App.css";
 
 const { Content, Header } = Layout;
-
-interface DebugData {
-  [key: string]: any;
-}
 
 function App() {
   const [debugData, setDebugData] = useState<DebugData | null>(null);

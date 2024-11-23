@@ -19,10 +19,6 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
     isDevelopment,
   } = useSettings();
 
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-  };
-
   const handleSettingChange = (key: keyof typeof settings, value: number) => {
     const newSettings = { [key]: value };
     updateSettings(newSettings);
