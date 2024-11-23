@@ -14,5 +14,14 @@ const config: StorybookConfig = {
     name: "@storybook/react-webpack5",
     options: {},
   },
+  staticDirs: ["../public"],
+  webpackFinal: async (config) => {
+    if (process.env.NODE_ENV === "production") {
+      if (config.output) {
+        config.output.publicPath = "/react-gravity/storybook";
+      }
+    }
+    return config;
+  },
 };
 export default config;
