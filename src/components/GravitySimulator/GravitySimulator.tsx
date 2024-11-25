@@ -348,17 +348,30 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
   const handleSelectScenario = useCallback(
     (scenario: Scenario) => {
-      updateSettings(scenario.data.settings);
-      setGravityPoints(scenario.data.gravityPoints);
-      setParticles(
-        scenario.data.particles.map((particle) => ({
-          ...particle,
-          trails: [{ ...particle.position, timestamp: Date.now() }],
-          force: { fx: 0, fy: 0 },
-        }))
-      );
-      setIsSimulationStarted(true);
-      setIsScenarioPanelOpen(false);
+      // First, ensure all gravity points have unique IDs
+      const newGravityPoints = scenario.data.gravityPoints.map((point) => ({
+        ...point,
+        id: point.id || Math.random().toString(36).substr(2, 9), // Ensure each point has an ID
+      }));
+
+      // Reset the simulation state
+      setParticles([]);
+      setGravityPoints([]); // Clear existing points first
+
+      // Update settings and state in the next frame to ensure clean rendering
+      requestAnimationFrame(() => {
+        updateSettings(scenario.data.settings);
+        setGravityPoints(newGravityPoints);
+        setParticles(
+          scenario.data.particles.map((particle) => ({
+            ...particle,
+            trails: [{ ...particle.position, timestamp: Date.now() }],
+            force: { fx: 0, fy: 0 },
+          }))
+        );
+        setIsSimulationStarted(true);
+        setIsScenarioPanelOpen(false);
+      });
     },
     [updateSettings]
   );
