@@ -92,19 +92,12 @@ export const ParticleRenderer: React.FC<ParticleRenderParams> = ({
               velocity.x,
               velocity.y,
               "#4CAF50",
-              40
+              2
             )}
 
           {/* Force/Acceleration vector */}
           {showForceArrows &&
-            drawArrow(
-              position.x,
-              position.y,
-              force.fx,
-              force.fy,
-              "#FF4081",
-              200
-            )}
+            drawArrow(position.x, position.y, force.fx, force.fy, "#FF4081", 2)}
         </svg>
       )}
 

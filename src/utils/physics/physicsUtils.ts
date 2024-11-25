@@ -21,13 +21,12 @@ export const calculateGravityMagnitude = (
   distance: number,
   mass: number,
   G = 0.1,
-  minDistance = 30,
-  maxForce = 2
+  minDistance = 10
+  //maxForce = Infinity
 ): number => {
-  const force = Math.min(
-    (G * mass) / Math.max(distance * distance, minDistance * minDistance),
-    maxForce
-  );
+  const force =
+    (G * mass) / Math.max(distance * distance, minDistance * minDistance);
+
   return force;
 };
 
@@ -54,7 +53,7 @@ export const calculateGravitationalForce = (
 ): Force => {
   if (!isFinite(x1) || !isFinite(y1) || !isFinite(x2) || !isFinite(y2)) {
     return { fx: 0, fy: 0 };
-  }
+  } // TODO: see if we can check the isFinite on x1+y1+x2+y2, is it faster?
 
   const p1: Point2D = { x: x1, y: y1 };
   const p2: Point2D = { x: x2, y: y2 };
