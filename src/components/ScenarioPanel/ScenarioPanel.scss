@@ -1,0 +1,65 @@
+.scenario-panel {
+  position: fixed;
+  right: 20px;
+  top: 20px;
+  width: 300px;
+  background: rgba(30, 30, 30, 0.95);
+  border-radius: 12px;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transform-origin: top right;
+
+  .scenarios-list {
+    margin-top: 10px;
+  }
+
+  .scenario-item {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    h3 {
+      margin: 0 0 4px 0;
+    }
+
+    p {
+      margin: 0;
+    }
+  }
+
+  :global(.ant-tabs) {
+    color: inherit;
+  }
+
+  :global(.ant-tabs-tab) {
+    color: rgba(255, 255, 255, 0.7) !important;
+    padding: 8px 0;
+
+    &:global(.ant-tabs-tab-active) {
+      color: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    &:hover {
+      color: rgba(255, 255, 255, 0.8) !important;
+    }
+  }
+
+  :global(.ant-tabs-ink-bar) {
+    background: white;
+  }
+
+  :global(.ant-tabs-nav) {
+    margin-bottom: 12px;
+  }
+
+  :global(.ant-tabs-content) {
+    height: 100%;
+  }
+}

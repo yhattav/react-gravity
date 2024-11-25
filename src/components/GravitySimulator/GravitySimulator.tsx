@@ -22,6 +22,11 @@ import { BiReset } from "react-icons/bi";
 import { motion } from "framer-motion";
 import { BsPlayFill, BsPauseFill } from "react-icons/bs";
 import { DebugData } from "../../types/Debug";
+import { AiOutlineExport } from "react-icons/ai";
+import { VscLibrary } from "react-icons/vsc";
+import { ScenarioPanel } from "../ScenarioPanel/ScenarioPanel";
+import { Scenario } from "../../types/scenario";
+import { SettingOutlined } from "@ant-design/icons";
 
 interface ParticleMechanics {
   position: Point2D;
@@ -50,6 +55,12 @@ interface GravitySimulatorProps {
   className?: string;
 }
 
+interface SimulationScenario {
+  settings: typeof physicsConfig;
+  gravityPoints: GravityPoint[];
+  particles: Array<Omit<Particle, "trails" | "force">>;
+}
+
 const generatePastelColor = () => {
   const r = Math.floor(Math.random() * 75 + 180);
   const g = Math.floor(Math.random() * 75 + 180);
@@ -74,6 +85,9 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [throttledPointerPos, setThrottledPointerPos] = useState(pointerPos);
   const [isPaused, setIsPaused] = useState(false);
+  const [isScenarioPanelOpen, setIsScenarioPanelOpen] = useState(false);
+  const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
+
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
       gravityRef.current?.requestFullscreen();
@@ -316,7 +330,71 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   );
 
   const handlePointDelete = useCallback((index: number) => {
-    setGravityPoints((points) => points.filter((_, i) => i !== index));
+    setGravityPoints((currentPoints) => {
+      // Create a new array without the deleted point
+      const newPoints = currentPoints.filter((_, i) => i !== index);
+
+      // Ensure each remaining point maintains its position and ID
+      return newPoints.map((point) => ({
+        ...point,
+        id: point.id || Math.random().toString(36).substr(2, 9), // Ensure ID exists
+      }));
+    });
+  }, []);
+
+  const exportScenario = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      const scenario: SimulationScenario = {
+        settings: physicsConfig,
+        gravityPoints,
+        particles: particles.map(({ trails, force, ...particle }) => particle),
+      };
+      console.log(JSON.stringify(scenario, null, 2));
+    },
+    [physicsConfig, gravityPoints, particles]
+  );
+
+  const handleSelectScenario = useCallback(
+    (scenario: Scenario) => {
+      // First, ensure all gravity points have unique IDs
+      const newGravityPoints = scenario.data.gravityPoints.map((point) => ({
+        ...point,
+        id: point.id || Math.random().toString(36).substr(2, 9), // Ensure each point has an ID
+      }));
+
+      // Reset the simulation state
+      setParticles([]);
+      setGravityPoints([]); // Clear existing points first
+
+      // Update settings and state in the next frame to ensure clean rendering
+      requestAnimationFrame(() => {
+        updateSettings(scenario.data.settings);
+        setGravityPoints(newGravityPoints);
+        setParticles(
+          scenario.data.particles.map((particle) => ({
+            ...particle,
+            trails: [{ ...particle.position, timestamp: Date.now() }],
+            force: { fx: 0, fy: 0 },
+          }))
+        );
+        setIsSimulationStarted(true);
+        setIsScenarioPanelOpen(false);
+      });
+    },
+    [updateSettings]
+  );
+
+  const handleSettingsPanelToggle = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsSettingsPanelOpen((prev) => !prev);
+    setIsScenarioPanelOpen(false);
+  }, []);
+
+  const handleScenarioPanelToggle = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsScenarioPanelOpen((prev) => !prev);
+    setIsSettingsPanelOpen(false);
   }, []);
 
   return (
@@ -431,6 +509,16 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
               <MdFullscreen size={20} />
             )}
           </motion.button>
+
+          <motion.button
+            onClick={exportScenario}
+            className="floating-panel floating-button"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            title="Export Scenario"
+          >
+            <AiOutlineExport size={20} />
+          </motion.button>
         </div>
 
         <StarPalette
@@ -471,7 +559,48 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             />
           ))}
 
-        <SimulatorSettings onSettingsChange={updateSettings} />
+        <SimulatorSettings
+          onSettingsChange={updateSettings}
+          isOpen={isSettingsPanelOpen}
+          onClose={() => setIsSettingsPanelOpen(false)}
+        />
+
+        <div
+          style={{
+            position: "absolute",
+            bottom: 20,
+            right: 20,
+            display: "flex",
+            gap: "10px",
+            zIndex: 1001,
+          }}
+        >
+          <motion.button
+            onClick={handleScenarioPanelToggle}
+            className="floating-panel floating-button"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            title="Scenarios"
+          >
+            <VscLibrary size={20} />
+          </motion.button>
+
+          <motion.button
+            onClick={handleSettingsPanelToggle}
+            className="floating-panel floating-button"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            title="Settings"
+          >
+            <SettingOutlined size={20} />
+          </motion.button>
+        </div>
+
+        <ScenarioPanel
+          isOpen={isScenarioPanelOpen}
+          onClose={() => setIsScenarioPanelOpen(false)}
+          onSelectScenario={handleSelectScenario}
+        />
 
         <a
           href="https://github.com/yhattav"
