@@ -72,7 +72,16 @@ export const ScenarioPanel: React.FC<ScenarioPanelProps> = ({
               items={[
                 {
                   key: "1",
-                  label: <span style={{ fontSize: "0.9rem" }}>Default</span>,
+                  label: (
+                    <span
+                      style={{
+                        fontSize: "0.9rem",
+                        color: "rgba(255, 255, 255, 0.9)",
+                      }}
+                    >
+                      Default
+                    </span>
+                  ),
                   children: (
                     <div className="scenarios-list">
                       {defaultScenarios.map((scenario) => (
@@ -107,7 +116,16 @@ export const ScenarioPanel: React.FC<ScenarioPanelProps> = ({
                 },
                 {
                   key: "2",
-                  label: <span style={{ fontSize: "0.9rem" }}>Saved</span>,
+                  label: (
+                    <span
+                      style={{
+                        fontSize: "0.9rem",
+                        color: "rgba(255, 255, 255, 0.9)",
+                      }}
+                    >
+                      Saved
+                    </span>
+                  ),
                   children: (
                     <div
                       className="scenarios-list"
