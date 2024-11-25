@@ -23,6 +23,10 @@ import { motion } from "framer-motion";
 import { BsPlayFill, BsPauseFill } from "react-icons/bs";
 import { DebugData } from "../../types/Debug";
 import { AiOutlineExport } from "react-icons/ai";
+import { VscLibrary } from "react-icons/vsc";
+import { ScenarioPanel } from "../ScenarioPanel/ScenarioPanel";
+import { Scenario } from "../../types/scenario";
+import { SettingOutlined } from "@ant-design/icons";
 
 interface ParticleMechanics {
   position: Point2D;
@@ -81,6 +85,9 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [throttledPointerPos, setThrottledPointerPos] = useState(pointerPos);
   const [isPaused, setIsPaused] = useState(false);
+  const [isScenarioPanelOpen, setIsScenarioPanelOpen] = useState(false);
+  const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
+
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
       gravityRef.current?.requestFullscreen();
@@ -339,6 +346,35 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     [physicsConfig, gravityPoints, particles]
   );
 
+  const handleSelectScenario = useCallback(
+    (scenario: Scenario) => {
+      updateSettings(scenario.data.settings);
+      setGravityPoints(scenario.data.gravityPoints);
+      setParticles(
+        scenario.data.particles.map((particle) => ({
+          ...particle,
+          trails: [{ ...particle.position, timestamp: Date.now() }],
+          force: { fx: 0, fy: 0 },
+        }))
+      );
+      setIsSimulationStarted(true);
+      setIsScenarioPanelOpen(false);
+    },
+    [updateSettings]
+  );
+
+  const handleSettingsPanelToggle = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsSettingsPanelOpen((prev) => !prev);
+    setIsScenarioPanelOpen(false);
+  }, []);
+
+  const handleScenarioPanelToggle = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsScenarioPanelOpen((prev) => !prev);
+    setIsSettingsPanelOpen(false);
+  }, []);
+
   return (
     <>
       <style>
@@ -501,7 +537,48 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             />
           ))}
 
-        <SimulatorSettings onSettingsChange={updateSettings} />
+        <SimulatorSettings
+          onSettingsChange={updateSettings}
+          isOpen={isSettingsPanelOpen}
+          onClose={() => setIsSettingsPanelOpen(false)}
+        />
+
+        <div
+          style={{
+            position: "absolute",
+            bottom: 20,
+            right: 20,
+            display: "flex",
+            gap: "10px",
+            zIndex: 1001,
+          }}
+        >
+          <motion.button
+            onClick={handleScenarioPanelToggle}
+            className="floating-panel floating-button"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            title="Scenarios"
+          >
+            <VscLibrary size={20} />
+          </motion.button>
+
+          <motion.button
+            onClick={handleSettingsPanelToggle}
+            className="floating-panel floating-button"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            title="Settings"
+          >
+            <SettingOutlined size={20} />
+          </motion.button>
+        </div>
+
+        <ScenarioPanel
+          isOpen={isScenarioPanelOpen}
+          onClose={() => setIsScenarioPanelOpen(false)}
+          onSelectScenario={handleSelectScenario}
+        />
 
         <a
           href="https://github.com/yhattav"

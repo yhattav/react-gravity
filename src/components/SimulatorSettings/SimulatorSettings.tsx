@@ -5,12 +5,15 @@ import { useSettings } from "../../hooks/useSettings";
 
 interface SimulatorSettingsProps {
   onSettingsChange: (settings: typeof PHYSICS_CONFIG) => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
   onSettingsChange,
+  isOpen,
+  onClose,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
   const {
     settings,
     showDevSettings,
@@ -42,40 +45,8 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
     return !isDevSetting || (isDevelopment && showDevSettings);
   };
 
-  const handleButtonClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsOpen(!isOpen);
-  };
-
   return (
-    <>
-      <motion.button
-        onClick={handleButtonClick}
-        className="floating-panel floating-button"
-        style={{
-          position: "absolute",
-          bottom: 20,
-          right: 20,
-        }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <line x1="3" y1="12" x2="21" y2="12" />
-          <line x1="3" y1="6" x2="21" y2="6" />
-          <line x1="3" y1="18" x2="21" y2="18" />
-        </svg>
-      </motion.button>
-
+    <div>
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -373,6 +344,6 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
           }
         `}
       </style>
-    </>
+    </div>
   );
 };
