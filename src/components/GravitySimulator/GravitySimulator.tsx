@@ -330,7 +330,16 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   );
 
   const handlePointDelete = useCallback((index: number) => {
-    setGravityPoints((points) => points.filter((_, i) => i !== index));
+    setGravityPoints((currentPoints) => {
+      // Create a new array without the deleted point
+      const newPoints = currentPoints.filter((_, i) => i !== index);
+
+      // Ensure each remaining point maintains its position and ID
+      return newPoints.map((point) => ({
+        ...point,
+        id: point.id || Math.random().toString(36).substr(2, 9), // Ensure ID exists
+      }));
+    });
   }, []);
 
   const exportScenario = useCallback(
