@@ -14,7 +14,7 @@ import {
 import { getContainerOffset } from "../../utils/dom/domUtils";
 import { INITIAL_GRAVITY_POINTS } from "../../constants/physics";
 import { SimulatorSettings } from "../SimulatorSettings/SimulatorSettings";
-import { useSettings } from "../../hooks/useSettings";
+import { useSettings } from "../../contexts/SettingsContext";
 import { throttle } from "lodash";
 import "../../styles/global.scss";
 import { MdFullscreen, MdFullscreenExit } from "react-icons/md";

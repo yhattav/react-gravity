@@ -5,7 +5,7 @@ import { Scenario } from "../../types/scenario";
 import { defaultScenarios } from "../../scenarios/defaults";
 import "./ScenarioPanel.scss";
 import { VscLibrary } from "react-icons/vsc";
-import { useSettings } from "../../hooks/useSettings";
+import { useSettings } from "../../contexts/SettingsContext";
 interface ScenarioPanelProps {
   onSelectScenario: (scenario: Scenario) => void;
   isOpen: boolean;
