@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { PHYSICS_CONFIG } from "../constants/physics";
+import { Scenario } from "../../types/scenario";
 
 const STORAGE_KEYS = {
   SETTINGS: "simulatorSettings",
   SHOW_DEV: "showDevSettings",
+  SAVED_SCENARIOS: "savedScenarios",
 } as const;
 
 export const useSettings = () => {
@@ -26,6 +28,11 @@ export const useSettings = () => {
   const [showDevSettings, setShowDevSettings] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.SHOW_DEV);
     return saved ? JSON.parse(saved) : false;
+  });
+
+  const [savedScenarios, setSavedScenarios] = useState<Scenario[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.SAVED_SCENARIOS);
+    return saved ? JSON.parse(saved) : [];
   });
 
   const updateSettings = (newSettings: Partial<typeof PHYSICS_CONFIG>) => {
@@ -54,6 +61,24 @@ export const useSettings = () => {
     localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(PHYSICS_CONFIG));
   };
 
+  const saveScenario = (scenario: Scenario) => {
+    const updatedScenarios = [...savedScenarios, scenario];
+    setSavedScenarios(updatedScenarios);
+    localStorage.setItem(
+      STORAGE_KEYS.SAVED_SCENARIOS,
+      JSON.stringify(updatedScenarios)
+    );
+  };
+
+  const deleteSavedScenario = (scenarioId: string) => {
+    const updatedScenarios = savedScenarios.filter((s) => s.id !== scenarioId);
+    setSavedScenarios(updatedScenarios);
+    localStorage.setItem(
+      STORAGE_KEYS.SAVED_SCENARIOS,
+      JSON.stringify(updatedScenarios)
+    );
+  };
+
   return {
     settings,
     showDevSettings,
@@ -61,5 +86,8 @@ export const useSettings = () => {
     updateShowDevSettings,
     resetSettings,
     isDevelopment: process.env.NODE_ENV === "development",
+    savedScenarios,
+    saveScenario,
+    deleteSavedScenario,
   };
 };

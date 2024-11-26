@@ -5,7 +5,7 @@ import { Scenario } from "../../types/scenario";
 import { defaultScenarios } from "../../scenarios/defaults";
 import "./ScenarioPanel.scss";
 import { VscLibrary } from "react-icons/vsc";
-
+import { useSettings } from "../../hooks/useSettings";
 interface ScenarioPanelProps {
   onSelectScenario: (scenario: Scenario) => void;
   isOpen: boolean;
@@ -18,6 +18,7 @@ export const ScenarioPanel: React.FC<ScenarioPanelProps> = ({
   onClose,
 }) => {
   const [activeTab, setActiveTab] = useState("1");
+  const { savedScenarios, deleteSavedScenario } = useSettings();
 
   return (
     <AnimatePresence>
@@ -127,11 +128,63 @@ export const ScenarioPanel: React.FC<ScenarioPanelProps> = ({
                     </span>
                   ),
                   children: (
-                    <div
-                      className="scenarios-list"
-                      style={{ color: "rgba(255, 255, 255, 0.7)" }}
-                    >
-                      Coming soon...
+                    <div className="scenarios-list">
+                      {savedScenarios.length === 0 ? (
+                        <div style={{ color: "rgba(255, 255, 255, 0.7)" }}>
+                          No saved scenarios yet
+                        </div>
+                      ) : (
+                        savedScenarios.map((scenario) => (
+                          <motion.div
+                            key={scenario.id}
+                            className="scenario-item"
+                            onClick={() => onSelectScenario(scenario)}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                              }}
+                            >
+                              <h3
+                                style={{
+                                  fontSize: "0.9rem",
+                                  color: "rgba(255, 255, 255, 0.9)",
+                                  fontWeight: "normal",
+                                }}
+                              >
+                                {scenario.name}
+                              </h3>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteSavedScenario(scenario.id);
+                                }}
+                                style={{
+                                  background: "none",
+                                  border: "none",
+                                  color: "rgba(255, 255, 255, 0.5)",
+                                  cursor: "pointer",
+                                  padding: "4px",
+                                }}
+                              >
+                                ×
+                              </button>
+                            </div>
+                            <p
+                              style={{
+                                fontSize: "0.85rem",
+                                color: "rgba(255, 255, 255, 0.7)",
+                              }}
+                            >
+                              {scenario.description}
+                            </p>
+                          </motion.div>
+                        ))
+                      )}
                     </div>
                   ),
                 },

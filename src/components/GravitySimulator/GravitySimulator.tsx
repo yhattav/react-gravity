@@ -27,6 +27,7 @@ import { VscLibrary } from "react-icons/vsc";
 import { ScenarioPanel } from "../ScenarioPanel/ScenarioPanel";
 import { Scenario } from "../../types/scenario";
 import { SettingOutlined } from "@ant-design/icons";
+import { SaveScenarioModal } from "../SaveScenarioModal/SaveScenarioModal";
 
 interface ParticleMechanics {
   position: Point2D;
@@ -81,12 +82,17 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   );
   const [isDragging, setIsDragging] = useState(false);
   const [isDraggingNewStar, setIsDraggingNewStar] = useState(false);
-  const { settings: physicsConfig, updateSettings } = useSettings();
+  const {
+    settings: physicsConfig,
+    updateSettings,
+    saveScenario,
+  } = useSettings();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [throttledPointerPos, setThrottledPointerPos] = useState(pointerPos);
   const [isPaused, setIsPaused] = useState(false);
   const [isScenarioPanelOpen, setIsScenarioPanelOpen] = useState(false);
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
 
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
@@ -342,17 +348,29 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     });
   }, []);
 
-  const exportScenario = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      const scenario: SimulationScenario = {
-        settings: physicsConfig,
-        gravityPoints,
-        particles: particles.map(({ trails, force, ...particle }) => particle),
+  const exportScenario = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsSaveModalOpen(true);
+  }, []);
+
+  const handleSaveScenario = useCallback(
+    (name: string) => {
+      const scenario: Scenario = {
+        id: Math.random().toString(36).substr(2, 9),
+        name,
+        description: "User saved scenario",
+        data: {
+          settings: physicsConfig,
+          gravityPoints,
+          particles: particles.map(
+            ({ trails, force, ...particle }) => particle
+          ),
+        },
       };
-      console.log(JSON.stringify(scenario, null, 2));
+      saveScenario(scenario);
+      setIsSaveModalOpen(false);
     },
-    [physicsConfig, gravityPoints, particles]
+    [physicsConfig, gravityPoints, particles, saveScenario]
   );
 
   const handleSelectScenario = useCallback(
@@ -600,6 +618,12 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           isOpen={isScenarioPanelOpen}
           onClose={() => setIsScenarioPanelOpen(false)}
           onSelectScenario={handleSelectScenario}
+        />
+
+        <SaveScenarioModal
+          isOpen={isSaveModalOpen}
+          onClose={() => setIsSaveModalOpen(false)}
+          onSave={handleSaveScenario}
         />
 
         <a
