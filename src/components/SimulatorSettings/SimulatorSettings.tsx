@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PHYSICS_CONFIG, SETTINGS_METADATA } from "../../constants/physics";
-import { useSettings } from "../../hooks/useSettings";
+import { useSettings } from "../../contexts/SettingsContext";
 
 interface SimulatorSettingsProps {
   onSettingsChange: (settings: typeof PHYSICS_CONFIG) => void;

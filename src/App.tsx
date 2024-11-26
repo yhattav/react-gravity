@@ -10,6 +10,7 @@ import { GravitySection } from "./sections/GravitySection";
 import { DebugInfo } from "./components/DebugInfo";
 import { DebugData } from "./types/Debug";
 import "./App.css";
+import { SettingsProvider } from "./contexts/SettingsContext";
 
 const { Content, Header } = Layout;
 
@@ -41,59 +42,61 @@ function App() {
   }, []);
 
   return (
-    <Layout className="app-layout">
-      <Header className="app-header">
-        <div className="header-content">
-          <h1 className="app-title">Gravity Simulator</h1>
-          <div className="header-icons">
-            <a
-              href="https://github.com/yhattav/react-gravity"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="header-icon"
-              title="View Source Code"
-            >
-              <GithubOutlined />
-            </a>
-            <a
-              href="https://github.com/yhattav/react-gravity/issues"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="header-icon"
-              title="Report Issues"
-            >
-              <BugOutlined />
-            </a>
-            <a
-              href="https://github.com/yhattav/react-gravity/wiki"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="header-icon"
-              title="Documentation"
-            >
-              <QuestionCircleOutlined />
-            </a>
-            <a
-              href="https://github.com/yhattav/react-gravity/blob/main/README.md#configuration"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="header-icon"
-              title="Configuration Guide"
-            >
-              <SettingOutlined />
-            </a>
+    <SettingsProvider>
+      <Layout className="app-layout">
+        <Header className="app-header">
+          <div className="header-content">
+            <h1 className="app-title">Gravity Simulator</h1>
+            <div className="header-icons">
+              <a
+                href="https://github.com/yhattav/react-gravity"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="header-icon"
+                title="View Source Code"
+              >
+                <GithubOutlined />
+              </a>
+              <a
+                href="https://github.com/yhattav/react-gravity/issues"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="header-icon"
+                title="Report Issues"
+              >
+                <BugOutlined />
+              </a>
+              <a
+                href="https://github.com/yhattav/react-gravity/wiki"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="header-icon"
+                title="Documentation"
+              >
+                <QuestionCircleOutlined />
+              </a>
+              <a
+                href="https://github.com/yhattav/react-gravity/blob/main/README.md#configuration"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="header-icon"
+                title="Configuration Guide"
+              >
+                <SettingOutlined />
+              </a>
+            </div>
           </div>
-        </div>
-      </Header>
-      <Layout>
-        <Content className="app-content">
-          <GravitySection onDebugData={handleDebugData} />
-        </Content>
-        <Layout.Sider className="app-sider" width="20%">
-          {debugData && <DebugInfo data={debugData} />}
-        </Layout.Sider>
+        </Header>
+        <Layout>
+          <Content className="app-content">
+            <GravitySection onDebugData={handleDebugData} />
+          </Content>
+          <Layout.Sider className="app-sider" width="20%">
+            {debugData && <DebugInfo data={debugData} />}
+          </Layout.Sider>
+        </Layout>
       </Layout>
-    </Layout>
+    </SettingsProvider>
   );
 }
 
