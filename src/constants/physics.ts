@@ -37,8 +37,8 @@ export const SETTINGS_METADATA: Record<
     type: "slider",
     isDev: false,
     min: 0.001,
-    max: 50000,
-    step: 1,
+    max: 0.5,
+    step: 0.001,
   },
   NEW_PARTICLE_ELASTICITY: {
     type: "slider",
