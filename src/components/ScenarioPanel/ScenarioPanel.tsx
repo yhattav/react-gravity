@@ -175,13 +175,25 @@ export const ScenarioPanel: React.FC<ScenarioPanelProps> = ({
                               >
                                 {scenario.name}
                               </h3>
-                              <div style={{ display: "flex", gap: "8px" }}>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  gap: "8px",
+                                  position: "relative",
+                                }}
+                              >
                                 <button
                                   onClick={(e) => {
+                                    e.preventDefault();
                                     e.stopPropagation();
                                     const link = createShareableLink(scenario);
                                     navigator.clipboard.writeText(link);
-                                    // You might want to add a toast notification here
+                                    const tooltip = e.currentTarget
+                                      .nextElementSibling as HTMLElement;
+                                    tooltip.style.opacity = "1";
+                                    setTimeout(() => {
+                                      tooltip.style.opacity = "0";
+                                    }, 2000);
                                   }}
                                   style={{
                                     background: "none",
@@ -193,6 +205,23 @@ export const ScenarioPanel: React.FC<ScenarioPanelProps> = ({
                                 >
                                   <VscShare style={{ opacity: 0.7 }} />
                                 </button>
+                                <div
+                                  style={{
+                                    position: "absolute",
+                                    top: "100%",
+                                    right: "0",
+                                    background: "rgba(0, 0, 0, 0.8)",
+                                    padding: "4px 8px",
+                                    borderRadius: "4px",
+                                    fontSize: "0.8rem",
+                                    opacity: "0",
+                                    transition: "opacity 0.2s",
+                                    pointerEvents: "none",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  Link copied!
+                                </div>
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
