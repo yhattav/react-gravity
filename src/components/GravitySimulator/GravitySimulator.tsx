@@ -29,26 +29,14 @@ import { Scenario } from "../../types/scenario";
 import { SettingOutlined } from "@ant-design/icons";
 import { SaveScenarioModal } from "../SaveScenarioModal/SaveScenarioModal";
 import { createShareableLink } from "../../utils/compression";
+import { Particle, ParticleMechanics, TrailPoint } from "../../types/particle";
 
-interface ParticleMechanics {
-  position: Point2D;
-  velocity: Point2D;
-  force: Force;
-  mass: number;
-  elasticity: number;
-}
-
-interface Particle extends ParticleMechanics {
-  id: string;
-  color: string;
-  size: number;
-  showVectors: boolean;
-  trails: TrailPoint[];
-}
-
-interface TrailPoint extends Point2D {
-  timestamp: number;
-}
+const generatePastelColor = () => {
+  const r = Math.floor(Math.random() * 75 + 180);
+  const g = Math.floor(Math.random() * 75 + 180);
+  const b = Math.floor(Math.random() * 75 + 180);
+  return `rgb(${r}, ${g}, ${b})`;
+};
 
 interface GravitySimulatorProps {
   gravityRef: React.RefObject<HTMLDivElement>;
@@ -62,13 +50,6 @@ interface SimulationScenario {
   gravityPoints: GravityPoint[];
   particles: Array<Omit<Particle, "trails" | "force">>;
 }
-
-const generatePastelColor = () => {
-  const r = Math.floor(Math.random() * 75 + 180);
-  const g = Math.floor(Math.random() * 75 + 180);
-  const b = Math.floor(Math.random() * 75 + 180);
-  return `rgb(${r}, ${g}, ${b})`;
-};
 
 export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   gravityRef,
@@ -157,14 +138,20 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
   const updateParticleMechanics = useCallback(
     (
-      particle: ParticleMechanics & { trails: TrailPoint[] }
+      particle: ParticleMechanics & { trails: TrailPoint[] },
+      allParticles: Array<ParticleMechanics & { trails: TrailPoint[] }> = []
     ): ParticleMechanics => {
+      // Filter out the current particle from gravity calculations
+      const otherParticles = allParticles.filter((p) => p !== particle);
+
       const calculatedForce = calculateTotalForce(
         particle.position,
         throttledPointerPos,
         gravityPoints,
         offset,
-        physicsConfig.POINTER_MASS
+        physicsConfig.POINTER_MASS,
+        otherParticles,
+        physicsConfig.PARTICLES_EXERT_GRAVITY
       );
 
       const force = {
@@ -232,7 +219,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
       setParticles((currentParticles) =>
         currentParticles.map((particle) => {
-          const mechanics = updateParticleMechanics(particle);
+          const mechanics = updateParticleMechanics(particle, currentParticles);
           return { ...particle, ...mechanics };
         })
       );

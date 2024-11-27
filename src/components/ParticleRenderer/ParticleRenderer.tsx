@@ -1,11 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { drawArrow } from "../../utils/physics/vectorUtils";
-import { Point2D, Force } from "../../types/physics";
-
-interface TrailPoint extends Point2D {
-  timestamp: number;
-}
+import { TrailPoint } from "../../types/particle";
 
 interface ParticleRenderParams {
   position: Point2D;

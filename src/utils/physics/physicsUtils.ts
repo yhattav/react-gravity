@@ -1,4 +1,5 @@
 import { Point2D, Force, GravityPoint } from "../types/physics";
+import { ParticleMechanics } from "../../types/particle";
 
 // Basic physics calculations
 export const calculateDistance = (p1: Point2D, p2: Point2D): number => {
@@ -51,6 +52,7 @@ export const calculateGravitationalForce = (
   minDistance = 30,
   maxForce = 2
 ): Force => {
+  console.log(x1, y1, x2, y2, mass);
   if (!isFinite(x1) || !isFinite(y1) || !isFinite(x2) || !isFinite(y2)) {
     return { fx: 0, fy: 0 };
   } // TODO: see if we can check the isFinite on x1+y1+x2+y2, is it faster?
@@ -84,19 +86,21 @@ export const calculateGravitationalForce = (
 };
 
 export const calculateTotalForce = (
-  cursorPos: Point2D,
+  selfPosition: Point2D,
   pointerPos: Point2D,
   gravityPoints: GravityPoint[],
   offset: Point2D,
-  pointerMass = 50000
+  pointerMass = 50000,
+  particles: Array<ParticleMechanics> = [],
+  particlesExertGravity = false
 ): Force => {
   let totalFx = 0;
   let totalFy = 0;
 
   // Add pointer gravitational pull
   const pointerForce = calculateGravitationalForce(
-    cursorPos.x,
-    cursorPos.y,
+    selfPosition.x,
+    selfPosition.y,
     pointerPos.x,
     pointerPos.y,
     pointerMass
@@ -107,8 +111,8 @@ export const calculateTotalForce = (
   // Add gravity points force
   gravityPoints.forEach((point) => {
     const force = calculateGravitationalForce(
-      cursorPos.x,
-      cursorPos.y,
+      selfPosition.x,
+      selfPosition.y,
       point.x + offset.x,
       point.y + offset.y,
       point.mass
@@ -116,6 +120,22 @@ export const calculateTotalForce = (
     totalFx += force.fx;
     totalFy += force.fy;
   });
+
+  // Add particle gravity if enabled
+  if (particlesExertGravity) {
+    particles.forEach((particle) => {
+      const force = calculateGravitationalForce(
+        selfPosition.x,
+        selfPosition.y,
+        particle.position.x,
+        particle.position.y,
+        particle.mass
+      );
+      console.log(force);
+      totalFx += force.fx;
+      totalFy += force.fy;
+    });
+  }
 
   return { fx: totalFx, fy: totalFy };
 };

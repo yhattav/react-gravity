@@ -26,6 +26,7 @@ export const PHYSICS_CONFIG = {
   CONSTANT_FORCE_X: 0,
   CONSTANT_FORCE_Y: 0,
   SOLID_BOUNDARIES: true,
+  PARTICLES_EXERT_GRAVITY: false,
 } as const;
 
 export const SETTINGS_METADATA: Record<
@@ -90,6 +91,10 @@ export const SETTINGS_METADATA: Record<
     step: 0.1,
   },
   SOLID_BOUNDARIES: {
+    type: "boolean",
+    isDev: false,
+  },
+  PARTICLES_EXERT_GRAVITY: {
     type: "boolean",
     isDev: false,
   },
