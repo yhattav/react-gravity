@@ -88,7 +88,7 @@ export const calculateTotalForce = (
   selfPosition: Point2D,
   pointerPos: Point2D,
   gravityPoints: GravityPoint[],
-  offset: Point2D,
+  //offset: Point2D,
   pointerMass = 50000,
   particles: Array<ParticleMechanics> = [],
   particlesExertGravity = false
@@ -112,8 +112,8 @@ export const calculateTotalForce = (
     const force = calculateGravitationalForce(
       selfPosition.x,
       selfPosition.y,
-      point.x + offset.x,
-      point.y + offset.y,
+      point.x, // + offset.x,
+      point.y, // + offset.y,
       point.mass
     );
     totalFx += force.fx;
@@ -187,24 +187,24 @@ export const handleBoundaryCollision = (
   const newVelocity = { ...velocity };
 
   // Calculate relative position within the container
-  const relativeX = position.x - bounds.left;
-  const relativeY = position.y - bounds.top;
+  const relativeX = position.x;
+  const relativeY = position.y;
 
   // Check horizontal boundaries using relative position
   if (relativeX <= 0) {
-    newPosition.x = bounds.left; // Set to container's left edge
+    newPosition.x = 0; // Set to container's left edge
     newVelocity.x = Math.abs(velocity.x) * elasticity;
   } else if (relativeX >= bounds.width) {
-    newPosition.x = bounds.left + bounds.width; // Set to container's right edge
+    newPosition.x = bounds.width; // Set to container's right edge
     newVelocity.x = -Math.abs(velocity.x) * elasticity;
   }
 
   // Check vertical boundaries using relative position
   if (relativeY <= 0) {
-    newPosition.y = bounds.top; // Set to container's top edge
+    newPosition.y = 0; // Set to container's top edge
     newVelocity.y = Math.abs(velocity.y) * elasticity;
   } else if (relativeY >= bounds.height) {
-    newPosition.y = bounds.top + bounds.height; // Set to container's bottom edge
+    newPosition.y = bounds.height; // Set to container's bottom edge
     newVelocity.y = -Math.abs(velocity.y) * elasticity;
   }
 
