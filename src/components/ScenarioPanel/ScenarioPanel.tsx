@@ -1,11 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Tabs } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
 import { Scenario } from "../../types/scenario";
 import { defaultScenarios } from "../../scenarios/defaults";
 import "./ScenarioPanel.scss";
-import { VscLibrary } from "react-icons/vsc";
+import { VscLibrary, VscShare } from "react-icons/vsc";
 import { useSettings } from "../../contexts/SettingsContext";
+import { useSearchParams } from "react-router-dom";
+import {
+  decompressScenario,
+  createShareableLink,
+} from "../../utils/compression";
+
 interface ScenarioPanelProps {
   onSelectScenario: (scenario: Scenario) => void;
   isOpen: boolean;
@@ -19,6 +25,17 @@ export const ScenarioPanel: React.FC<ScenarioPanelProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState("1");
   const { savedScenarios, deleteSavedScenario } = useSettings();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const scenarioParam = searchParams.get("scenario");
+    if (scenarioParam) {
+      const sharedScenario = decompressScenario(scenarioParam);
+      if (sharedScenario) {
+        onSelectScenario(sharedScenario);
+      }
+    }
+  }, [searchParams]);
 
   return (
     <AnimatePresence>
@@ -158,21 +175,40 @@ export const ScenarioPanel: React.FC<ScenarioPanelProps> = ({
                               >
                                 {scenario.name}
                               </h3>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteSavedScenario(scenario.id);
-                                }}
-                                style={{
-                                  background: "none",
-                                  border: "none",
-                                  color: "rgba(255, 255, 255, 0.5)",
-                                  cursor: "pointer",
-                                  padding: "4px",
-                                }}
-                              >
-                                ×
-                              </button>
+                              <div style={{ display: "flex", gap: "8px" }}>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const link = createShareableLink(scenario);
+                                    navigator.clipboard.writeText(link);
+                                    // You might want to add a toast notification here
+                                  }}
+                                  style={{
+                                    background: "none",
+                                    border: "none",
+                                    color: "rgba(255, 255, 255, 0.5)",
+                                    cursor: "pointer",
+                                    padding: "4px",
+                                  }}
+                                >
+                                  <VscShare style={{ opacity: 0.7 }} />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteSavedScenario(scenario.id);
+                                  }}
+                                  style={{
+                                    background: "none",
+                                    border: "none",
+                                    color: "rgba(255, 255, 255, 0.5)",
+                                    cursor: "pointer",
+                                    padding: "4px",
+                                  }}
+                                >
+                                  ×
+                                </button>
+                              </div>
                             </div>
                             <p
                               style={{
