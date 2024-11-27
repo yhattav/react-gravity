@@ -152,47 +152,48 @@ export const ScenarioPanel: React.FC<ScenarioPanelProps> = ({
                         </div>
                       ) : (
                         savedScenarios.map((scenario) => (
-                          <motion.div
+                          <div
                             key={scenario.id}
                             className="scenario-item"
-                            onClick={() => onSelectScenario(scenario)}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
+                            style={{
+                              display: "flex",
+                              gap: "12px",
+                              border: "1px solid rgba(255, 255, 255, 0.1)",
+                              borderRadius: "8px",
+                              transition: "border-color 0.2s ease",
+                              padding: "12px",
+                            }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.borderColor =
+                                "rgba(255, 255, 255, 0.3)")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.borderColor =
+                                "rgba(255, 255, 255, 0.1)")
+                            }
                           >
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                              }}
+                            <motion.div
+                              style={{ flex: "1" }}
+                              onClick={() => onSelectScenario(scenario)}
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
                             >
-                              <h3
+                              <div
                                 style={{
-                                  fontSize: "0.9rem",
-                                  color: "rgba(255, 255, 255, 0.9)",
-                                  fontWeight: "normal",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
                                 }}
                               >
-                                {scenario.name}
-                              </h3>
-                              <div style={{ display: "flex", gap: "8px" }}>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const link = createShareableLink(scenario);
-                                    navigator.clipboard.writeText(link);
-                                    // You might want to add a toast notification here
-                                  }}
+                                <h3
                                   style={{
-                                    background: "none",
-                                    border: "none",
-                                    color: "rgba(255, 255, 255, 0.5)",
-                                    cursor: "pointer",
-                                    padding: "4px",
+                                    fontSize: "0.9rem",
+                                    color: "rgba(255, 255, 255, 0.9)",
+                                    fontWeight: "normal",
                                   }}
                                 >
-                                  <VscShare style={{ opacity: 0.7 }} />
-                                </button>
+                                  {scenario.name}
+                                </h3>
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -209,16 +210,66 @@ export const ScenarioPanel: React.FC<ScenarioPanelProps> = ({
                                   ×
                                 </button>
                               </div>
-                            </div>
-                            <p
-                              style={{
-                                fontSize: "0.85rem",
-                                color: "rgba(255, 255, 255, 0.7)",
+                              <p
+                                style={{
+                                  fontSize: "0.85rem",
+                                  color: "rgba(255, 255, 255, 0.7)",
+                                }}
+                              >
+                                {scenario.description}
+                              </p>
+                            </motion.div>
+
+                            <motion.div
+                              style={{ width: "20%", position: "relative" }}
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              onClick={(e) => {
+                                const link = createShareableLink(scenario);
+                                navigator.clipboard.writeText(link);
+                                const tooltip = e.currentTarget.querySelector(
+                                  ".tooltip"
+                                ) as HTMLElement;
+                                tooltip.style.opacity = "1";
+                                setTimeout(() => {
+                                  tooltip.style.opacity = "0";
+                                }, 2000);
                               }}
                             >
-                              {scenario.description}
-                            </p>
-                          </motion.div>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  height: "100%",
+                                  cursor: "pointer",
+                                  color: "rgba(255, 255, 255, 0.5)",
+                                }}
+                              >
+                                <VscShare
+                                  style={{ opacity: 0.7, fontSize: "1.5rem" }}
+                                />
+                              </div>
+                              <div
+                                className="tooltip"
+                                style={{
+                                  position: "absolute",
+                                  top: "100%",
+                                  right: "0",
+                                  background: "rgba(0, 0, 0, 0.8)",
+                                  padding: "4px 8px",
+                                  borderRadius: "4px",
+                                  fontSize: "0.8rem",
+                                  opacity: "0",
+                                  transition: "opacity 0.2s",
+                                  pointerEvents: "none",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                Link copied!
+                              </div>
+                            </motion.div>
+                          </div>
                         ))
                       )}
                     </div>
