@@ -91,7 +91,11 @@ function App() {
           <Content className="app-content">
             <GravitySection onDebugData={handleDebugData} />
           </Content>
-          <Layout.Sider className="app-sider" width="20%">
+          <Layout.Sider
+            className="app-sider"
+            width="20%"
+            style={{ overflow: "scroll" }}
+          >
             {debugData && <DebugInfo data={debugData} />}
           </Layout.Sider>
         </Layout>
