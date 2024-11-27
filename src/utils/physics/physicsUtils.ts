@@ -88,7 +88,7 @@ export const calculateTotalForce = (
   selfPosition: Point2D,
   pointerPos: Point2D,
   gravityPoints: GravityPoint[],
-  offset: Point2D,
+  //offset: Point2D,
   pointerMass = 50000,
   particles: Array<ParticleMechanics> = [],
   particlesExertGravity = false
@@ -112,8 +112,8 @@ export const calculateTotalForce = (
     const force = calculateGravitationalForce(
       selfPosition.x,
       selfPosition.y,
-      point.x + offset.x,
-      point.y + offset.y,
+      point.x, // + offset.x,
+      point.y, // + offset.y,
       point.mass
     );
     totalFx += force.fx;

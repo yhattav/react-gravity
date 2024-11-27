@@ -143,7 +143,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         particle.position,
         throttledPointerPos,
         gravityPoints,
-        offset,
+        //offset,
         physicsConfig.POINTER_MASS,
         otherParticles,
         physicsConfig.PARTICLES_EXERT_GRAVITY
@@ -236,20 +236,27 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     (
       position: Point2D,
       options: Partial<Omit<Particle, "position" | "id">> = {}
-    ): Particle => ({
-      id: Math.random().toString(36).substr(2, 9),
-      position,
-      velocity: { x: 0, y: 0 },
-      force: { fx: 0, fy: 0 },
-      mass: physicsConfig.NEW_PARTICLE_MASS,
-      elasticity: physicsConfig.NEW_PARTICLE_ELASTICITY,
-      color: generatePastelColor(),
-      size: 10,
-      showVectors: true,
-      trails: [{ ...position, timestamp: Date.now() }],
-      ...options,
-    }),
-    [physicsConfig]
+    ): Particle => {
+      console.log(offset);
+      const newPosition = {
+        x: position.x - offset.x,
+        y: position.y - offset.y,
+      };
+      return {
+        id: Math.random().toString(36).substr(2, 9),
+        position: newPosition,
+        velocity: { x: 0, y: 0 },
+        force: { fx: 0, fy: 0 },
+        mass: physicsConfig.NEW_PARTICLE_MASS,
+        elasticity: physicsConfig.NEW_PARTICLE_ELASTICITY,
+        color: generatePastelColor(),
+        size: 10,
+        showVectors: true,
+        trails: [{ ...newPosition, timestamp: Date.now() }],
+        ...options,
+      };
+    },
+    [physicsConfig, offset]
   );
 
   const handleContainerClick = useCallback(() => {
@@ -258,7 +265,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     if (!isSimulationStarted) {
       setIsSimulationStarted(true);
     }
-
+    console.log(offset);
     setParticles((current) => [...current, createParticle(pointerPos)]);
   }, [
     pointerPos,
@@ -266,6 +273,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     isDragging,
     isDraggingNewStar,
     createParticle,
+    offset,
   ]);
 
   useEffect(() => {
@@ -461,12 +469,18 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           .inverted {
             filter: invert(1);
           }
+
+          .not-inverted {
+            filter: invert(0);
+          }
         `}
       </style>
       <div
         ref={gravityRef}
         onClick={handleContainerClick}
-        className={`${className} ${isColorInverted ? "inverted" : ""}`}
+        className={`${className} ${
+          isColorInverted ? "inverted" : "not-inverted"
+        }`}
         style={{
           position: "absolute",
           top: 0,
