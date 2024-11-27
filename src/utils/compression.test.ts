@@ -4,7 +4,6 @@ import {
   demodulateScenario,
   compressScenario,
   decompressScenario,
-  createShareableLink,
 } from "./compression";
 import { Scenario } from "../types/scenario";
 
@@ -12,7 +11,7 @@ describe("Scenario Compression", () => {
   const testScenario: Scenario = {
     id: "test-123",
     name: "Test Scenario",
-    description: "A test scenario",
+    description: "A test scenario made for testing",
     data: {
       settings: {
         NEW_PARTICLE_MASS: 0.1,
@@ -44,8 +43,18 @@ describe("Scenario Compression", () => {
           mass: 0.1,
           elasticity: 0.8,
           color: "#00FF00",
-          size: 100,
+          size: 10,
           showVectors: true,
+        },
+        {
+          id: "p2",
+          position: { x: 123, y: 400 },
+          velocity: { x: 1, y: -20 },
+          mass: 0.1,
+          elasticity: 0.8,
+          color: "#00FF00",
+          size: 20,
+          showVectors: false,
         },
       ],
     },
@@ -111,19 +120,4 @@ describe("Scenario Compression", () => {
     // Step 5: Verify the compression actually reduces size
     expect(compressed.length).toBeLessThan(JSON.stringify(testScenario).length);
   });
-
-  //   it("should create a valid shareable link", () => {
-  //     const link = createShareableLink(testScenario);
-  //     expect(typeof link).toBe("string");
-  //     expect(link).toContain("scenario=");
-
-  //     // Extract the scenario parameter
-  //     const url = new URL(link);
-  //     const scenarioParam = url.searchParams.get("scenario");
-  //     expect(scenarioParam).not.toBeNull();
-
-  //     // Verify we can decompress the URL parameter back to the original scenario
-  //     const decompressed = decompressScenario(scenarioParam!);
-  //     expect(decompressed).toEqual(testScenario);
-  //   });
 });
