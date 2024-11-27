@@ -21,7 +21,6 @@ interface ScenarioPanelProps {
 export const ScenarioPanel: React.FC<ScenarioPanelProps> = ({
   onSelectScenario,
   isOpen,
-  onClose,
 }) => {
   const [activeTab, setActiveTab] = useState("1");
   const { savedScenarios, deleteSavedScenario } = useSettings();

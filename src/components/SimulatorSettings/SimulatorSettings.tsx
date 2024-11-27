@@ -1,10 +1,13 @@
-import React, { useState } from "react";
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PHYSICS_CONFIG, SETTINGS_METADATA } from "../../constants/physics";
+import {
+  DEFAULT_PHYSICS_CONFIG,
+  SETTINGS_METADATA,
+} from "../../constants/physics";
 import { useSettings } from "../../contexts/SettingsContext";
 
 interface SimulatorSettingsProps {
-  onSettingsChange: (settings: typeof PHYSICS_CONFIG) => void;
+  onSettingsChange: (settings: typeof DEFAULT_PHYSICS_CONFIG) => void;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -12,7 +15,6 @@ interface SimulatorSettingsProps {
 export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
   onSettingsChange,
   isOpen,
-  onClose,
 }) => {
   const {
     settings,
@@ -40,7 +42,7 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
     onSettingsChange({ ...settings, ...newSettings });
   };
 
-  const shouldShowSetting = (key: keyof typeof PHYSICS_CONFIG) => {
+  const shouldShowSetting = (key: keyof typeof DEFAULT_PHYSICS_CONFIG) => {
     const isDevSetting = SETTINGS_METADATA[key].isDev;
     return !isDevSetting || (isDevelopment && showDevSettings);
   };
@@ -130,10 +132,13 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
               )}
 
               {Object.entries(settings).map(([key, value]) =>
-                shouldShowSetting(key as keyof typeof PHYSICS_CONFIG) ? (
+                shouldShowSetting(
+                  key as keyof typeof DEFAULT_PHYSICS_CONFIG
+                ) ? (
                   <div key={key} style={{ marginBottom: "16px" }}>
-                    {SETTINGS_METADATA[key as keyof typeof PHYSICS_CONFIG]
-                      .type === "boolean" ? (
+                    {SETTINGS_METADATA[
+                      key as keyof typeof DEFAULT_PHYSICS_CONFIG
+                    ].type === "boolean" ? (
                       <label
                         style={{
                           display: "flex",
@@ -228,7 +233,7 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
                           value={value as number}
                           onChange={(e) =>
                             handleSettingChange(
-                              key as keyof typeof PHYSICS_CONFIG,
+                              key as keyof typeof DEFAULT_PHYSICS_CONFIG,
                               Number(e.target.value)
                             )
                           }

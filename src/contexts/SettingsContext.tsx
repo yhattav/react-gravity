@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
-import { PHYSICS_CONFIG } from "../constants/physics";
+import { DEFAULT_PHYSICS_CONFIG, PhysicsSettings } from "../constants/physics";
 import { Scenario } from "../types/scenario";
 
 const STORAGE_KEYS = {
@@ -9,10 +9,10 @@ const STORAGE_KEYS = {
 } as const;
 
 interface SettingsContextType {
-  settings: typeof PHYSICS_CONFIG;
+  settings: PhysicsSettings;
   showDevSettings: boolean;
   savedScenarios: Scenario[];
-  updateSettings: (newSettings: Partial<typeof PHYSICS_CONFIG>) => void;
+  updateSettings: (newSettings: Partial<PhysicsSettings>) => void;
   updateShowDevSettings: (show: boolean) => void;
   resetSettings: () => void;
   saveScenario: (scenario: Scenario) => void;
@@ -25,20 +25,20 @@ const SettingsContext = createContext<SettingsContextType | null>(null);
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [settings, setSettings] = useState(() => {
+  const [settings, setSettings] = useState<PhysicsSettings>(() => {
     const savedSettings = localStorage.getItem(STORAGE_KEYS.SETTINGS);
     if (savedSettings) {
       const parsedSettings = JSON.parse(savedSettings);
       const validSettings = Object.keys(parsedSettings).reduce((acc, key) => {
-        if (key in PHYSICS_CONFIG) {
+        if (key in DEFAULT_PHYSICS_CONFIG) {
           acc[key] = parsedSettings[key];
         }
         return acc;
-      }, {} as Partial<typeof PHYSICS_CONFIG>);
+      }, {} as Partial<PhysicsSettings>);
 
-      return { ...PHYSICS_CONFIG, ...validSettings };
+      return { ...DEFAULT_PHYSICS_CONFIG, ...validSettings };
     }
-    return PHYSICS_CONFIG;
+    return DEFAULT_PHYSICS_CONFIG;
   });
 
   const [showDevSettings, setShowDevSettings] = useState(() => {
@@ -52,13 +52,13 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
   });
 
   const updateSettings = useCallback(
-    (newSettings: Partial<typeof PHYSICS_CONFIG>) => {
+    (newSettings: Partial<PhysicsSettings>) => {
       const validNewSettings = Object.keys(newSettings).reduce((acc, key) => {
-        if (key in PHYSICS_CONFIG) {
-          acc[key] = newSettings[key as keyof typeof PHYSICS_CONFIG];
+        if (key in DEFAULT_PHYSICS_CONFIG) {
+          acc[key] = newSettings[key as keyof typeof DEFAULT_PHYSICS_CONFIG];
         }
         return acc;
-      }, {} as Partial<typeof PHYSICS_CONFIG>);
+      }, {} as Partial<PhysicsSettings>);
 
       setSettings((prevSettings) => {
         const updatedSettings = { ...prevSettings, ...validNewSettings };
@@ -78,8 +78,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const resetSettings = useCallback(() => {
-    setSettings(PHYSICS_CONFIG);
-    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(PHYSICS_CONFIG));
+    setSettings(DEFAULT_PHYSICS_CONFIG);
+    localStorage.setItem(
+      STORAGE_KEYS.SETTINGS,
+      JSON.stringify(DEFAULT_PHYSICS_CONFIG)
+    );
   }, []);
 
   const saveScenario = useCallback((scenario: Scenario) => {

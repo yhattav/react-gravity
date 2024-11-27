@@ -52,7 +52,6 @@ export const calculateGravitationalForce = (
   minDistance = 30,
   maxForce = 2
 ): Force => {
-  console.log(x1, y1, x2, y2, mass);
   if (!isFinite(x1) || !isFinite(y1) || !isFinite(x2) || !isFinite(y2)) {
     return { fx: 0, fy: 0 };
   } // TODO: see if we can check the isFinite on x1+y1+x2+y2, is it faster?

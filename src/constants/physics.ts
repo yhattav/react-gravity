@@ -14,8 +14,20 @@ interface BooleanSettingMetadata {
 }
 
 type SettingMetadata = SliderSettingMetadata | BooleanSettingMetadata;
-
-export const PHYSICS_CONFIG = {
+export interface PhysicsSettings {
+  NEW_PARTICLE_MASS: number;
+  NEW_PARTICLE_ELASTICITY: number;
+  FRICTION: number;
+  DELTA_TIME: number;
+  POINTER_MASS: number;
+  SHOW_VELOCITY_ARROWS: boolean;
+  SHOW_FORCE_ARROWS: boolean;
+  CONSTANT_FORCE_X: number;
+  CONSTANT_FORCE_Y: number;
+  SOLID_BOUNDARIES: boolean;
+  PARTICLES_EXERT_GRAVITY: boolean;
+}
+export const DEFAULT_PHYSICS_CONFIG: PhysicsSettings = {
   NEW_PARTICLE_MASS: 0.1,
   NEW_PARTICLE_ELASTICITY: 0.8,
   FRICTION: 1,
@@ -30,7 +42,7 @@ export const PHYSICS_CONFIG = {
 } as const;
 
 export const SETTINGS_METADATA: Record<
-  keyof typeof PHYSICS_CONFIG,
+  keyof typeof DEFAULT_PHYSICS_CONFIG,
   SettingMetadata
 > = {
   NEW_PARTICLE_MASS: {

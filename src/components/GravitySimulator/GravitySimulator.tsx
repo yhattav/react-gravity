@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { Point2D, GravityPoint, Force } from "../../utils/types/physics";
+import { Point2D, GravityPoint } from "../../utils/types/physics";
 import { GravityPointComponent } from "../GravityPoint/GravityPoint";
 import { ParticleRenderer } from "../ParticleRenderer/ParticleRenderer";
 import { StarPalette } from "../StarPalette/StarPalette";
@@ -43,12 +43,6 @@ interface GravitySimulatorProps {
   pointerPos: Point2D;
   onDebugData?: (data: DebugData) => void;
   className?: string;
-}
-
-interface SimulationScenario {
-  settings: typeof physicsConfig;
-  gravityPoints: GravityPoint[];
-  particles: Array<Omit<Particle, "trails" | "force">>;
 }
 
 export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
@@ -313,7 +307,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
               y,
               label: template.label,
               mass: template.mass,
-              color: template.color,
             },
           ]);
         }
@@ -348,6 +341,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           settings: physicsConfig,
           gravityPoints,
           particles: particles.map(
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             ({ trails, force, ...particle }) => particle
           ),
         },
@@ -369,6 +363,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           settings: physicsConfig,
           gravityPoints,
           particles: particles.map(
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             ({ trails, force, ...particle }) => particle
           ),
         },

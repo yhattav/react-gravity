@@ -4,14 +4,6 @@ export interface StarTemplate {
   size: number;
 }
 
-export interface GravityPoint {
-  x: number;
-  y: number;
-  label: string;
-  mass: number;
-  color: string;
-}
-
 export enum StarClass {
   BROWN_DWARF = "BROWN_DWARF", // <0.08 solar masses
   RED_DWARF = "RED_DWARF", // 0.08-0.45 solar masses

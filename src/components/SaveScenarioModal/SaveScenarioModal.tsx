@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Scenario } from "../../types/scenario";
-import { createShareableLink } from "../../utils/compression";
 import { CopyOutlined, CheckOutlined } from "@ant-design/icons";
 
 interface SaveScenarioModalProps {
