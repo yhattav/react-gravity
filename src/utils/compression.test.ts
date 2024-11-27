@@ -42,7 +42,7 @@ describe("Scenario Compression", () => {
           velocity: { x: 1, y: -1 },
           mass: 0.1,
           elasticity: 0.8,
-          color: "#00FF00",
+          color: "rgb(0, 255, 0)",
           size: 10,
           showVectors: true,
         },
