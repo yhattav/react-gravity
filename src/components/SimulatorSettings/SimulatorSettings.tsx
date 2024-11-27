@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   DEFAULT_PHYSICS_CONFIG,
@@ -15,7 +15,6 @@ interface SimulatorSettingsProps {
 export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
   onSettingsChange,
   isOpen,
-  onClose,
 }) => {
   const {
     settings,
