@@ -124,7 +124,10 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
   useEffect(() => {
     const throttledUpdate = throttle((newPos: Point2D) => {
-      setThrottledPointerPos(newPos);
+      setThrottledPointerPos({
+        x: newPos.x - offset.x,
+        y: newPos.y - offset.y,
+      });
     }, physicsConfig.DELTA_TIME * 1000);
 
     throttledUpdate(pointerPos);
