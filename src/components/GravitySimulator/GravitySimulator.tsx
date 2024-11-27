@@ -237,7 +237,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       position: Point2D,
       options: Partial<Omit<Particle, "position" | "id">> = {}
     ): Particle => {
-      console.log(offset);
       const newPosition = {
         x: position.x - offset.x,
         y: position.y - offset.y,
@@ -265,7 +264,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     if (!isSimulationStarted) {
       setIsSimulationStarted(true);
     }
-    console.log(offset);
     setParticles((current) => [...current, createParticle(pointerPos)]);
   }, [
     pointerPos,
@@ -273,7 +271,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     isDragging,
     isDraggingNewStar,
     createParticle,
-    offset,
   ]);
 
   useEffect(() => {
