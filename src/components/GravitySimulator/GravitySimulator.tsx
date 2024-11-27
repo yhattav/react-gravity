@@ -17,7 +17,7 @@ import { SimulatorSettings } from "../SimulatorSettings/SimulatorSettings";
 import { useSettings } from "../../contexts/SettingsContext";
 import { throttle } from "lodash";
 import "../../styles/global.scss";
-import { MdFullscreen, MdFullscreenExit } from "react-icons/md";
+import { MdFullscreen, MdFullscreenExit, MdInvertColors } from "react-icons/md";
 import { BiReset } from "react-icons/bi";
 import { motion } from "framer-motion";
 import { BsPlayFill, BsPauseFill } from "react-icons/bs";
@@ -70,6 +70,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [shareableLink, setShareableLink] = useState<string>("");
+  const [isColorInverted, setIsColorInverted] = useState(false);
 
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
@@ -456,12 +457,16 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             color: rgba(255, 255, 255, 0.6);
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
           }
+
+          .inverted {
+            filter: invert(1);
+          }
         `}
       </style>
       <div
         ref={gravityRef}
         onClick={handleContainerClick}
-        className={className}
+        className={`${className} ${isColorInverted ? "inverted" : ""}`}
         style={{
           position: "absolute",
           top: 0,
@@ -537,6 +542,19 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             title="Export Scenario"
           >
             <AiOutlineExport size={20} />
+          </motion.button>
+
+          <motion.button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsColorInverted((prev) => !prev);
+            }}
+            className="floating-panel floating-button"
+            whileHover={{ scale: 2.05 }}
+            whileTap={{ scale: 0.95 }}
+            title="Invert Colors"
+          >
+            <MdInvertColors size={20} />
           </motion.button>
         </div>
 
