@@ -22,5 +22,6 @@ export const decompressScenario = (compressed: string): Scenario | null => {
 
 export const createShareableLink = (scenario: Scenario): string => {
   const compressed = compressScenario(scenario);
-  return `${window.location.origin}?scenario=${compressed}`;
+  const basePath = window.location.pathname.replace(/\/$/, "");
+  return `${window.location.origin}${basePath}?scenario=${compressed}`;
 };
