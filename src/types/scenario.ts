@@ -10,6 +10,7 @@ export interface ScenarioData {
     CONSTANT_FORCE_X: number;
     CONSTANT_FORCE_Y: number;
     SOLID_BOUNDARIES: boolean;
+    PARTICLES_EXERT_GRAVITY: boolean;
   };
   gravityPoints: Array<{
     x: number;
