@@ -6,6 +6,7 @@ export interface ParticleMechanics {
   force: Force;
   mass: number;
   elasticity: number;
+  trails: TrailPoint[];
 }
 
 export interface TrailPoint extends Point2D {

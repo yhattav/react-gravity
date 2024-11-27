@@ -6,7 +6,7 @@ export interface Point2D {
 export interface GravityPoint extends Point2D {
   label: string;
   mass: number;
-  color: string;
+  id?: string;
 }
 
 export interface Force {
