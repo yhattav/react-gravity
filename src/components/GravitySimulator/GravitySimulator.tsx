@@ -43,6 +43,9 @@ interface GravitySimulatorProps {
   pointerPos: Point2D;
   onDebugData?: (data: DebugData) => void;
   className?: string;
+  removeOverlay?: boolean;
+  initialScenario?: Scenario;
+  blockInteractions?: boolean;
 }
 
 export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
@@ -50,11 +53,22 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   pointerPos,
   onDebugData,
   className,
+  removeOverlay = false,
+  initialScenario,
+  blockInteractions = false,
 }) => {
-  const [isSimulationStarted, setIsSimulationStarted] = useState(false);
-  const [particles, setParticles] = useState<Particle[]>([]);
+  const [isSimulationStarted, setIsSimulationStarted] = useState(
+    !!initialScenario
+  );
+  const [particles, setParticles] = useState<Particle[]>(
+    initialScenario?.data.particles.map((particle) => ({
+      ...particle,
+      trails: [{ ...particle.position, timestamp: Date.now() }],
+      force: { fx: 0, fy: 0 },
+    })) || []
+  );
   const [gravityPoints, setGravityPoints] = useState<GravityPoint[]>(
-    INITIAL_GRAVITY_POINTS
+    initialScenario?.data.gravityPoints || INITIAL_GRAVITY_POINTS
   );
   const [isDragging, setIsDragging] = useState(false);
   const [isDraggingNewStar, setIsDraggingNewStar] = useState(false);
@@ -92,11 +106,16 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
-  const handleDrag = throttle(() => {
-    setTimeout(() => {
-      setIsDragging(true);
-    }, 0);
-  });
+  const handleDrag = useCallback(
+    throttle(() => {
+      if (blockInteractions) return;
+
+      setTimeout(() => {
+        setIsDragging(true);
+      }, 0);
+    }),
+    [blockInteractions]
+  );
 
   const handleReportNewPosition = useCallback(
     throttle((point: Point2D, index: number) => {
@@ -114,11 +133,13 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     [gravityRef]
   );
 
-  const handleDragEnd = () => {
+  const handleDragEnd = useCallback(() => {
+    if (blockInteractions) return;
+
     setTimeout(() => {
       setIsDragging(false);
     }, 0);
-  };
+  }, [blockInteractions]);
 
   const offset = getContainerOffset(gravityRef);
 
@@ -262,6 +283,8 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   );
 
   const handleContainerClick = useCallback(() => {
+    if (blockInteractions) return;
+
     if (isDragging || isDraggingNewStar) return;
 
     if (!isSimulationStarted) {
@@ -274,6 +297,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     isDragging,
     isDraggingNewStar,
     createParticle,
+    blockInteractions,
   ]);
 
   useEffect(() => {
@@ -291,11 +315,13 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   }, [particles, pointerPos, onDebugData]);
 
   const handleStarDragStart = useCallback(() => {
+    if (blockInteractions) return;
     setIsDraggingNewStar(true);
-  }, []);
+  }, [blockInteractions]);
 
   const handleStarDragEnd = useCallback(
     (template: StarTemplate, e: MouseEvent | TouchEvent | PointerEvent) => {
+      if (blockInteractions) return;
       setIsDraggingNewStar(false);
       if (gravityRef.current) {
         const rect = gravityRef.current.getBoundingClientRect();
@@ -323,7 +349,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
       setIsDraggingNewStar(false);
     },
-    [gravityRef]
+    [gravityRef, blockInteractions]
   );
 
   const handlePointDelete = useCallback((index: number) => {
@@ -481,7 +507,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         onClick={handleContainerClick}
         className={`${className} ${
           isColorInverted ? "inverted" : "not-inverted"
-        }`}
+        } ${blockInteractions ? "pointer-events-none" : ""}`}
         style={{
           position: "absolute",
           top: 0,
@@ -492,96 +518,100 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           zIndex: 1,
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            top: 20,
-            right: 20,
-            display: "flex",
-            gap: "10px",
-            zIndex: 1001,
-            width: "fit-content",
-            height: "40px",
-            alignItems: "center",
-          }}
-        >
-          <motion.button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsPaused(!isPaused);
+        {!removeOverlay && (
+          <div
+            style={{
+              position: "absolute",
+              top: 20,
+              right: 20,
+              display: "flex",
+              gap: "10px",
+              zIndex: 1001,
+              width: "fit-content",
+              height: "40px",
+              alignItems: "center",
             }}
-            className="floating-panel floating-button"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            title={isPaused ? "Resume Simulation" : "Pause Simulation"}
           >
-            {isPaused ? <BsPlayFill size={20} /> : <BsPauseFill size={20} />}
-          </motion.button>
+            <motion.button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsPaused(!isPaused);
+              }}
+              className="floating-panel floating-button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              title={isPaused ? "Resume Simulation" : "Pause Simulation"}
+            >
+              {isPaused ? <BsPlayFill size={20} /> : <BsPauseFill size={20} />}
+            </motion.button>
 
-          <motion.button
-            onClick={(e) => {
-              e.stopPropagation();
-              setParticles([]);
-              setIsSimulationStarted(false);
-            }}
-            className="floating-panel floating-button"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            title="Reset Simulation"
-          >
-            <BiReset size={20} />
-          </motion.button>
+            <motion.button
+              onClick={(e) => {
+                e.stopPropagation();
+                setParticles([]);
+                setIsSimulationStarted(false);
+              }}
+              className="floating-panel floating-button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              title="Reset Simulation"
+            >
+              <BiReset size={20} />
+            </motion.button>
 
-          <motion.button
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleFullscreen();
-            }}
-            className="floating-panel floating-button"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-          >
-            {isFullscreen ? (
-              <MdFullscreenExit size={20} />
-            ) : (
-              <MdFullscreen size={20} />
-            )}
-          </motion.button>
+            <motion.button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleFullscreen();
+              }}
+              className="floating-panel floating-button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+            >
+              {isFullscreen ? (
+                <MdFullscreenExit size={20} />
+              ) : (
+                <MdFullscreen size={20} />
+              )}
+            </motion.button>
 
-          <motion.button
-            onClick={exportScenario}
-            className="floating-panel floating-button"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            title="Export Scenario"
-          >
-            <AiOutlineExport size={20} />
-          </motion.button>
+            <motion.button
+              onClick={exportScenario}
+              className="floating-panel floating-button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              title="Export Scenario"
+            >
+              <AiOutlineExport size={20} />
+            </motion.button>
 
-          <motion.button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsColorInverted((prev) => !prev);
-            }}
-            className="floating-panel floating-button"
-            whileHover={{ scale: 2.05 }}
-            whileTap={{ scale: 0.95 }}
-            title="Invert Colors"
-          >
-            <MdInvertColors size={20} />
-          </motion.button>
-        </div>
+            <motion.button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsColorInverted((prev) => !prev);
+              }}
+              className="floating-panel floating-button"
+              whileHover={{ scale: 2.05 }}
+              whileTap={{ scale: 0.95 }}
+              title="Invert Colors"
+            >
+              <MdInvertColors size={20} />
+            </motion.button>
+          </div>
+        )}
 
-        <StarPalette
-          onStarDragStart={handleStarDragStart}
-          onStarDragEnd={handleStarDragEnd}
-          containerRef={gravityRef}
-        />
+        {!removeOverlay && (
+          <StarPalette
+            onStarDragStart={handleStarDragStart}
+            onStarDragEnd={handleStarDragEnd}
+            containerRef={gravityRef}
+          />
+        )}
 
         {gravityPoints.map((point, index) => (
           <GravityPointComponent
-            key={point.id}
+            key={point.id || index}
             point={point}
             index={index}
             onDrag={handleDrag}
@@ -589,6 +619,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             onDragEnd={handleDragEnd}
             onDelete={handlePointDelete}
             containerRef={gravityRef}
+            disabled={blockInteractions}
           />
         ))}
 
@@ -598,7 +629,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
               key={particle.id}
               position={particle.position}
               velocity={particle.velocity}
-              force={particle.force}
+              force={particle.force || { fx: 0, fy: 0 }}
               color={particle.color}
               size={particle.size}
               showVectors={particle.showVectors}
@@ -608,68 +639,73 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
               onDelete={() => {
                 setParticles(particles.filter((p) => p.id !== particle.id));
               }}
+              disabled={blockInteractions}
             />
           ))}
 
-        <SimulatorSettings
-          onSettingsChange={updateSettings}
-          isOpen={isSettingsPanelOpen}
-          onClose={() => setIsSettingsPanelOpen(false)}
-        />
+        {!removeOverlay && (
+          <>
+            <SimulatorSettings
+              onSettingsChange={updateSettings}
+              isOpen={isSettingsPanelOpen}
+              onClose={() => setIsSettingsPanelOpen(false)}
+            />
 
-        <div
-          style={{
-            position: "absolute",
-            bottom: 20,
-            right: 20,
-            display: "flex",
-            gap: "10px",
-            zIndex: 1001,
-          }}
-        >
-          <motion.button
-            onClick={handleScenarioPanelToggle}
-            className="floating-panel floating-button"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            title="Scenarios"
-          >
-            <VscLibrary size={20} />
-          </motion.button>
+            <div
+              style={{
+                position: "absolute",
+                bottom: 20,
+                right: 20,
+                display: "flex",
+                gap: "10px",
+                zIndex: 1001,
+              }}
+            >
+              <motion.button
+                onClick={handleScenarioPanelToggle}
+                className="floating-panel floating-button"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                title="Scenarios"
+              >
+                <VscLibrary size={20} />
+              </motion.button>
 
-          <motion.button
-            onClick={handleSettingsPanelToggle}
-            className="floating-panel floating-button"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            title="Settings"
-          >
-            <SettingOutlined size={20} />
-          </motion.button>
-        </div>
+              <motion.button
+                onClick={handleSettingsPanelToggle}
+                className="floating-panel floating-button"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                title="Settings"
+              >
+                <SettingOutlined size={20} />
+              </motion.button>
+            </div>
 
-        <ScenarioPanel
-          isOpen={isScenarioPanelOpen}
-          onClose={() => setIsScenarioPanelOpen(false)}
-          onSelectScenario={handleSelectScenario}
-        />
+            <ScenarioPanel
+              isOpen={isScenarioPanelOpen}
+              onClose={() => setIsScenarioPanelOpen(false)}
+              onSelectScenario={handleSelectScenario}
+            />
 
-        <SaveScenarioModal
-          isOpen={isSaveModalOpen}
-          onClose={() => setIsSaveModalOpen(false)}
-          onSave={handleSaveScenario}
-          shareableLink={shareableLink}
-        />
+            <SaveScenarioModal
+              isOpen={isSaveModalOpen}
+              onClose={() => setIsSaveModalOpen(false)}
+              onSave={handleSaveScenario}
+              shareableLink={shareableLink}
+            />
 
-        <a
-          href="https://github.com/yhattav"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="signature"
-          onClick={(e) => e.stopPropagation()}
-        >
-          Y·Hattav
-        </a>
+            <a
+              href="https://github.com/yhattav"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="signature"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Y·Hattav
+            </a>
+          </>
+        )}
       </div>
     </>
   );

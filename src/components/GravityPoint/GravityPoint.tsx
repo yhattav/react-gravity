@@ -11,7 +11,8 @@ interface GravityPointComponentProps {
   onDragEnd: () => void;
   reportNewPosition: (point: Point2D, index: number) => void;
   onDelete: (index: number) => void;
-  containerRef: React.RefObject<HTMLElement>;
+  containerRef: React.RefObject<HTMLDivElement>;
+  disabled?: boolean;
 }
 
 export const GravityPointComponent: React.FC<GravityPointComponentProps> = ({
@@ -22,6 +23,7 @@ export const GravityPointComponent: React.FC<GravityPointComponentProps> = ({
   onDragEnd,
   onDelete,
   containerRef,
+  disabled = false,
 }) => {
   const elementRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout>();
@@ -60,28 +62,32 @@ export const GravityPointComponent: React.FC<GravityPointComponentProps> = ({
       onUpdate={(latest) => {
         reportPosition({ x: Number(latest.x), y: Number(latest.y) });
       }}
-      drag
+      drag={!disabled}
       dragMomentum={false}
-      //dragElastic={0}
+      dragElastic={0}
       onDrag={() => {
         isDraggingRef.current = true;
         onDrag();
       }}
       initial={{ x: point.x, y: point.y }}
       onDragEnd={onDragEnd}
-      onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
+      onPointerDown={disabled ? undefined : handlePointerDown}
+      onPointerUp={disabled ? undefined : handlePointerUp}
       data-point={index}
       style={{
         position: "absolute",
-        cursor: "grab",
+        cursor: disabled ? "default" : "grab",
         zIndex: 2,
       }}
       dragConstraints={containerRef}
-      whileDrag={{ cursor: "grabbing" }}
-      whileHover={{
-        scale: 1.1,
-      }}
+      whileDrag={disabled ? undefined : { cursor: "grabbing" }}
+      whileHover={
+        disabled
+          ? undefined
+          : {
+              scale: 1.1,
+            }
+      }
     >
       <StarRenderer mass={point.mass} />
     </motion.div>
