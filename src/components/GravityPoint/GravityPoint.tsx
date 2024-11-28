@@ -71,19 +71,23 @@ export const GravityPointComponent: React.FC<GravityPointComponentProps> = ({
       }}
       initial={{ x: point.x, y: point.y }}
       onDragEnd={onDragEnd}
-      onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
+      onPointerDown={disabled ? undefined : handlePointerDown}
+      onPointerUp={disabled ? undefined : handlePointerUp}
       data-point={index}
       style={{
         position: "absolute",
-        cursor: "grab",
+        cursor: disabled ? "default" : "grab",
         zIndex: 2,
       }}
       dragConstraints={containerRef}
-      whileDrag={{ cursor: "grabbing" }}
-      whileHover={{
-        scale: 1.1,
-      }}
+      whileDrag={disabled ? undefined : { cursor: "grabbing" }}
+      whileHover={
+        disabled
+          ? undefined
+          : {
+              scale: 1.1,
+            }
+      }
     >
       <StarRenderer mass={point.mass} />
     </motion.div>

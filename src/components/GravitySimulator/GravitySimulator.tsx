@@ -282,26 +282,23 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     [physicsConfig, offset]
   );
 
-  const handleContainerClick = useCallback(
-    (e: React.MouseEvent) => {
-      if (blockInteractions) return;
+  const handleContainerClick = useCallback(() => {
+    if (blockInteractions) return;
 
-      if (isDragging || isDraggingNewStar) return;
+    if (isDragging || isDraggingNewStar) return;
 
-      if (!isSimulationStarted) {
-        setIsSimulationStarted(true);
-      }
-      setParticles((current) => [...current, createParticle(pointerPos)]);
-    },
-    [
-      pointerPos,
-      isSimulationStarted,
-      isDragging,
-      isDraggingNewStar,
-      createParticle,
-      blockInteractions,
-    ]
-  );
+    if (!isSimulationStarted) {
+      setIsSimulationStarted(true);
+    }
+    setParticles((current) => [...current, createParticle(pointerPos)]);
+  }, [
+    pointerPos,
+    isSimulationStarted,
+    isDragging,
+    isDraggingNewStar,
+    createParticle,
+    blockInteractions,
+  ]);
 
   useEffect(() => {
     onDebugData?.({
@@ -642,6 +639,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
               onDelete={() => {
                 setParticles(particles.filter((p) => p.id !== particle.id));
               }}
+              disabled={blockInteractions}
             />
           ))}
 

@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { drawArrow } from "../../utils/physics/vectorUtils";
 import { TrailPoint } from "../../types/particle";
+import { Point2D } from "../../utils/types/physics";
+import { Force } from "../../utils/types/physics";
 
 interface ParticleRenderParams {
   position: Point2D;
@@ -14,6 +16,7 @@ interface ParticleRenderParams {
   showForceArrows?: boolean;
   trails?: TrailPoint[];
   onDelete?: () => void;
+  disabled?: boolean;
 }
 
 export const ParticleRenderer: React.FC<ParticleRenderParams> = ({
@@ -27,6 +30,7 @@ export const ParticleRenderer: React.FC<ParticleRenderParams> = ({
   showForceArrows = true,
   trails = [],
   onDelete,
+  disabled = false,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -80,7 +84,6 @@ export const ParticleRenderer: React.FC<ParticleRenderParams> = ({
           }}
         >
           {/* Velocity vector */}
-
           {showVelocityArrows &&
             drawArrow(
               position.x,
@@ -102,33 +105,38 @@ export const ParticleRenderer: React.FC<ParticleRenderParams> = ({
         style={{
           width: `${size}px`,
           height: `${size}px`,
-          backgroundColor: isHovered ? "rgba(255, 82, 82, 0.6)" : "transparent",
-          border: `2px solid ${isHovered ? "#ff5252" : color}`,
+          backgroundColor:
+            isHovered && !disabled ? "rgba(255, 82, 82, 0.6)" : "transparent",
+          border: `2px solid ${isHovered && !disabled ? "#ff5252" : color}`,
           borderRadius: "50%",
           position: "fixed",
           left: position.x,
           top: position.y,
           transformOrigin: "center center",
-          cursor: "pointer",
-          boxShadow: isHovered
-            ? "0 0 10px rgba(255, 82, 82, 0.5), inset 0 0 8px rgba(255, 255, 255, 0.3)"
-            : "0 0 20px rgba(255,255,255,0.2)",
+          cursor: disabled ? "default" : "pointer",
+          boxShadow:
+            isHovered && !disabled
+              ? "0 0 10px rgba(255, 82, 82, 0.5), inset 0 0 8px rgba(255, 255, 255, 0.3)"
+              : "0 0 20px rgba(255,255,255,0.2)",
           zIndex: 3,
         }}
         animate={{
-          transform: isHovered
-            ? `translate(-50%, -50%) scale(${Math.max(20 / size, 1.2)})`
-            : "translate(-50%, -50%) scale(1)",
+          transform:
+            isHovered && !disabled
+              ? `translate(-50%, -50%) scale(${Math.max(20 / size, 1.2)})`
+              : "translate(-50%, -50%) scale(1)",
         }}
         transition={{
           duration: 0.2,
           ease: "easeOut",
         }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onMouseEnter={() => !disabled && setIsHovered(true)}
+        onMouseLeave={() => !disabled && setIsHovered(false)}
         onClick={(e) => {
-          e.stopPropagation();
-          onDelete?.();
+          if (!disabled) {
+            e.stopPropagation();
+            onDelete?.();
+          }
         }}
       />
     </>
