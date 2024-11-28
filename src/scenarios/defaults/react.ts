@@ -16,7 +16,7 @@ export const react: Scenario = {
       SHOW_FORCE_ARROWS: false,
       CONSTANT_FORCE_X: 0,
       CONSTANT_FORCE_Y: 0,
-      SOLID_BOUNDARIES: false,
+      SOLID_BOUNDARIES: true,
       PARTICLES_EXERT_GRAVITY: false,
     },
     gravityPoints: [
