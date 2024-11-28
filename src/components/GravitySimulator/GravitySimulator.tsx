@@ -43,6 +43,7 @@ interface GravitySimulatorProps {
   pointerPos: Point2D;
   onDebugData?: (data: DebugData) => void;
   className?: string;
+  removeOverlay?: boolean;
 }
 
 export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
@@ -50,6 +51,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   pointerPos,
   onDebugData,
   className,
+  removeOverlay = false,
 }) => {
   const [isSimulationStarted, setIsSimulationStarted] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
@@ -492,92 +494,96 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           zIndex: 1,
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            top: 20,
-            right: 20,
-            display: "flex",
-            gap: "10px",
-            zIndex: 1001,
-            width: "fit-content",
-            height: "40px",
-            alignItems: "center",
-          }}
-        >
-          <motion.button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsPaused(!isPaused);
+        {!removeOverlay && (
+          <div
+            style={{
+              position: "absolute",
+              top: 20,
+              right: 20,
+              display: "flex",
+              gap: "10px",
+              zIndex: 1001,
+              width: "fit-content",
+              height: "40px",
+              alignItems: "center",
             }}
-            className="floating-panel floating-button"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            title={isPaused ? "Resume Simulation" : "Pause Simulation"}
           >
-            {isPaused ? <BsPlayFill size={20} /> : <BsPauseFill size={20} />}
-          </motion.button>
+            <motion.button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsPaused(!isPaused);
+              }}
+              className="floating-panel floating-button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              title={isPaused ? "Resume Simulation" : "Pause Simulation"}
+            >
+              {isPaused ? <BsPlayFill size={20} /> : <BsPauseFill size={20} />}
+            </motion.button>
 
-          <motion.button
-            onClick={(e) => {
-              e.stopPropagation();
-              setParticles([]);
-              setIsSimulationStarted(false);
-            }}
-            className="floating-panel floating-button"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            title="Reset Simulation"
-          >
-            <BiReset size={20} />
-          </motion.button>
+            <motion.button
+              onClick={(e) => {
+                e.stopPropagation();
+                setParticles([]);
+                setIsSimulationStarted(false);
+              }}
+              className="floating-panel floating-button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              title="Reset Simulation"
+            >
+              <BiReset size={20} />
+            </motion.button>
 
-          <motion.button
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleFullscreen();
-            }}
-            className="floating-panel floating-button"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-          >
-            {isFullscreen ? (
-              <MdFullscreenExit size={20} />
-            ) : (
-              <MdFullscreen size={20} />
-            )}
-          </motion.button>
+            <motion.button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleFullscreen();
+              }}
+              className="floating-panel floating-button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+            >
+              {isFullscreen ? (
+                <MdFullscreenExit size={20} />
+              ) : (
+                <MdFullscreen size={20} />
+              )}
+            </motion.button>
 
-          <motion.button
-            onClick={exportScenario}
-            className="floating-panel floating-button"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            title="Export Scenario"
-          >
-            <AiOutlineExport size={20} />
-          </motion.button>
+            <motion.button
+              onClick={exportScenario}
+              className="floating-panel floating-button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              title="Export Scenario"
+            >
+              <AiOutlineExport size={20} />
+            </motion.button>
 
-          <motion.button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsColorInverted((prev) => !prev);
-            }}
-            className="floating-panel floating-button"
-            whileHover={{ scale: 2.05 }}
-            whileTap={{ scale: 0.95 }}
-            title="Invert Colors"
-          >
-            <MdInvertColors size={20} />
-          </motion.button>
-        </div>
+            <motion.button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsColorInverted((prev) => !prev);
+              }}
+              className="floating-panel floating-button"
+              whileHover={{ scale: 2.05 }}
+              whileTap={{ scale: 0.95 }}
+              title="Invert Colors"
+            >
+              <MdInvertColors size={20} />
+            </motion.button>
+          </div>
+        )}
 
-        <StarPalette
-          onStarDragStart={handleStarDragStart}
-          onStarDragEnd={handleStarDragEnd}
-          containerRef={gravityRef}
-        />
+        {!removeOverlay && (
+          <StarPalette
+            onStarDragStart={handleStarDragStart}
+            onStarDragEnd={handleStarDragEnd}
+            containerRef={gravityRef}
+          />
+        )}
 
         {gravityPoints.map((point, index) => (
           <GravityPointComponent
@@ -611,65 +617,69 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             />
           ))}
 
-        <SimulatorSettings
-          onSettingsChange={updateSettings}
-          isOpen={isSettingsPanelOpen}
-          onClose={() => setIsSettingsPanelOpen(false)}
-        />
+        {!removeOverlay && (
+          <>
+            <SimulatorSettings
+              onSettingsChange={updateSettings}
+              isOpen={isSettingsPanelOpen}
+              onClose={() => setIsSettingsPanelOpen(false)}
+            />
 
-        <div
-          style={{
-            position: "absolute",
-            bottom: 20,
-            right: 20,
-            display: "flex",
-            gap: "10px",
-            zIndex: 1001,
-          }}
-        >
-          <motion.button
-            onClick={handleScenarioPanelToggle}
-            className="floating-panel floating-button"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            title="Scenarios"
-          >
-            <VscLibrary size={20} />
-          </motion.button>
+            <div
+              style={{
+                position: "absolute",
+                bottom: 20,
+                right: 20,
+                display: "flex",
+                gap: "10px",
+                zIndex: 1001,
+              }}
+            >
+              <motion.button
+                onClick={handleScenarioPanelToggle}
+                className="floating-panel floating-button"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                title="Scenarios"
+              >
+                <VscLibrary size={20} />
+              </motion.button>
 
-          <motion.button
-            onClick={handleSettingsPanelToggle}
-            className="floating-panel floating-button"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            title="Settings"
-          >
-            <SettingOutlined size={20} />
-          </motion.button>
-        </div>
+              <motion.button
+                onClick={handleSettingsPanelToggle}
+                className="floating-panel floating-button"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                title="Settings"
+              >
+                <SettingOutlined size={20} />
+              </motion.button>
+            </div>
 
-        <ScenarioPanel
-          isOpen={isScenarioPanelOpen}
-          onClose={() => setIsScenarioPanelOpen(false)}
-          onSelectScenario={handleSelectScenario}
-        />
+            <ScenarioPanel
+              isOpen={isScenarioPanelOpen}
+              onClose={() => setIsScenarioPanelOpen(false)}
+              onSelectScenario={handleSelectScenario}
+            />
 
-        <SaveScenarioModal
-          isOpen={isSaveModalOpen}
-          onClose={() => setIsSaveModalOpen(false)}
-          onSave={handleSaveScenario}
-          shareableLink={shareableLink}
-        />
+            <SaveScenarioModal
+              isOpen={isSaveModalOpen}
+              onClose={() => setIsSaveModalOpen(false)}
+              onSave={handleSaveScenario}
+              shareableLink={shareableLink}
+            />
 
-        <a
-          href="https://github.com/yhattav"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="signature"
-          onClick={(e) => e.stopPropagation()}
-        >
-          Y·Hattav
-        </a>
+            <a
+              href="https://github.com/yhattav"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="signature"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Y·Hattav
+            </a>
+          </>
+        )}
       </div>
     </>
   );
