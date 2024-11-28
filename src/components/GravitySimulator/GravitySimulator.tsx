@@ -377,6 +377,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           ),
         },
       };
+      console.log("scenario", scenario);
       saveScenario(scenario);
       setIsSaveModalOpen(false);
     },
