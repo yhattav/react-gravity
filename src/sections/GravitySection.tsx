@@ -110,6 +110,7 @@ export const GravitySection: React.FC<GravitySectionProps> = ({
           onDebugData={onDebugData}
           //initialScenario={testScenario}
           //blockInteractions={true}
+          //removeOverlay={true}
         />
       </Card>
     </>
