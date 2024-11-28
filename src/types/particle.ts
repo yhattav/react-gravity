@@ -3,10 +3,10 @@ import { Point2D, Force } from "../utils/types/physics";
 export interface ParticleMechanics {
   position: Point2D;
   velocity: Point2D;
-  force: Force;
+  force?: Force;
   mass: number;
   elasticity: number;
-  trails: TrailPoint[];
+  trails?: TrailPoint[];
 }
 
 export interface TrailPoint extends Point2D {

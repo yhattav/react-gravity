@@ -44,6 +44,7 @@ interface GravitySimulatorProps {
   onDebugData?: (data: DebugData) => void;
   className?: string;
   removeOverlay?: boolean;
+  initialScenario?: Scenario;
 }
 
 export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
@@ -52,11 +53,20 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   onDebugData,
   className,
   removeOverlay = false,
+  initialScenario,
 }) => {
-  const [isSimulationStarted, setIsSimulationStarted] = useState(false);
-  const [particles, setParticles] = useState<Particle[]>([]);
+  const [isSimulationStarted, setIsSimulationStarted] = useState(
+    !!initialScenario
+  );
+  const [particles, setParticles] = useState<Particle[]>(
+    initialScenario?.data.particles.map((particle) => ({
+      ...particle,
+      trails: [{ ...particle.position, timestamp: Date.now() }],
+      force: { fx: 0, fy: 0 },
+    })) || []
+  );
   const [gravityPoints, setGravityPoints] = useState<GravityPoint[]>(
-    INITIAL_GRAVITY_POINTS
+    initialScenario?.data.gravityPoints || INITIAL_GRAVITY_POINTS
   );
   const [isDragging, setIsDragging] = useState(false);
   const [isDraggingNewStar, setIsDraggingNewStar] = useState(false);
