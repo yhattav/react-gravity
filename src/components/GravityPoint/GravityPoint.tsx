@@ -11,7 +11,8 @@ interface GravityPointComponentProps {
   onDragEnd: () => void;
   reportNewPosition: (point: Point2D, index: number) => void;
   onDelete: (index: number) => void;
-  containerRef: React.RefObject<HTMLElement>;
+  containerRef: React.RefObject<HTMLDivElement>;
+  disabled?: boolean;
 }
 
 export const GravityPointComponent: React.FC<GravityPointComponentProps> = ({
@@ -22,6 +23,7 @@ export const GravityPointComponent: React.FC<GravityPointComponentProps> = ({
   onDragEnd,
   onDelete,
   containerRef,
+  disabled = false,
 }) => {
   const elementRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout>();
@@ -60,9 +62,9 @@ export const GravityPointComponent: React.FC<GravityPointComponentProps> = ({
       onUpdate={(latest) => {
         reportPosition({ x: Number(latest.x), y: Number(latest.y) });
       }}
-      drag
+      drag={!disabled}
       dragMomentum={false}
-      //dragElastic={0}
+      dragElastic={0}
       onDrag={() => {
         isDraggingRef.current = true;
         onDrag();

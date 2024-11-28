@@ -109,6 +109,7 @@ export const GravitySection: React.FC<GravitySectionProps> = ({
           pointerPos={pointerPos}
           onDebugData={onDebugData}
           //initialScenario={testScenario}
+          blockInteractions={true}
         />
       </Card>
     </>

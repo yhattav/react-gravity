@@ -45,6 +45,7 @@ interface GravitySimulatorProps {
   className?: string;
   removeOverlay?: boolean;
   initialScenario?: Scenario;
+  blockInteractions?: boolean;
 }
 
 export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
@@ -54,6 +55,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   className,
   removeOverlay = false,
   initialScenario,
+  blockInteractions = false,
 }) => {
   const [isSimulationStarted, setIsSimulationStarted] = useState(
     !!initialScenario
@@ -104,11 +106,16 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
-  const handleDrag = throttle(() => {
-    setTimeout(() => {
-      setIsDragging(true);
-    }, 0);
-  });
+  const handleDrag = useCallback(
+    throttle(() => {
+      if (blockInteractions) return;
+
+      setTimeout(() => {
+        setIsDragging(true);
+      }, 0);
+    }),
+    [blockInteractions]
+  );
 
   const handleReportNewPosition = useCallback(
     throttle((point: Point2D, index: number) => {
@@ -126,11 +133,13 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     [gravityRef]
   );
 
-  const handleDragEnd = () => {
+  const handleDragEnd = useCallback(() => {
+    if (blockInteractions) return;
+
     setTimeout(() => {
       setIsDragging(false);
     }, 0);
-  };
+  }, [blockInteractions]);
 
   const offset = getContainerOffset(gravityRef);
 
@@ -273,20 +282,26 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     [physicsConfig, offset]
   );
 
-  const handleContainerClick = useCallback(() => {
-    if (isDragging || isDraggingNewStar) return;
+  const handleContainerClick = useCallback(
+    (e: React.MouseEvent) => {
+      if (blockInteractions) return;
 
-    if (!isSimulationStarted) {
-      setIsSimulationStarted(true);
-    }
-    setParticles((current) => [...current, createParticle(pointerPos)]);
-  }, [
-    pointerPos,
-    isSimulationStarted,
-    isDragging,
-    isDraggingNewStar,
-    createParticle,
-  ]);
+      if (isDragging || isDraggingNewStar) return;
+
+      if (!isSimulationStarted) {
+        setIsSimulationStarted(true);
+      }
+      setParticles((current) => [...current, createParticle(pointerPos)]);
+    },
+    [
+      pointerPos,
+      isSimulationStarted,
+      isDragging,
+      isDraggingNewStar,
+      createParticle,
+      blockInteractions,
+    ]
+  );
 
   useEffect(() => {
     onDebugData?.({
@@ -303,11 +318,13 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   }, [particles, pointerPos, onDebugData]);
 
   const handleStarDragStart = useCallback(() => {
+    if (blockInteractions) return;
     setIsDraggingNewStar(true);
-  }, []);
+  }, [blockInteractions]);
 
   const handleStarDragEnd = useCallback(
     (template: StarTemplate, e: MouseEvent | TouchEvent | PointerEvent) => {
+      if (blockInteractions) return;
       setIsDraggingNewStar(false);
       if (gravityRef.current) {
         const rect = gravityRef.current.getBoundingClientRect();
@@ -335,7 +352,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
       setIsDraggingNewStar(false);
     },
-    [gravityRef]
+    [gravityRef, blockInteractions]
   );
 
   const handlePointDelete = useCallback((index: number) => {
@@ -493,7 +510,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         onClick={handleContainerClick}
         className={`${className} ${
           isColorInverted ? "inverted" : "not-inverted"
-        }`}
+        } ${blockInteractions ? "pointer-events-none" : ""}`}
         style={{
           position: "absolute",
           top: 0,
@@ -597,7 +614,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
         {gravityPoints.map((point, index) => (
           <GravityPointComponent
-            key={point.id}
+            key={point.id || index}
             point={point}
             index={index}
             onDrag={handleDrag}
@@ -605,6 +622,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             onDragEnd={handleDragEnd}
             onDelete={handlePointDelete}
             containerRef={gravityRef}
+            disabled={blockInteractions}
           />
         ))}
 
