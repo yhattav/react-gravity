@@ -4,7 +4,7 @@ import { Card } from "antd";
 import { Point2D } from "../utils/types/physics";
 import { GravitySimulator } from "../components/GravitySimulator/GravitySimulator";
 import { DebugData } from "../types/Debug";
-import { Scenario } from "../types/scenario";
+//import { Scenario } from "../types/scenario";
 
 interface GravitySectionProps {
   onDebugData?: (data: DebugData) => void;
