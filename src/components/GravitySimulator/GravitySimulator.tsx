@@ -52,7 +52,7 @@ interface GravitySimulatorProps {
   onApiReady?: (api: GravitySimulatorApi) => void;
 }
 
-interface GravitySimulatorApi {
+export interface GravitySimulatorApi {
   // Simulation Control
   play: () => void;
   pause: () => void;

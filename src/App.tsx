@@ -11,6 +11,7 @@ import { DebugInfo } from "./components/DebugInfo";
 import { DebugData } from "./types/Debug";
 import "./App.css";
 import { SettingsProvider } from "./contexts/SettingsContext";
+import { ReactLogoIcon } from "./components/ReactLogoIcon/ReactLogoIcon";
 
 const { Content, Header } = Layout;
 
@@ -46,7 +47,10 @@ function App() {
       <Layout className="app-layout">
         <Header className="app-header">
           <div className="header-content">
-            <h1 className="app-title">Gravity Simulator</h1>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <ReactLogoIcon />
+              <h1 className="app-title">Gravity Simulator</h1>
+            </div>
             <div className="header-icons">
               <a
                 href="https://github.com/yhattav/react-gravity"
