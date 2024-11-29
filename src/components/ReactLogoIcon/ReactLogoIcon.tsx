@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { GravitySimulator } from "../GravitySimulator/GravitySimulator";
 import { reactIcon } from "../../scenarios/defaults/reactIcon";
 import { Point2D } from "../../utils/types/physics";
