@@ -12,7 +12,10 @@ import {
   handleBoundaryCollision,
 } from "../../utils/physics/physicsUtils";
 import { getContainerOffset } from "../../utils/dom/domUtils";
-import { INITIAL_GRAVITY_POINTS } from "../../constants/physics";
+import {
+  INITIAL_GRAVITY_POINTS,
+  PhysicsSettings,
+} from "../../constants/physics";
 import { SimulatorSettings } from "../SimulatorSettings/SimulatorSettings";
 import { useSettings } from "../../contexts/SettingsContext";
 import { throttle } from "lodash";
@@ -46,6 +49,46 @@ interface GravitySimulatorProps {
   removeOverlay?: boolean;
   initialScenario?: Scenario;
   blockInteractions?: boolean;
+  onApiReady?: (api: GravitySimulatorApi) => void;
+}
+
+interface GravitySimulatorApi {
+  // Simulation Control
+  play: () => void;
+  pause: () => void;
+  reset: () => void;
+
+  // Display Control
+  enterFullscreen: () => void;
+  exitFullscreen: () => void;
+  toggleFullscreen: () => void;
+  invertColors: (invert: boolean) => void;
+
+  // Particle Management
+  addParticle: (
+    position: Point2D,
+    options?: Partial<Omit<Particle, "position" | "id">>
+  ) => void;
+  removeAllParticles: () => void;
+
+  // Gravity Points Management
+  addGravityPoint: (point: Omit<GravityPoint, "id">) => void;
+  removeGravityPoint: (index: number) => void;
+  removeAllGravityPoints: () => void;
+
+  // Scenario Management
+  loadScenario: (scenario: Scenario) => void;
+  exportCurrentScenario: () => Scenario;
+
+  // Settings
+  updateSettings: (settings: Partial<PhysicsSettings>) => void;
+  getSettings: () => PhysicsSettings;
+
+  // State Queries
+  isPlaying: () => boolean;
+  isFullscreen: () => boolean;
+  getParticleCount: () => number;
+  getGravityPointsCount: () => number;
 }
 
 export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
@@ -56,6 +99,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   removeOverlay = false,
   initialScenario,
   blockInteractions = false,
+  onApiReady,
 }) => {
   const [isSimulationStarted, setIsSimulationStarted] = useState(
     !!initialScenario
@@ -451,6 +495,82 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     setIsScenarioPanelOpen((prev) => !prev);
     setIsSettingsPanelOpen(false);
   }, []);
+
+  // Create and expose the API
+  useEffect(
+    () => {
+      if (!onApiReady) return;
+
+      const api: GravitySimulatorApi = {
+        play: () => setIsPaused(false),
+        pause: () => setIsPaused(true),
+        reset: () => {
+          setParticles([]);
+          setIsSimulationStarted(false);
+        },
+
+        enterFullscreen: () => {
+          gravityRef.current?.requestFullscreen();
+          setIsFullscreen(true);
+        },
+        exitFullscreen: () => {
+          document.exitFullscreen();
+          setIsFullscreen(false);
+        },
+        toggleFullscreen,
+        invertColors: (invert: boolean) => setIsColorInverted(invert),
+
+        addParticle: (position, options) => {
+          setIsSimulationStarted(true);
+          setParticles((current) => [
+            ...current,
+            createParticle(position, options),
+          ]);
+        },
+        removeAllParticles: () => setParticles([]),
+
+        addGravityPoint: (point) => {
+          setGravityPoints((current) => [
+            ...current,
+            {
+              ...point,
+              id: Math.random().toString(36).substr(2, 9),
+            },
+          ]);
+        },
+        removeGravityPoint: handlePointDelete,
+        removeAllGravityPoints: () => setGravityPoints([]),
+
+        loadScenario: handleSelectScenario,
+        exportCurrentScenario: () => ({
+          id: Math.random().toString(36).substr(2, 9),
+          name: "Exported Scenario",
+          description: "Current simulation state",
+          data: {
+            settings: physicsConfig,
+            gravityPoints,
+            particles: particles.map(
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              ({ trails, force, ...particle }) => particle
+            ),
+          },
+        }),
+
+        updateSettings: updateSettings,
+        getSettings: () => physicsConfig,
+
+        isPlaying: () => !isPaused,
+        isFullscreen: () => isFullscreen,
+        getParticleCount: () => particles.length,
+        getGravityPointsCount: () => gravityPoints.length,
+      };
+
+      onApiReady(api);
+    },
+    [
+      // Add all dependencies used in the API object
+    ]
+  );
 
   return (
     <>
