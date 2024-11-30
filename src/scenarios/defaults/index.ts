@@ -5,6 +5,7 @@ import { galaxyCollision } from "./galaxyCollision";
 import { flowerDance } from "./flowerDance";
 import { orbit } from "./orbit";
 import { react } from "./react";
+import { pulsar } from "./pulsar";
 
 export const defaultScenarios: Scenario[] = [
   react,
@@ -13,4 +14,5 @@ export const defaultScenarios: Scenario[] = [
   orbitalDance,
   galaxyCollision,
   flowerDance,
+  pulsar,
 ];
