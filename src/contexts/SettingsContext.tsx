@@ -82,7 +82,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
         return updatedSettings;
       });
     },
-    [simulatorId]
+    [saveToStorage]
   );
 
   const updateShowDevSettings = useCallback(
@@ -90,13 +90,13 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
       setShowDevSettings(show);
       saveToStorage("SHOW_DEV", show);
     },
-    [simulatorId]
+    [saveToStorage]
   );
 
   const resetSettings = useCallback(() => {
     setSettings(DEFAULT_PHYSICS_CONFIG);
     saveToStorage("SETTINGS", DEFAULT_PHYSICS_CONFIG);
-  }, [simulatorId]);
+  }, [saveToStorage]);
 
   const saveScenario = useCallback(
     (scenario: Scenario) => {
@@ -106,7 +106,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
         return updatedScenarios;
       });
     },
-    [simulatorId]
+    [saveToStorage]
   );
 
   const deleteSavedScenario = useCallback(
@@ -119,7 +119,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
         return updatedScenarios;
       });
     },
-    [simulatorId]
+    [saveToStorage]
   );
 
   const value = {

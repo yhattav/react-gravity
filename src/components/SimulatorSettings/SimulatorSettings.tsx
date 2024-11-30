@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   DEFAULT_PHYSICS_CONFIG,
   SETTINGS_METADATA,
+  SliderSettingMetadata,
 } from "../../constants/physics";
 import { useSettings } from "../../contexts/SettingsContext";
 
@@ -207,27 +208,33 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
                             SETTINGS_METADATA[
                               key as keyof typeof SETTINGS_METADATA
                             ].type === "slider"
-                              ? SETTINGS_METADATA[
-                                  key as keyof typeof SETTINGS_METADATA
-                                ].min
+                              ? (
+                                  SETTINGS_METADATA[
+                                    key as keyof typeof SETTINGS_METADATA
+                                  ] as SliderSettingMetadata
+                                ).min
                               : undefined
                           }
                           max={
                             SETTINGS_METADATA[
                               key as keyof typeof SETTINGS_METADATA
                             ].type === "slider"
-                              ? SETTINGS_METADATA[
-                                  key as keyof typeof SETTINGS_METADATA
-                                ].max
+                              ? (
+                                  SETTINGS_METADATA[
+                                    key as keyof typeof SETTINGS_METADATA
+                                  ] as SliderSettingMetadata
+                                ).max
                               : undefined
                           }
                           step={
                             SETTINGS_METADATA[
                               key as keyof typeof SETTINGS_METADATA
                             ].type === "slider"
-                              ? SETTINGS_METADATA[
-                                  key as keyof typeof SETTINGS_METADATA
-                                ].step
+                              ? (
+                                  SETTINGS_METADATA[
+                                    key as keyof typeof SETTINGS_METADATA
+                                  ] as SliderSettingMetadata
+                                ).step
                               : undefined
                           }
                           value={value as number}

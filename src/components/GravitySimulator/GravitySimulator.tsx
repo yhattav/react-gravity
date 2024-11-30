@@ -33,7 +33,6 @@ import { SettingOutlined } from "@ant-design/icons";
 import { SaveScenarioModal } from "../SaveScenarioModal/SaveScenarioModal";
 import { createShareableLink } from "../../utils/compression";
 import { Particle, ParticleMechanics, TrailPoint } from "../../types/particle";
-import { SettingsProvider } from "../../contexts/SettingsContext";
 
 const generatePastelColor = () => {
   const r = Math.floor(Math.random() * 75 + 180);
@@ -102,7 +101,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   initialScenario,
   blockInteractions = false,
   onApiReady,
-  simulatorId,
 }) => {
   const [isSimulationStarted, setIsSimulationStarted] = useState(
     !!initialScenario
