@@ -10,7 +10,6 @@ import { GravitySection } from "./sections/GravitySection";
 import { DebugInfo } from "./components/DebugInfo";
 import { DebugData } from "./types/Debug";
 import "./App.css";
-import { SettingsProvider } from "./contexts/SettingsContext";
 import { ReactLogoIcon } from "./components/ReactLogoIcon/ReactLogoIcon";
 
 const { Content, Header } = Layout;
@@ -43,68 +42,66 @@ function App() {
   }, []);
 
   return (
-    <SettingsProvider>
-      <Layout className="app-layout">
-        <Header className="app-header">
-          <div className="header-content">
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <ReactLogoIcon />
-              <h1 className="app-title">Gravity Simulator</h1>
-            </div>
-            <div className="header-icons">
-              <a
-                href="https://github.com/yhattav/react-gravity"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="header-icon"
-                title="View Source Code"
-              >
-                <GithubOutlined />
-              </a>
-              <a
-                href="https://github.com/yhattav/react-gravity/issues"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="header-icon"
-                title="Report Issues"
-              >
-                <BugOutlined />
-              </a>
-              <a
-                href="https://github.com/yhattav/react-gravity/wiki"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="header-icon"
-                title="Documentation"
-              >
-                <QuestionCircleOutlined />
-              </a>
-              <a
-                href="https://github.com/yhattav/react-gravity/blob/main/README.md#configuration"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="header-icon"
-                title="Configuration Guide"
-              >
-                <SettingOutlined />
-              </a>
-            </div>
+    <Layout className="app-layout">
+      <Header className="app-header">
+        <div className="header-content">
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <ReactLogoIcon />
+            <h1 className="app-title">Gravity Simulator</h1>
           </div>
-        </Header>
-        <Layout>
-          <Content className="app-content">
-            <GravitySection onDebugData={handleDebugData} />
-          </Content>
-          <Layout.Sider
-            className="app-sider"
-            width="20%"
-            style={{ overflow: "scroll" }}
-          >
-            {debugData && <DebugInfo data={debugData} />}
-          </Layout.Sider>
-        </Layout>
+          <div className="header-icons">
+            <a
+              href="https://github.com/yhattav/react-gravity"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="header-icon"
+              title="View Source Code"
+            >
+              <GithubOutlined />
+            </a>
+            <a
+              href="https://github.com/yhattav/react-gravity/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="header-icon"
+              title="Report Issues"
+            >
+              <BugOutlined />
+            </a>
+            <a
+              href="https://github.com/yhattav/react-gravity/wiki"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="header-icon"
+              title="Documentation"
+            >
+              <QuestionCircleOutlined />
+            </a>
+            <a
+              href="https://github.com/yhattav/react-gravity/blob/main/README.md#configuration"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="header-icon"
+              title="Configuration Guide"
+            >
+              <SettingOutlined />
+            </a>
+          </div>
+        </div>
+      </Header>
+      <Layout>
+        <Content className="app-content">
+          <GravitySection onDebugData={handleDebugData} />
+        </Content>
+        <Layout.Sider
+          className="app-sider"
+          width="20%"
+          style={{ overflow: "scroll" }}
+        >
+          {debugData && <DebugInfo data={debugData} />}
+        </Layout.Sider>
       </Layout>
-    </SettingsProvider>
+    </Layout>
   );
 }
 

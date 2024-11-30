@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import { motion } from "framer-motion";
-import { GravityPoint } from "../../types/star";
+import { GravityPoint } from "../../utils/types/physics";
 import { Point2D } from "../../utils/types/physics";
 import { StarRenderer } from "../../components/StarRenderer/StarRenderer";
 

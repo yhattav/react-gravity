@@ -25,7 +25,6 @@ export const react: Scenario = {
         y: 300,
         label: "Nucleus",
         mass: 100000,
-        color: "#61dafb",
       },
     ],
     particles: [

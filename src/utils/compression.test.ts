@@ -32,7 +32,6 @@ describe("Scenario Compression", () => {
           y: 200,
           label: "Point 1",
           mass: 50000,
-          color: "#FF0000",
         },
       ],
       particles: [

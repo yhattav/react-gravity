@@ -41,7 +41,7 @@ const generatePastelColor = () => {
   return `rgb(${r}, ${g}, ${b})`;
 };
 
-interface GravitySimulatorProps {
+export interface GravitySimulatorProps {
   gravityRef: React.RefObject<HTMLDivElement>;
   pointerPos: Point2D;
   onDebugData?: (data: DebugData) => void;
@@ -50,6 +50,7 @@ interface GravitySimulatorProps {
   initialScenario?: Scenario;
   blockInteractions?: boolean;
   onApiReady?: (api: GravitySimulatorApi) => void;
+  simulatorId?: string;
 }
 
 export interface GravitySimulatorApi {
@@ -121,6 +122,11 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     updateSettings,
     saveScenario,
   } = useSettings();
+  useEffect(() => {
+    if (initialScenario?.data.settings) {
+      updateSettings(initialScenario.data.settings);
+    }
+  }, [initialScenario, updateSettings]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [throttledPointerPos, setThrottledPointerPos] = useState(pointerPos);
   const [isPaused, setIsPaused] = useState(false);
@@ -572,7 +578,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     ]
   );
 
-  return (
+  const content = (
     <>
       <style>
         {`
@@ -829,4 +835,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       </div>
     </>
   );
+
+  return content;
 };
