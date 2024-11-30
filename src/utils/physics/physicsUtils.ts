@@ -123,14 +123,16 @@ export const calculateTotalForce = (
   // Add particle gravity if enabled
   if (particlesExertGravity) {
     particles.forEach((particle) => {
+      // Calculate effective mass using outgoingForceRatio
+      const effectiveMass = particle.mass * (particle.outgoingForceRatio ?? 1);
+
       const force = calculateGravitationalForce(
         selfPosition.x,
         selfPosition.y,
         particle.position.x,
         particle.position.y,
-        particle.mass
+        effectiveMass // Use the modified mass for force calculation
       );
-      console.log(force);
       totalFx += force.fx;
       totalFy += force.fy;
     });
