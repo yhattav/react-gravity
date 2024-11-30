@@ -33,9 +33,12 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 }) => {
   const storagePrefix = simulatorId ? `${simulatorId}_` : "";
 
-  const getStorageKey = (key: keyof typeof STORAGE_KEYS) => {
-    return simulatorId ? `${storagePrefix}${STORAGE_KEYS[key]}` : null;
-  };
+  const getStorageKey = useCallback(
+    (key: keyof typeof STORAGE_KEYS) => {
+      return simulatorId ? `${storagePrefix}${STORAGE_KEYS[key]}` : null;
+    },
+    [simulatorId, storagePrefix]
+  );
 
   const loadFromStorage = <T,>(
     key: keyof typeof STORAGE_KEYS,
@@ -48,12 +51,14 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
     return saved ? JSON.parse(saved) : defaultValue;
   };
 
-  const saveToStorage = (key: keyof typeof STORAGE_KEYS, value: unknown) => {
-    const storageKey = getStorageKey(key);
-    if (!storageKey) return;
-
-    localStorage.setItem(storageKey, JSON.stringify(value));
-  };
+  const saveToStorage = useCallback(
+    (key: keyof typeof STORAGE_KEYS, value: unknown) => {
+      const storageKey = getStorageKey(key);
+      if (!storageKey) return;
+      localStorage.setItem(storageKey, JSON.stringify(value));
+    },
+    [getStorageKey]
+  );
 
   const [settings, setSettings] = useState<PhysicsSettings>(() => {
     return loadFromStorage("SETTINGS", DEFAULT_PHYSICS_CONFIG);
@@ -71,6 +76,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
     (newSettings: Partial<PhysicsSettings>) => {
       const validNewSettings = Object.keys(newSettings).reduce((acc, key) => {
         if (key in DEFAULT_PHYSICS_CONFIG) {
+          // @ts-expect-error todo later
           acc[key] = newSettings[key as keyof typeof DEFAULT_PHYSICS_CONFIG];
         }
         return acc;

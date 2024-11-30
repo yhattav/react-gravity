@@ -34,7 +34,7 @@ export const ScenarioPanel: React.FC<ScenarioPanelProps> = ({
         onSelectScenario(sharedScenario);
       }
     }
-  }, [searchParams]);
+  }, [searchParams, onSelectScenario]);
 
   return (
     <AnimatePresence>

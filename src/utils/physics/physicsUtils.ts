@@ -49,8 +49,8 @@ export const calculateGravitationalForce = (
   y2: number,
   mass: number,
   G = 0.1,
-  minDistance = 30,
-  maxForce = 2
+  minDistance = 30
+  //maxForce = 2
 ): Force => {
   if (!isFinite(x1) || !isFinite(y1) || !isFinite(x2) || !isFinite(y2)) {
     return { fx: 0, fy: 0 };
@@ -66,8 +66,8 @@ export const calculateGravitationalForce = (
     distance,
     mass,
     G,
-    minDistance,
-    maxForce
+    minDistance
+    //maxForce
   );
 
   const dirVector = calculateDirectionVector(p1, p2);

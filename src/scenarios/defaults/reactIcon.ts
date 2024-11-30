@@ -24,7 +24,6 @@ export const reactIcon: Scenario = {
         y: 25,
         label: "Nucleus",
         mass: 100000,
-        color: "#61dafb",
       },
     ],
     particles: [

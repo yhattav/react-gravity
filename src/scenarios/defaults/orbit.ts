@@ -25,7 +25,6 @@ export const orbit: Scenario = {
         y: 400,
         label: "Central Star",
         mass: 1300000,
-        color: "#FFD700",
       },
     ],
     particles: [

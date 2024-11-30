@@ -22,7 +22,7 @@ const modSettings = (settings: ScenarioData["settings"]): string => {
 };
 
 const modGravityPoint = (point: ScenarioData["gravityPoints"][0]): string => {
-  return `${point.x}|${point.y}|${point.label}|${point.mass}|${point.color}`;
+  return `${point.x}|${point.y}|${point.label}|${point.mass}`;
 };
 
 const modParticle = (particle: ScenarioData["particles"][0]): string => {
@@ -71,13 +71,12 @@ const demodSettings = (str: string): ScenarioData["settings"] => {
 };
 
 const demodGravityPoint = (str: string): ScenarioData["gravityPoints"][0] => {
-  const [x, y, label, mass, color] = str.split("|");
+  const [x, y, label, mass] = str.split("|");
   return {
     x: Number(x),
     y: Number(y),
     label,
     mass: Number(mass),
-    color,
   };
 };
 
