@@ -33,6 +33,7 @@ import { SettingOutlined } from "@ant-design/icons";
 import { SaveScenarioModal } from "../SaveScenarioModal/SaveScenarioModal";
 import { createShareableLink } from "../../utils/compression";
 import { Particle, ParticleMechanics, TrailPoint } from "../../types/particle";
+import { SettingsProvider } from "../../contexts/SettingsContext";
 
 const generatePastelColor = () => {
   const r = Math.floor(Math.random() * 75 + 180);
@@ -41,7 +42,7 @@ const generatePastelColor = () => {
   return `rgb(${r}, ${g}, ${b})`;
 };
 
-interface GravitySimulatorProps {
+export interface GravitySimulatorProps {
   gravityRef: React.RefObject<HTMLDivElement>;
   pointerPos: Point2D;
   onDebugData?: (data: DebugData) => void;
@@ -50,6 +51,7 @@ interface GravitySimulatorProps {
   initialScenario?: Scenario;
   blockInteractions?: boolean;
   onApiReady?: (api: GravitySimulatorApi) => void;
+  simulatorId?: string;
 }
 
 export interface GravitySimulatorApi {
@@ -100,6 +102,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   initialScenario,
   blockInteractions = false,
   onApiReady,
+  simulatorId,
 }) => {
   const [isSimulationStarted, setIsSimulationStarted] = useState(
     !!initialScenario
@@ -121,6 +124,11 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     updateSettings,
     saveScenario,
   } = useSettings();
+  useEffect(() => {
+    if (initialScenario?.data.settings) {
+      updateSettings(initialScenario.data.settings);
+    }
+  }, [initialScenario, updateSettings]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [throttledPointerPos, setThrottledPointerPos] = useState(pointerPos);
   const [isPaused, setIsPaused] = useState(false);
@@ -572,7 +580,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     ]
   );
 
-  return (
+  const content = (
     <>
       <style>
         {`
@@ -829,4 +837,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       </div>
     </>
   );
+
+  return content;
 };

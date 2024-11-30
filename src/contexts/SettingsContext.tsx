@@ -20,35 +20,51 @@ interface SettingsContextType {
   isDevelopment: boolean;
 }
 
+interface SettingsProviderProps {
+  children: React.ReactNode;
+  simulatorId?: string;
+}
+
 const SettingsContext = createContext<SettingsContextType | null>(null);
 
-export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
+export const SettingsProvider: React.FC<SettingsProviderProps> = ({
   children,
+  simulatorId,
 }) => {
-  const [settings, setSettings] = useState<PhysicsSettings>(() => {
-    const savedSettings = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-    if (savedSettings) {
-      const parsedSettings = JSON.parse(savedSettings);
-      const validSettings = Object.keys(parsedSettings).reduce((acc, key) => {
-        if (key in DEFAULT_PHYSICS_CONFIG) {
-          acc[key] = parsedSettings[key];
-        }
-        return acc;
-      }, {} as Partial<PhysicsSettings>);
+  const storagePrefix = simulatorId ? `${simulatorId}_` : "";
 
-      return { ...DEFAULT_PHYSICS_CONFIG, ...validSettings };
-    }
-    return DEFAULT_PHYSICS_CONFIG;
+  const getStorageKey = (key: keyof typeof STORAGE_KEYS) => {
+    return simulatorId ? `${storagePrefix}${STORAGE_KEYS[key]}` : null;
+  };
+
+  const loadFromStorage = <T,>(
+    key: keyof typeof STORAGE_KEYS,
+    defaultValue: T
+  ): T => {
+    const storageKey = getStorageKey(key);
+    if (!storageKey) return defaultValue;
+
+    const saved = localStorage.getItem(storageKey);
+    return saved ? JSON.parse(saved) : defaultValue;
+  };
+
+  const saveToStorage = (key: keyof typeof STORAGE_KEYS, value: unknown) => {
+    const storageKey = getStorageKey(key);
+    if (!storageKey) return;
+
+    localStorage.setItem(storageKey, JSON.stringify(value));
+  };
+
+  const [settings, setSettings] = useState<PhysicsSettings>(() => {
+    return loadFromStorage("SETTINGS", DEFAULT_PHYSICS_CONFIG);
   });
 
   const [showDevSettings, setShowDevSettings] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.SHOW_DEV);
-    return saved ? JSON.parse(saved) : false;
+    return loadFromStorage("SHOW_DEV", false);
   });
 
   const [savedScenarios, setSavedScenarios] = useState<Scenario[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.SAVED_SCENARIOS);
-    return saved ? JSON.parse(saved) : [];
+    return loadFromStorage("SAVED_SCENARIOS", []);
   });
 
   const updateSettings = useCallback(
@@ -62,50 +78,49 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
 
       setSettings((prevSettings) => {
         const updatedSettings = { ...prevSettings, ...validNewSettings };
-        localStorage.setItem(
-          STORAGE_KEYS.SETTINGS,
-          JSON.stringify(updatedSettings)
-        );
+        saveToStorage("SETTINGS", updatedSettings);
         return updatedSettings;
       });
     },
-    []
+    [simulatorId]
   );
 
-  const updateShowDevSettings = useCallback((show: boolean) => {
-    setShowDevSettings(show);
-    localStorage.setItem(STORAGE_KEYS.SHOW_DEV, JSON.stringify(show));
-  }, []);
+  const updateShowDevSettings = useCallback(
+    (show: boolean) => {
+      setShowDevSettings(show);
+      saveToStorage("SHOW_DEV", show);
+    },
+    [simulatorId]
+  );
 
   const resetSettings = useCallback(() => {
     setSettings(DEFAULT_PHYSICS_CONFIG);
-    localStorage.setItem(
-      STORAGE_KEYS.SETTINGS,
-      JSON.stringify(DEFAULT_PHYSICS_CONFIG)
-    );
-  }, []);
+    saveToStorage("SETTINGS", DEFAULT_PHYSICS_CONFIG);
+  }, [simulatorId]);
 
-  const saveScenario = useCallback((scenario: Scenario) => {
-    setSavedScenarios((prevScenarios) => {
-      const updatedScenarios = [...prevScenarios, scenario];
-      localStorage.setItem(
-        STORAGE_KEYS.SAVED_SCENARIOS,
-        JSON.stringify(updatedScenarios)
-      );
-      return updatedScenarios;
-    });
-  }, []);
+  const saveScenario = useCallback(
+    (scenario: Scenario) => {
+      setSavedScenarios((prevScenarios) => {
+        const updatedScenarios = [...prevScenarios, scenario];
+        saveToStorage("SAVED_SCENARIOS", updatedScenarios);
+        return updatedScenarios;
+      });
+    },
+    [simulatorId]
+  );
 
-  const deleteSavedScenario = useCallback((scenarioId: string) => {
-    setSavedScenarios((prevScenarios) => {
-      const updatedScenarios = prevScenarios.filter((s) => s.id !== scenarioId);
-      localStorage.setItem(
-        STORAGE_KEYS.SAVED_SCENARIOS,
-        JSON.stringify(updatedScenarios)
-      );
-      return updatedScenarios;
-    });
-  }, []);
+  const deleteSavedScenario = useCallback(
+    (scenarioId: string) => {
+      setSavedScenarios((prevScenarios) => {
+        const updatedScenarios = prevScenarios.filter(
+          (s) => s.id !== scenarioId
+        );
+        saveToStorage("SAVED_SCENARIOS", updatedScenarios);
+        return updatedScenarios;
+      });
+    },
+    [simulatorId]
+  );
 
   const value = {
     settings,

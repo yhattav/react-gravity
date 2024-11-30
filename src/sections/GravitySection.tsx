@@ -2,8 +2,9 @@ import React, { useRef, useState, useCallback } from "react";
 import { CustomCursor } from "@yhattav/react-component-cursor";
 import { Card } from "antd";
 import { Point2D } from "../utils/types/physics";
-import { GravitySimulator } from "../components/GravitySimulator/GravitySimulator";
+//import { GravitySimulator } from "../components/GravitySimulator/GravitySimulator";
 import { DebugData } from "../types/Debug";
+import { GravitySimulatorWithSettings } from "../components/GravitySimulatorWithSettings/GravitySimulatorWithSettings";
 //import { Scenario } from "../types/scenario";
 
 interface GravitySectionProps {
@@ -104,7 +105,8 @@ export const GravitySection: React.FC<GravitySectionProps> = ({
           <div style={{ width: "100vw", height: "100vh" }} />
         </CustomCursor>
 
-        <GravitySimulator
+        <GravitySimulatorWithSettings
+          simulatorId="gravity-main-section"
           gravityRef={gravityRef}
           pointerPos={pointerPos}
           onDebugData={onDebugData}
