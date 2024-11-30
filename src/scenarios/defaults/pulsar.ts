@@ -12,20 +12,21 @@ export const pulsar: Scenario = {
       FRICTION: 1,
       DELTA_TIME: 0.0166666666666667,
       POINTER_MASS: 0,
-      SHOW_VELOCITY_ARROWS: true,
-      SHOW_FORCE_ARROWS: true,
+      SHOW_VELOCITY_ARROWS: false,
+      SHOW_FORCE_ARROWS: false,
       CONSTANT_FORCE_X: 0,
       CONSTANT_FORCE_Y: 0,
       SOLID_BOUNDARIES: true,
-      PARTICLES_EXERT_GRAVITY: true, // Important for particle interaction
+      PARTICLES_EXERT_GRAVITY: true,
     },
-    gravityPoints: [], // No fixed gravity points needed
+    gravityPoints: [],
     particles: [
       {
         id: "pulsar1",
-        position: { x: 414, y: 300 },
-        velocity: { x: 0, y: 40 }, // Initial velocity for orbital motion
-        mass: 5000, // High mass for strong gravitational effect
+        position: { x: 510, y: 400 },
+        velocity: { x: 0, y: 40 },
+        mass: 1,
+        outgoingForceRatio: 600000000, // Will exert force as if mass was 30000
         elasticity: 1,
         color: "#00ffff",
         size: 15,
@@ -33,9 +34,10 @@ export const pulsar: Scenario = {
       },
       {
         id: "pulsar2",
-        position: { x: 415, y: 400 },
-        velocity: { x: 0, y: -40 }, // Opposite velocity for counter-rotation
-        mass: 5000,
+        position: { x: 500, y: 400 },
+        velocity: { x: 0, y: -40 },
+        mass: 1,
+        outgoingForceRatio: 600000000, // Will exert force as if mass was 30000
         elasticity: 1,
         color: "#ff00ff",
         size: 15,

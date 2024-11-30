@@ -6,6 +6,7 @@ export interface ParticleMechanics {
   force?: Force;
   mass: number;
   elasticity: number;
+  outgoingForceRatio?: number;
   trails?: TrailPoint[];
 }
 
