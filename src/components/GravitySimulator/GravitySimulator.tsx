@@ -43,7 +43,7 @@ const generatePastelColor = () => {
 
 export interface GravitySimulatorProps {
   gravityRef: React.RefObject<HTMLDivElement>;
-  pointerPos: Point2D;
+  pointerPos?: Point2D;
   onDebugData?: (data: DebugData) => void;
   className?: string;
   removeOverlay?: boolean;
@@ -94,7 +94,7 @@ export interface GravitySimulatorApi {
 
 export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   gravityRef,
-  pointerPos,
+  pointerPos = { x: 0, y: 0 } as Point2D,
   onDebugData,
   className,
   removeOverlay = false,
