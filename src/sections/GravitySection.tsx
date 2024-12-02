@@ -77,11 +77,12 @@ export const GravitySection: React.FC<GravitySectionProps> = ({
   onDebugData,
 }) => {
   const gravityRef = useRef<HTMLDivElement>(null);
-  const [pointerPos, setPointerPos] = useState<Point2D>({ x: 0, y: 0 });
+  const pointerPosRef = useRef<Point2D>({ x: 0, y: 0 });
 
-  const handleCursorMove = useCallback((x: number, y: number) => {
+  const handleCursorMove = useCallback(async (x: number, y: number) => {
+    await new Promise((resolve) => setTimeout(resolve, 0));
     if (isFinite(x) && isFinite(y)) {
-      setPointerPos({ x, y });
+      pointerPosRef.current = { x, y };
     }
   }, []);
 
@@ -108,11 +109,8 @@ export const GravitySection: React.FC<GravitySectionProps> = ({
         <GravitySimulatorWithSettings
           simulatorId="gravity-main-section"
           gravityRef={gravityRef}
-          pointerPos={pointerPos}
+          pointerPosRef={pointerPosRef}
           onDebugData={onDebugData}
-          //initialScenario={testScenario}
-          //blockInteractions={true}
-          //removeOverlay={true}
         />
       </Card>
     </>
