@@ -1,7 +1,6 @@
 import React, { useRef, useState } from "react";
 //import { GravitySimulator } from "../GravitySimulator/GravitySimulator";
 import { reactIcon } from "../../scenarios/defaults/reactIcon";
-import { Point2D } from "../../utils/types/physics";
 import { GravitySimulatorApi } from "../GravitySimulator/GravitySimulator";
 import { GravitySimulatorWithSettings } from "../GravitySimulatorWithSettings/GravitySimulatorWithSettings";
 
@@ -33,7 +32,7 @@ export const ReactLogoIcon: React.FC = () => {
       <GravitySimulatorWithSettings
         simulatorId="react-logo-icon"
         gravityRef={iconRef}
-        pointerPos={{ x: 0, y: 0 } as Point2D}
+        //pointerPos={{ x: 0, y: 0 } as Point2D}
         initialScenario={reactIcon}
         removeOverlay={true}
         blockInteractions={true}
