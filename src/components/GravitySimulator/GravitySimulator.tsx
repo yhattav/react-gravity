@@ -33,6 +33,7 @@ import { SettingOutlined } from "@ant-design/icons";
 import { SaveScenarioModal } from "../SaveScenarioModal/SaveScenarioModal";
 import { createShareableLink } from "../../utils/compression";
 import { Particle, ParticleMechanics, TrailPoint } from "../../types/particle";
+import { Position } from "@yhattav/react-component-cursor";
 
 const generatePastelColor = () => {
   const r = Math.floor(Math.random() * 75 + 180);
@@ -43,7 +44,7 @@ const generatePastelColor = () => {
 
 export interface GravitySimulatorProps {
   gravityRef: React.RefObject<HTMLDivElement>;
-  pointerPosRef: React.RefObject<Point2D>;
+  pointerPosRef: React.RefObject<Position>;
   onDebugData?: (data: DebugData) => void;
   className?: string;
   removeOverlay?: boolean;
@@ -325,7 +326,12 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
   const handleContainerClick = useCallback(() => {
     if (blockInteractions) return;
-
+    if (
+      !pointerPosRef.current ||
+      !pointerPosRef.current.x ||
+      !pointerPosRef.current.y
+    )
+      throw new Error("Pointer position is not defined");
     if (isDragging || isDraggingNewStar) return;
 
     if (!isSimulationStarted) {
