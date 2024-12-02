@@ -1,4 +1,10 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  useMemo,
+} from "react";
 import { Point2D, GravityPoint } from "../../utils/types/physics";
 import { GravityPointComponent } from "../GravityPoint/GravityPoint";
 import { ParticleRenderer } from "../ParticleRenderer/ParticleRenderer";
@@ -18,7 +24,7 @@ import {
 } from "../../constants/physics";
 import { SimulatorSettings } from "../SimulatorSettings/SimulatorSettings";
 import { useSettings } from "../../contexts/SettingsContext";
-import { throttle } from "lodash";
+import { throttle, debounce } from "lodash";
 import "../../styles/global.scss";
 import { MdFullscreen, MdFullscreenExit, MdInvertColors } from "react-icons/md";
 import { BiReset } from "react-icons/bi";
@@ -128,13 +134,33 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     }
   }, [initialScenario, updateSettings]);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [throttledPointerPos, setThrottledPointerPos] = useState(pointerPos);
   const [isPaused, setIsPaused] = useState(false);
   const [isScenarioPanelOpen, setIsScenarioPanelOpen] = useState(false);
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [shareableLink, setShareableLink] = useState<string>("");
   const [isColorInverted, setIsColorInverted] = useState(false);
+  const pointerPosRef = useRef(pointerPos);
+  const [offset, setOffset] = useState<{ x: number; y: number }>({
+    x: 0,
+    y: 0,
+  });
+
+  useEffect(() => {
+    const updateOffset = () => {
+      const newOffset = getContainerOffset(gravityRef);
+      if (newOffset) {
+        setOffset(newOffset);
+      }
+    };
+
+    // Update offset on mount
+    updateOffset();
+
+    // Optionally, update offset on window resize
+    window.addEventListener("resize", debounce(updateOffset, 250));
+    return () => window.removeEventListener("resize", updateOffset);
+  }, [gravityRef]);
 
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
@@ -169,9 +195,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
   const handleReportNewPosition = useCallback(
     throttle((point: Point2D, index: number) => {
-      const offset = getContainerOffset(gravityRef);
       if (!offset) return;
-
       setGravityPoints((points) =>
         points.map((point2, i) =>
           i === index
@@ -180,7 +204,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         )
       );
     }, 16),
-    [gravityRef]
+    [gravityRef, offset]
   );
 
   const handleDragEnd = useCallback(() => {
@@ -191,33 +215,35 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     }, 0);
   }, [blockInteractions]);
 
-  const offset = getContainerOffset(gravityRef);
+  const deltaTime = useMemo(() => physicsConfig.DELTA_TIME, [physicsConfig]);
+
+  const updatePointerPos = useCallback((newPos: Point2D) => {
+    pointerPosRef.current = newPos;
+  }, []);
 
   useEffect(() => {
     const throttledUpdate = throttle((newPos: Point2D) => {
-      setThrottledPointerPos({
+      updatePointerPos({
         x: newPos.x - offset.x,
         y: newPos.y - offset.y,
       });
-    }, physicsConfig.DELTA_TIME * 1000);
+    }, deltaTime * 1000);
 
     throttledUpdate(pointerPos);
     return () => throttledUpdate.cancel();
-  }, [pointerPos, physicsConfig.DELTA_TIME]);
+  }, [pointerPos, updatePointerPos, offset, deltaTime]);
 
   const updateParticleMechanics = useCallback(
     (
       particle: ParticleMechanics & { trails: TrailPoint[] },
       allParticles: Array<ParticleMechanics & { trails: TrailPoint[] }> = []
     ): ParticleMechanics => {
-      // Filter out the current particle from gravity calculations
       const otherParticles = allParticles.filter((p) => p !== particle);
 
       const calculatedForce = calculateTotalForce(
         particle.position,
-        throttledPointerPos,
+        pointerPosRef.current,
         gravityPoints,
-        //offset,
         physicsConfig.POINTER_MASS,
         otherParticles,
         physicsConfig.PARTICLES_EXERT_GRAVITY
@@ -268,7 +294,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         trails: newTrails,
       };
     },
-    [throttledPointerPos, gravityPoints, offset, physicsConfig, gravityRef]
+    [gravityPoints, physicsConfig, gravityRef]
   );
 
   useEffect(() => {
