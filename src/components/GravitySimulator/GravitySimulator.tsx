@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { Point2D, GravityPoint } from "../../utils/types/physics";
 import { GravityPointComponent } from "../GravityPoint/GravityPoint";
 import { ParticleRenderer } from "../ParticleRenderer/ParticleRenderer";
@@ -282,13 +282,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     // let accumulator = 0;
 
     const updateParticles = () => {
-      // const frameTime = (currentTime - lastTime) / 1000;
-      // lastTime = currentTime;
-      // accumulator += frameTime;
-
-      // if (accumulator >= physicsConfig.DELTA_TIME) {
-      //   accumulator = 0;
-
       setParticles((currentParticles) =>
         currentParticles.map((particle) => {
           const mechanics = updateParticleMechanics(particle, currentParticles);
@@ -302,12 +295,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
     animationFrameId = requestAnimationFrame(updateParticles);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [
-    isSimulationStarted,
-    isPaused,
-    updateParticleMechanics,
-    physicsConfig.DELTA_TIME,
-  ]);
+  }, [isSimulationStarted, isPaused, updateParticleMechanics]);
 
   const createParticle = useCallback(
     (
