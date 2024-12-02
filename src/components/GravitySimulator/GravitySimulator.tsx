@@ -497,80 +497,93 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   }, []);
 
   // Create and expose the API
-  useEffect(
-    () => {
-      if (!onApiReady) return;
+  useEffect(() => {
+    if (!onApiReady) return;
 
-      const api: GravitySimulatorApi = {
-        play: () => setIsPaused(false),
-        pause: () => setIsPaused(true),
-        reset: () => {
-          setParticles([]);
-          setIsSimulationStarted(false);
-        },
+    const api: GravitySimulatorApi = {
+      play: () => setIsPaused(false),
+      pause: () => setIsPaused(true),
+      reset: () => {
+        setParticles([]);
+        setIsSimulationStarted(false);
+      },
 
-        enterFullscreen: () => {
-          gravityRef.current?.requestFullscreen();
-          setIsFullscreen(true);
-        },
-        exitFullscreen: () => {
-          document.exitFullscreen();
-          setIsFullscreen(false);
-        },
-        toggleFullscreen,
-        invertColors: (invert: boolean) => setIsColorInverted(invert),
+      enterFullscreen: () => {
+        gravityRef.current?.requestFullscreen();
+        setIsFullscreen(true);
+      },
+      exitFullscreen: () => {
+        document.exitFullscreen();
+        setIsFullscreen(false);
+      },
+      toggleFullscreen,
+      invertColors: (invert: boolean) => setIsColorInverted(invert),
 
-        addParticle: (position, options) => {
-          setIsSimulationStarted(true);
-          setParticles((current) => [
-            ...current,
-            createParticle(position, options),
-          ]);
-        },
-        removeAllParticles: () => setParticles([]),
+      addParticle: (position, options) => {
+        setIsSimulationStarted(true);
+        setParticles((current) => [
+          ...current,
+          createParticle(position, options),
+        ]);
+      },
+      removeAllParticles: () => setParticles([]),
 
-        addGravityPoint: (point) => {
-          setGravityPoints((current) => [
-            ...current,
-            {
-              ...point,
-              id: Math.random().toString(36).substr(2, 9),
-            },
-          ]);
-        },
-        removeGravityPoint: handlePointDelete,
-        removeAllGravityPoints: () => setGravityPoints([]),
-
-        loadScenario: handleSelectScenario,
-        exportCurrentScenario: () => ({
-          id: Math.random().toString(36).substr(2, 9),
-          name: "Exported Scenario",
-          description: "Current simulation state",
-          data: {
-            settings: physicsConfig,
-            gravityPoints,
-            particles: particles.map(
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              ({ trails, force, ...particle }) => particle
-            ),
+      addGravityPoint: (point) => {
+        setGravityPoints((current) => [
+          ...current,
+          {
+            ...point,
+            id: Math.random().toString(36).substr(2, 9),
           },
-        }),
+        ]);
+      },
+      removeGravityPoint: handlePointDelete,
+      removeAllGravityPoints: () => setGravityPoints([]),
 
-        updateSettings: updateSettings,
-        getSettings: () => physicsConfig,
+      loadScenario: handleSelectScenario,
+      exportCurrentScenario: () => ({
+        id: Math.random().toString(36).substr(2, 9),
+        name: "Exported Scenario",
+        description: "Current simulation state",
+        data: {
+          settings: physicsConfig,
+          gravityPoints,
+          particles: particles.map(
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            ({ trails, force, ...particle }) => particle
+          ),
+        },
+      }),
 
-        isPlaying: () => !isPaused,
-        isFullscreen: () => isFullscreen,
-        getParticleCount: () => particles.length,
-        getGravityPointsCount: () => gravityPoints.length,
-      };
+      updateSettings: updateSettings,
+      getSettings: () => physicsConfig,
 
-      onApiReady(api);
-    },
-    [
-      // Add all dependencies used in the API object
-    ]
-  );
+      isPlaying: () => !isPaused,
+      isFullscreen: () => isFullscreen,
+      getParticleCount: () => particles.length,
+      getGravityPointsCount: () => gravityPoints.length,
+    };
+
+    onApiReady(api);
+  }, [
+    physicsConfig,
+    gravityPoints,
+    particles,
+    createParticle,
+    handlePointDelete,
+    handleSelectScenario,
+    handleSaveScenario,
+    exportScenario,
+    toggleFullscreen,
+    isFullscreen,
+    isPaused,
+    setIsPaused,
+    setIsSimulationStarted,
+    setParticles,
+    onApiReady,
+    gravityRef,
+    updateSettings,
+  ]);
 
   const content = (
     <>

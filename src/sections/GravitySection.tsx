@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from "react";
+import React, { useRef, useCallback } from "react";
 import { CustomCursor } from "@yhattav/react-component-cursor";
 import { Card } from "antd";
 import { Point2D } from "../utils/types/physics";
