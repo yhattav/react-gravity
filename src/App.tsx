@@ -12,6 +12,7 @@ import { DebugData } from "./types/Debug";
 import "./App.css";
 import { ReactLogoIcon } from "./components/ReactLogoIcon/ReactLogoIcon";
 import "./styles/mobile.scss";
+import { debounce } from "lodash";
 
 const { Content, Header } = Layout;
 
@@ -24,9 +25,9 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const handleResize = () => {
+    const handleResize = debounce(() => {
       setIsMobileView(window.innerWidth < 768);
-    };
+    }, 100);
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
