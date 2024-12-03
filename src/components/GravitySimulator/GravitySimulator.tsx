@@ -324,31 +324,57 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     [physicsConfig, offset]
   );
 
-  const handleContainerClick = useCallback(() => {
-    if (blockInteractions) return;
-    if (
-      !pointerPosRef.current ||
-      !pointerPosRef.current.x ||
-      !pointerPosRef.current.y
-    )
-      throw new Error("Pointer position is not defined");
-    if (isDragging || isDraggingNewStar) return;
+  const handleContainerClick = useCallback(
+    (e: React.MouseEvent | React.TouchEvent) => {
+      if (blockInteractions) return;
+      if (isDragging || isDraggingNewStar) return;
 
-    if (!isSimulationStarted) {
-      setIsSimulationStarted(true);
-    }
-    setParticles((current) => [
-      ...current,
-      createParticle(pointerPosRef.current as Point2D),
-    ]);
-  }, [
-    pointerPosRef,
-    isSimulationStarted,
-    isDragging,
-    isDraggingNewStar,
-    createParticle,
-    blockInteractions,
-  ]);
+      // Get the correct coordinates whether it's a touch or mouse event
+      const coordinates =
+        "touches" in e
+          ? { x: e.touches[0].clientX, y: e.touches[0].clientY }
+          : { x: e.clientX, y: e.clientY };
+
+      if (!isSimulationStarted) {
+        setIsSimulationStarted(true);
+      }
+      setParticles((current) => [
+        ...current,
+        createParticle({ x: coordinates.x, y: coordinates.y }),
+      ]);
+    },
+    [
+      pointerPosRef,
+      isSimulationStarted,
+      isDragging,
+      isDraggingNewStar,
+      createParticle,
+      blockInteractions,
+    ]
+  );
+
+  // Add touch event handlers
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      if (blockInteractions) return;
+      if (pointerPosRef.current) {
+        pointerPosRef.current.x = e.touches[0].clientX;
+        pointerPosRef.current.y = e.touches[0].clientY;
+      }
+    },
+    [blockInteractions, pointerPosRef]
+  );
+
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      if (blockInteractions) return;
+      if (pointerPosRef.current) {
+        pointerPosRef.current.x = e.touches[0].clientX;
+        pointerPosRef.current.y = e.touches[0].clientY;
+      }
+    },
+    [blockInteractions, pointerPosRef]
+  );
 
   useEffect(() => {
     onDebugData?.({
@@ -631,6 +657,8 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       <div
         ref={gravityRef}
         onClick={handleContainerClick}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
         className={`${className} ${
           isColorInverted ? "inverted" : "not-inverted"
         } ${blockInteractions ? "pointer-events-none" : ""}`}
@@ -642,6 +670,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           height: "100%",
           background: "linear-gradient(45deg, #1a1a1a, #2a2a2a)",
           zIndex: 1,
+          touchAction: "none", // Prevent default touch behaviors
         }}
       >
         {!removeOverlay && (

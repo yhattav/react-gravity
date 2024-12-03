@@ -1,0 +1,76 @@
+/* Mobile-specific styles */
+@media screen and (max-width: 768px) {
+  .app-header {
+    padding-right: 10px;
+    height: 50px !important;
+
+    .header-content {
+      padding: 0 5px;
+      height: 100%;
+
+      .app-title {
+        font-size: 1.2rem !important;
+        margin-left: 8px;
+      }
+
+      .header-icons {
+        gap: 12px;
+
+        .header-icon {
+          font-size: 1.2rem;
+        }
+      }
+    }
+  }
+
+  .floating-button {
+    svg {
+      width: 24px;
+      height: 24px;
+    }
+  }
+
+  .scenario-panel {
+    width: 90% !important;
+    right: 5% !important;
+    left: 5% !important;
+    max-height: 80vh;
+  }
+
+  .settings-panel {
+    width: 90% !important;
+    right: 5% !important;
+    left: 5% !important;
+    max-height: 80vh;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+  }
+
+  input[type="checkbox"] {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* Touch-specific improvements */
+@media (hover: none) and (pointer: coarse) {
+  .floating-button,
+  .scenario-item,
+  .settings-item {
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  .floating-panel {
+    touch-action: none;
+  }
+}
