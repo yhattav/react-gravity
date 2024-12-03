@@ -8,68 +8,6 @@ interface GravitySectionProps {
   onDebugData?: (data: DebugData) => void;
 }
 
-// const testScenario: Scenario = {
-//   id: "test-react",
-//   name: "Test React",
-//   description: "A test scenario based on the React logo",
-//   data: {
-//     settings: {
-//       NEW_PARTICLE_MASS: 0.016,
-//       NEW_PARTICLE_ELASTICITY: 1,
-//       FRICTION: 1,
-//       DELTA_TIME: 0.016666,
-//       POINTER_MASS: 0,
-//       SHOW_VELOCITY_ARROWS: false,
-//       SHOW_FORCE_ARROWS: false,
-//       CONSTANT_FORCE_X: 0,
-//       CONSTANT_FORCE_Y: 0,
-//       SOLID_BOUNDARIES: true,
-//       PARTICLES_EXERT_GRAVITY: false,
-//     },
-//     gravityPoints: [
-//       {
-//         x: 275,
-//         y: 300,
-//         label: "Nucleus",
-//         mass: 100000,
-//         color: "#61dafb",
-//       },
-//     ],
-//     particles: [
-//       {
-//         id: "electron-1",
-//         position: { x: 295, y: 300 },
-//         velocity: { x: 0, y: -30 },
-//         mass: 0.016,
-//         elasticity: 1,
-//         color: "#61dafb",
-//         size: 4,
-//         showVectors: false,
-//       },
-//       {
-//         id: "electron-2",
-//         position: { x: 265, y: 317 },
-//         velocity: { x: 26, y: 15 },
-//         mass: 0.016,
-//         elasticity: 1,
-//         color: "#61dafb",
-//         size: 4,
-//         showVectors: false,
-//       },
-//       {
-//         id: "electron-3",
-//         position: { x: 265, y: 283 },
-//         velocity: { x: 26, y: -15 },
-//         mass: 0.016,
-//         elasticity: 1,
-//         color: "#61dafb",
-//         size: 4,
-//         showVectors: false,
-//       },
-//     ],
-//   },
-// };
-
 export const GravitySection: React.FC<GravitySectionProps> = ({
   onDebugData,
 }) => {
@@ -84,32 +22,40 @@ export const GravitySection: React.FC<GravitySectionProps> = ({
   }, []);
 
   return (
-    <>
-      <Card
-        onDragOver={(e) => e.preventDefault()}
-        style={{
+    <Card
+      onDragOver={(e) => e.preventDefault()}
+      style={{
+        height: "100%",
+        position: "relative",
+        border: "none",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+      }}
+      styles={{
+        body: {
+          flex: 1,
+          padding: 0,
           height: "100%",
           position: "relative",
-          border: "none",
-          overflow: "hidden",
-        }}
+        },
+      }}
+    >
+      <CustomCursor
+        containerRef={gravityRef}
+        smoothFactor={1}
+        onMove={handleCursorMove}
+        hideNativeCursor={false}
       >
-        <CustomCursor
-          containerRef={gravityRef}
-          smoothFactor={1}
-          onMove={handleCursorMove}
-          hideNativeCursor={false}
-        >
-          <div style={{ width: "100vw", height: "100vh" }} />
-        </CustomCursor>
+        <div style={{ width: "100%", height: "100%" }} />
+      </CustomCursor>
 
-        <GravitySimulatorWithSettings
-          simulatorId="gravity-main-section"
-          gravityRef={gravityRef}
-          pointerPosRef={pointerPosRef}
-          onDebugData={onDebugData}
-        />
-      </Card>
-    </>
+      <GravitySimulatorWithSettings
+        simulatorId="gravity-main-section"
+        gravityRef={gravityRef}
+        pointerPosRef={pointerPosRef}
+        onDebugData={onDebugData}
+      />
+    </Card>
   );
 };
