@@ -17,9 +17,19 @@ const { Content, Header } = Layout;
 
 function App() {
   const [debugData, setDebugData] = useState<DebugData | null>(null);
+  const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
 
   const handleDebugData = useCallback((data: DebugData) => {
     setDebugData(data);
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
@@ -94,13 +104,15 @@ function App() {
         <Content className="app-content">
           <GravitySection onDebugData={handleDebugData} />
         </Content>
-        <Layout.Sider
-          className="app-sider"
-          width="20%"
-          style={{ overflow: "scroll" }}
-        >
-          {debugData && <DebugInfo data={debugData} />}
-        </Layout.Sider>
+        {!isMobileView && (
+          <Layout.Sider
+            className="app-sider"
+            width="20%"
+            style={{ overflow: "scroll" }}
+          >
+            {debugData && <DebugInfo data={debugData} />}
+          </Layout.Sider>
+        )}
       </Layout>
     </Layout>
   );
