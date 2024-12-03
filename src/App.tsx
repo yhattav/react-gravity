@@ -11,6 +11,7 @@ import { DebugInfo } from "./components/DebugInfo";
 import { DebugData } from "./types/Debug";
 import "./App.css";
 import { ReactLogoIcon } from "./components/ReactLogoIcon/ReactLogoIcon";
+import "./styles/mobile.scss";
 
 const { Content, Header } = Layout;
 
