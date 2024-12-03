@@ -27,6 +27,16 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const shouldLookHovered = forceHover || isDragging || isHovered;
+
+  const handlePaletteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (shouldLookHovered && !isDragging) {
+      setIsHovered(false);
+    } else {
+      setIsHovered(true);
+    }
+  };
+
   const handleStarMassChange = (index: number, mass: number) => {
     setStarMasses((prev) => ({
       ...prev,
@@ -36,11 +46,17 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
 
   return (
     <motion.div
-      onClick={(e) => e.stopPropagation()}
+      onClick={handlePaletteClick}
       onMouseDown={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={(e) => {
+        e.stopPropagation();
+        setIsHovered(true);
+      }}
+      onMouseLeave={(e) => {
+        e.stopPropagation();
+        setIsHovered(false);
+      }}
       className="floating-panel star-palette"
       whileHover={{
         width: "400px",
