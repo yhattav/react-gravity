@@ -630,7 +630,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             bottom: 15px;
             left: 20px;
             font-family: 'Homemade Apple', cursive;
-            font-size: 21px;
+            font-size: 18px;
             color: rgba(255, 255, 255, 0.40);
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
             user-select: none;
