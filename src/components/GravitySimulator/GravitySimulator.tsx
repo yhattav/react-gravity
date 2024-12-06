@@ -747,7 +747,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
                 setIsColorInverted((prev) => !prev);
               }}
               className="floating-panel floating-button"
-              whileHover={{ scale: 2.05 }}
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               title="Invert Colors"
             >

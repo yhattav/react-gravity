@@ -23,7 +23,7 @@ export const pulsar: Scenario = {
     particles: [
       {
         id: "pulsar1",
-        position: { x: 520, y: 400 },
+        position: { x: 220, y: 200 },
         velocity: { x: 0, y: 80 },
         mass: 1,
         outgoingForceRatio: 600000000, // Will exert force as if mass was 30000
@@ -34,7 +34,7 @@ export const pulsar: Scenario = {
       },
       {
         id: "pulsar2",
-        position: { x: 500, y: 400 },
+        position: { x: 200, y: 200 },
         velocity: { x: 0, y: -80 },
         mass: 1,
         outgoingForceRatio: 600000000, // Will exert force as if mass was 30000
