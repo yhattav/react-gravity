@@ -6,10 +6,12 @@ import { flowerDance } from "./flowerDance";
 import { orbit } from "./orbit";
 import { react } from "./react";
 import { pulsar } from "./pulsar";
+import { negativeMass } from "./negativeMass";
 
 export const defaultScenarios: Scenario[] = [
   react,
   orbit,
+  negativeMass,
   threeStars,
   orbitalDance,
   galaxyCollision,

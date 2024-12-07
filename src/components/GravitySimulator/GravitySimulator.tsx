@@ -791,6 +791,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
               trails={particle.trails}
               showVelocityArrows={physicsConfig.SHOW_VELOCITY_ARROWS}
               showForceArrows={physicsConfig.SHOW_FORCE_ARROWS}
+              mass={particle.mass}
               onDelete={() => {
                 setParticles(particles.filter((p) => p.id !== particle.id));
               }}

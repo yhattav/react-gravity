@@ -17,6 +17,7 @@ interface ParticleRenderParams {
   trails?: TrailPoint[];
   onDelete?: () => void;
   disabled?: boolean;
+  mass?: number;
 }
 
 export const ParticleRenderer: React.FC<ParticleRenderParams> = ({
@@ -31,8 +32,10 @@ export const ParticleRenderer: React.FC<ParticleRenderParams> = ({
   trails = [],
   onDelete,
   disabled = false,
+  mass = 0.1,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const isNegativeMass = mass < 0;
 
   return (
     <>
@@ -64,6 +67,7 @@ export const ParticleRenderer: React.FC<ParticleRenderParams> = ({
                 strokeWidth={size * progress * 0.8}
                 strokeOpacity={progress * 0.4}
                 strokeLinecap="round"
+                strokeDasharray={isNegativeMass ? "4,4" : "none"}
               />
             );
           })}
@@ -107,7 +111,9 @@ export const ParticleRenderer: React.FC<ParticleRenderParams> = ({
           height: `${size}px`,
           backgroundColor:
             isHovered && !disabled ? "rgba(255, 82, 82, 0.6)" : "transparent",
-          border: `2px solid ${isHovered && !disabled ? "#ff5252" : color}`,
+          border: `2px ${isNegativeMass ? "dashed" : "solid"} ${
+            isHovered && !disabled ? "#ff5252" : color
+          }`,
           borderRadius: "50%",
           position: "fixed",
           left: position.x,
@@ -117,6 +123,8 @@ export const ParticleRenderer: React.FC<ParticleRenderParams> = ({
           boxShadow:
             isHovered && !disabled
               ? "0 0 10px rgba(255, 82, 82, 0.5), inset 0 0 8px rgba(255, 255, 255, 0.3)"
+              : isNegativeMass
+              ? "0 0 20px rgba(0,0,0,0.3), inset 0 0 8px rgba(0,0,0,0.2)"
               : "0 0 20px rgba(255,255,255,0.2)",
           zIndex: 3,
         }}
