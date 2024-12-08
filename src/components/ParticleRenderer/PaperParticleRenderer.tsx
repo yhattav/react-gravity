@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import Paper, { Point } from "paper";
 import { Particle } from "../../types/particle";
+import { createPaperArrow } from "../../utils/physics/vectorUtils";
 
 interface ParticleTrail {
   path: paper.Path & {
@@ -10,43 +11,6 @@ interface ParticleTrail {
   segmentPaths?: paper.Path[];
   particle: Particle;
 }
-
-const createArrow = (
-  from: paper.Point,
-  direction: paper.Point,
-  color: string,
-  scale: number = 20,
-  arrowSize: number = 8
-): paper.Group => {
-  const to = from.add(direction.multiply(scale));
-
-  // Create the main line
-  const line = new Paper.Path({
-    segments: [from, to],
-    strokeColor: color,
-    strokeWidth: 2,
-    strokeCap: "round",
-  });
-
-  // Create arrowhead
-  const arrowHead = new Paper.Path({
-    strokeColor: color,
-    fillColor: color,
-    strokeWidth: 1,
-    closed: true,
-  });
-
-  const arrowDirection = direction.normalize(arrowSize);
-  const arrowLeft = to.subtract(arrowDirection.rotate(315, new Point(0, 0)));
-  const arrowRight = to.subtract(arrowDirection.rotate(45, new Point(0, 0)));
-
-  arrowHead.add(to);
-  arrowHead.add(arrowLeft);
-  arrowHead.add(arrowRight);
-
-  // Group the line and arrowhead
-  return new Paper.Group([line, arrowHead]);
-};
 
 export const PaperParticleRenderer: React.FC<{
   particles: Particle[];
@@ -240,21 +204,20 @@ export const PaperParticleRenderer: React.FC<{
         trail.path.vectors = [];
 
         if (showVelocityArrows) {
-          const velocityArrow = createArrow(
+          const velocityArrow = createPaperArrow(
             new Paper.Point(position.x, position.y),
             particle.velocity,
-            "#4CAF50", // Green
+            "#4CAF50",
             1
           );
           trail.path.vectors.push(velocityArrow);
         }
 
         if (showForceArrows) {
-          const forceArrow = createArrow(
+          const forceArrow = createPaperArrow(
             new Paper.Point(position.x, position.y),
-            // Rotate force vector by 180 degrees if mass is negative
             isNegativeMass ? particle.force.multiply(-1) : particle.force,
-            "#FF4081", // Pink
+            "#FF4081",
             40
           );
           trail.path.vectors.push(forceArrow);
