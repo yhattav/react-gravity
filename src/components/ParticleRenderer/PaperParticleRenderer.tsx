@@ -252,7 +252,8 @@ export const PaperParticleRenderer: React.FC<{
         if (showForceArrows) {
           const forceArrow = createArrow(
             new Paper.Point(position.x, position.y),
-            particle.force,
+            // Rotate force vector by 180 degrees if mass is negative
+            isNegativeMass ? particle.force.multiply(-1) : particle.force,
             "#FF4081", // Pink
             40
           );
