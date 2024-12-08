@@ -1,8 +1,9 @@
 import React, { useRef, useCallback } from "react";
-import { CustomCursor, Position } from "@yhattav/react-component-cursor";
+import { CustomCursor } from "@yhattav/react-component-cursor";
 import { Card } from "antd";
 import { DebugData } from "../types/Debug";
 import { GravitySimulatorWithSettings } from "../components/GravitySimulatorWithSettings/GravitySimulatorWithSettings";
+import { Point } from "paper";
 
 interface GravitySectionProps {
   onDebugData?: (data: DebugData) => void;
@@ -12,12 +13,12 @@ export const GravitySection: React.FC<GravitySectionProps> = ({
   onDebugData,
 }) => {
   const gravityRef = useRef<HTMLDivElement>(null);
-  const pointerPosRef = useRef<Position>({ x: null, y: null });
+  const pointerPosRef = useRef<Point | null>(null);
 
   const handleCursorMove = useCallback(async (x: number, y: number) => {
     await new Promise((resolve) => setTimeout(resolve, 0));
     if (isFinite(x) && isFinite(y)) {
-      pointerPosRef.current = { x, y };
+      pointerPosRef.current = new Point(x, y);
     }
   }, []);
 

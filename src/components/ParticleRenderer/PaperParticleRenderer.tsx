@@ -1,164 +1,159 @@
 import React, { useEffect, useRef } from "react";
 import Paper from "paper";
-import { Point2D, Force } from "../../utils/types/physics";
-import { TrailPoint } from "../../types/particle";
+import { Particle } from "../../types/particle";
 
-interface PaperParticleRenderParams {
-  position: Point2D;
-  velocity: Point2D;
-  force: Force;
-  color?: string;
-  size?: number;
-  showVectors?: boolean;
+export const PaperParticleRenderer: React.FC<{
+  particles: Particle[];
+  width: number;
+  height: number;
   showVelocityArrows?: boolean;
   showForceArrows?: boolean;
-  trails?: TrailPoint[];
-  onDelete?: () => void;
-  disabled?: boolean;
-  mass?: number;
-}
-
-export const PaperParticleRenderer: React.FC<PaperParticleRenderParams> = ({
-  position,
-  velocity,
-  force,
-  color = "#BADA55",
-  size = 10,
-  showVectors = true,
-  showVelocityArrows = true,
-  showForceArrows = true,
-  trails = [],
-  onDelete,
-  disabled = false,
-  mass = 0.1,
-}) => {
+}> = ({ particles, width, height }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const particleRef = useRef<Paper.Path.Circle | null>(null);
-  const trailRef = useRef<Paper.Path | null>(null);
-  const vectorsRef = useRef<Paper.Group | null>(null);
 
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    // Initialize Paper.js
+    // Use viewport dimensions instead of passed props
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    // Setup Paper.js with the correct pixel ratio
+    const pixelRatio = 1;
+    canvasRef.current.width = viewportWidth * pixelRatio;
+    canvasRef.current.height = viewportHeight * pixelRatio;
+
     Paper.setup(canvasRef.current);
+    Paper.view.viewSize = new Paper.Size(viewportWidth, viewportHeight);
+    // Don't center the view - keep 0,0 at top left
+    Paper.view.scale(pixelRatio, pixelRatio);
 
-    // Create particle
-    const particle = new Paper.Path.Circle({
-      center: new Paper.Point(position.x, position.y),
-      radius: size / 2,
-      strokeColor: color,
-      strokeWidth: 2,
-      fillColor: mass < 0 ? "transparent" : color + "20", // Transparent fill for negative mass
-      dashArray: mass < 0 ? [4, 4] : null, // Dashed stroke for negative mass
-    });
-    particleRef.current = particle;
-
-    // Create trail
-    if (trails.length > 1) {
-      const trail = new Paper.Path({
-        segments: trails.map((p) => new Paper.Point(p.x, p.y)),
-        strokeColor: color,
-        strokeWidth: size * 0.8,
-        strokeCap: "round",
-        opacity: 0.4,
-        dashArray: mass < 0 ? [4, 4] : null,
-      });
-      trail.smooth(); // Smooth the path for better visuals
-      trailRef.current = trail;
-    }
-
-    // Create vectors
-    if (showVectors) {
-      const vectors = new Paper.Group();
-
-      if (showVelocityArrows) {
-        const velocityVector = new Paper.Path({
-          segments: [
-            new Paper.Point(position.x, position.y),
-            new Paper.Point(
-              position.x + velocity.x * 5,
-              position.y + velocity.y * 5
-            ),
-          ],
-          strokeColor: "#4CAF50",
-          strokeWidth: 2,
-          strokeCap: "round",
-        });
-        vectors.addChild(velocityVector);
-      }
-
-      if (showForceArrows) {
-        const forceVector = new Paper.Path({
-          segments: [
-            new Paper.Point(position.x, position.y),
-            new Paper.Point(
-              position.x + force.fx * 50,
-              position.y + force.fy * 50
-            ),
-          ],
-          strokeColor: "#FF4081",
-          strokeWidth: 2,
-          strokeCap: "round",
-        });
-        vectors.addChild(forceVector);
-      }
-      vectorsRef.current = vectors;
-    }
-
-    // Add hover and click interactions
-    particle.onMouseEnter = () => {
-      if (!disabled) {
-        particle.scale(1.2);
-        particle.strokeColor = new Paper.Color("#ff5252");
-      }
-    };
-
-    particle.onMouseLeave = () => {
-      if (!disabled) {
-        particle.scale(1 / 1.2);
-        particle.strokeColor = new Paper.Color(color);
-      }
-    };
-
-    particle.onClick = (event: Paper.MouseEvent) => {
-      if (!disabled) {
-        event.stopPropagation();
-        onDelete?.();
-      }
-    };
-
-    // Cleanup
     return () => {
-      particle.remove();
-      trailRef.current?.remove();
-      vectorsRef.current?.remove();
-      Paper.project.clear();
+      Paper.project?.clear();
     };
-  }, [
-    position,
-    velocity,
-    force,
-    color,
-    size,
-    showVectors,
-    trails,
-    disabled,
-    mass,
-  ]);
+  }, []); // Remove width/height from dependencies since we're using viewport size
+
+  useEffect(() => {
+    if (!Paper.project) return;
+    Paper.project.clear();
+
+    // Add debug log to verify particles data
+
+    particles.forEach((particle) => {
+      const {
+        position,
+        color = "#BADA55",
+        size = 10,
+        trails = [],
+        mass = 0.1,
+      } = particle;
+
+      // Add debug log to verify each particle position
+
+      const isNegativeMass = mass < 0;
+
+      // Draw trails with opacity gradient
+      if (trails.length > 1) {
+        trails.slice(0, -1).forEach((point, i) => {
+          const nextPoint = trails[i + 1];
+          const progress = 1 - i / (trails.length - 1);
+
+          new Paper.Path({
+            segments: [
+              new Paper.Point(point.position?.x || 0, point.position?.y || 0),
+              new Paper.Point(
+                nextPoint.position?.x || 0,
+                nextPoint.position?.y || 0
+              ),
+            ],
+            strokeColor: color,
+            strokeWidth: size * progress * 0.8,
+            opacity: progress * 0.4,
+            strokeCap: "round",
+            dashArray: isNegativeMass ? [4, 4] : null,
+          });
+        });
+      }
+      // Draw particle
+      const particleCircle = new Paper.Path.Circle({
+        center: new Paper.Point(position.x, position.y),
+        radius: size / 2,
+        strokeColor: color,
+        strokeWidth: 2,
+        fillColor: color,
+      });
+
+      if (isNegativeMass) {
+        particleCircle.dashArray = [4, 4];
+      }
+
+      // Draw vectors if enabled
+      //   if (showVectors) {
+      //     // Velocity vector (green)
+      //     if (showVelocityArrows) {
+      //       const velocityScale = 20;
+      //       new Paper.Path({
+      //         segments: [
+      //           new Paper.Point(position.x, position.y),
+      //           new Paper.Point(
+      //             position.x + velocity.x * velocityScale,
+      //             position.y + velocity.y * velocityScale
+      //           ),
+      //         ],
+      //         strokeColor: "#4CAF50",
+      //         strokeWidth: 2,
+      //         strokeCap: "round",
+      //         // Add arrowhead
+      //         onFrame: function () {
+      //           //   const arrowHead = new Paper.Path({
+      //           //     segments: this.segments,
+      //           //     strokeColor: "#4CAF50",
+      //           //     strokeWidth: 2,
+      //           //   });
+      //           // Add arrow head geometry here
+      //           //arrowHead.add(new Paper.Point(position.x, position.y));
+      //         },
+      //       });
+      //     }
+
+      //     // Force vector (pink)
+      //     if (showForceArrows) {
+      //       const forceScale = 50;
+      //       new Paper.Path({
+      //         segments: [
+      //           new Paper.Point(position.x, position.y),
+      //           new Paper.Point(
+      //             position.x + (force?.x || 0) * forceScale,
+      //             position.y + (force?.y || 0) * forceScale
+      //           ),
+      //         ],
+      //         strokeColor: "#FF4081",
+      //         strokeWidth: 2,
+      //         strokeCap: "round",
+      //         // Add similar arrowhead
+      //       });
+      //     }
+      //   }
+    });
+
+    Paper.view.update();
+  }, [particles, width, height]);
 
   return (
     <canvas
       ref={canvasRef}
+      id="paper-canvas"
       style={{
-        position: "fixed",
+        position: "fixed", // Changed to fixed to cover viewport
         top: 0,
         left: 0,
-        width: "100%",
-        height: "100%",
-        pointerEvents: disabled ? "none" : "auto",
-        zIndex: 3,
+        width: "100vw", // Use viewport units
+        height: "100vh",
+        pointerEvents: "none", // Allow clicks to pass through
+        zIndex: 10, // Ensure it's above other content but below UI
       }}
     />
   );
 };
+
+export default PaperParticleRenderer;

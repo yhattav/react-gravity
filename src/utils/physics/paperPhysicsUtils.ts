@@ -1,10 +1,6 @@
 import { Point } from "paper";
-import { Point2D, Force, GravityPoint } from "../types/physics";
+import { Vector, Force, GravityPoint } from "../types/physics";
 import { ParticleMechanics } from "../../types/particle";
-
-// Convert only at the public API boundary
-const toPoint = (p: Point2D): Point => new Point(p.x, p.y);
-const toForce = (p: Point): Force => ({ fx: p.x, fy: p.y });
 
 // Newton's law of universal gravitation (simplified)
 const calculateGravityMagnitude = (
@@ -28,13 +24,18 @@ const calculateForceFalloff = (
 
 // Calculate gravitational force using Paper.js vectors
 const calculateGravitationalForceVector = (
-  p1: Point,
-  p2: Point,
+  p1: Vector,
+  p2: Vector,
   mass: number,
   G = 0.1,
   minDistance = 30
-): Point => {
-  if (!p1.isFinite() || !p2.isFinite()) {
+): Force => {
+  if (
+    !isFinite(p1.x) ||
+    !isFinite(p1.y) ||
+    !isFinite(p2.x) ||
+    !isFinite(p2.y)
+  ) {
     return new Point(0, 0);
   }
 
@@ -49,91 +50,122 @@ const calculateGravitationalForceVector = (
     G,
     minDistance
   );
+
   const normalizedDirection = direction.normalize();
+
   const force = normalizedDirection.multiply(forceMagnitude);
+
   const forceFalloff = calculateForceFalloff(distance, minDistance * 2);
 
   return force.multiply(forceFalloff);
 };
 
-// Public API functions that handle the conversions at the boundary
+// Calculate total force using Paper.js vectors
 export const calculateTotalForce = (
-  selfPosition: Point2D,
-  pointerPos: Point2D,
+  selfPosition: Vector,
+  pointerPos: Vector,
   gravityPoints: GravityPoint[],
   pointerMass = 50000,
   particles: Array<ParticleMechanics> = [],
   particlesExertGravity = false
 ): Force => {
-  // Convert input positions to Paper.js Points
-  const pos = toPoint(selfPosition);
-  const pointer = toPoint(pointerPos);
-
-  // Calculate forces using Paper.js vectors internally
-  const totalForce = new Point(0, 0);
+  let totalForce = new Point(0, 0);
 
   // Add pointer gravitational pull
-  totalForce.add(calculateGravitationalForceVector(pos, pointer, pointerMass));
+  const gravitationalForce = calculateGravitationalForceVector(
+    selfPosition,
+    pointerPos,
+    pointerMass
+  );
+
+  totalForce = totalForce.add(gravitationalForce);
 
   // Add gravity points force
   gravityPoints.forEach((point) => {
-    const pointPos = new Point(point.x, point.y);
-    totalForce.add(
-      calculateGravitationalForceVector(pos, pointPos, point.mass)
+    const pointForce = calculateGravitationalForceVector(
+      selfPosition,
+      point.position,
+      point.mass
     );
+    totalForce = totalForce.add(pointForce);
   });
 
   // Add particle gravity if enabled
   if (particlesExertGravity) {
     particles.forEach((particle) => {
       const effectiveMass = particle.mass * (particle.outgoingForceRatio ?? 1);
-      const particlePos = toPoint(particle.position);
-      totalForce.add(
-        calculateGravitationalForceVector(pos, particlePos, effectiveMass)
+      totalForce = totalForce.add(
+        calculateGravitationalForceVector(
+          selfPosition,
+          particle.position,
+          effectiveMass
+        )
       );
     });
   }
 
-  // Convert back to Force type only at the end
-  return toForce(totalForce);
+  return totalForce;
 };
 
-export const calculateAcceleration = (force: Force, mass: number): Point2D => {
-  const forceVector = new Point(force.fx, force.fy);
-  const acceleration = forceVector.divide(mass);
-  // Convert to Point2D at API boundary
-  return { x: acceleration.x, y: acceleration.y };
+// Calculate acceleration using Paper.js vectors
+export const calculateAcceleration = (force: Force, mass: number): Vector => {
+  return force.divide(mass);
 };
 
+// Calculate new velocity using Paper.js vectors
 export const calculateNewVelocity = (
-  currentVelocity: Point2D,
-  acceleration: Point2D,
+  currentVelocity: Vector,
+  acceleration: Vector,
   deltaTime: number,
   friction: number
-): Point2D => {
-  // Convert at boundary
-  const velocity = toPoint(currentVelocity);
-  const acc = toPoint(acceleration);
-
-  // Do calculations in Paper.js vectors
-  const newVelocity = velocity.add(acc.multiply(deltaTime)).multiply(friction);
-
-  // Convert back at boundary
-  return { x: newVelocity.x, y: newVelocity.y };
+): Vector => {
+  return currentVelocity
+    .add(acceleration.multiply(deltaTime))
+    .multiply(friction);
 };
 
+// Calculate new position using Paper.js vectors
 export const calculateNewPosition = (
-  currentPosition: Point2D,
-  velocity: Point2D,
+  currentPosition: Vector,
+  velocity: Vector,
   deltaTime: number
-): Point2D => {
-  // Convert at boundary
-  const position = toPoint(currentPosition);
-  const vel = toPoint(velocity);
+): Vector => {
+  return currentPosition.add(velocity.multiply(deltaTime));
+};
 
-  // Do calculations in Paper.js vectors
-  const newPosition = position.add(vel.multiply(deltaTime));
+export const handleBoundaryCollision = (
+  position: Point,
+  velocity: Point,
+  containerRef: React.RefObject<HTMLDivElement>,
+  elasticity: number
+): { position: Point; velocity: Point } => {
+  if (!containerRef.current) return { position, velocity };
 
-  // Convert back at boundary
-  return { x: newPosition.x, y: newPosition.y };
+  const bounds = containerRef.current.getBoundingClientRect();
+  const newPosition = position.clone();
+  let newVelocity = velocity.clone();
+
+  // Check horizontal boundaries
+  if (position.x <= 0) {
+    newPosition.x = 0;
+    // Reflect velocity along x-axis
+    newVelocity = new Point(Math.abs(velocity.x) * elasticity, velocity.y);
+  } else if (position.x >= bounds.width) {
+    newPosition.x = bounds.width;
+    // Reflect velocity along x-axis
+    newVelocity = new Point(-Math.abs(velocity.x) * elasticity, velocity.y);
+  }
+
+  // Check vertical boundaries
+  if (position.y <= 0) {
+    newPosition.y = 0;
+    // Reflect velocity along y-axis
+    newVelocity = new Point(newVelocity.x, Math.abs(velocity.y) * elasticity);
+  } else if (position.y >= bounds.height) {
+    newPosition.y = bounds.height;
+    // Reflect velocity along y-axis
+    newVelocity = new Point(newVelocity.x, -Math.abs(velocity.y) * elasticity);
+  }
+
+  return { position: newPosition, velocity: newVelocity };
 };
