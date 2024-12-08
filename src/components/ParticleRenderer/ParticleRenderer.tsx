@@ -32,7 +32,7 @@ export const ParticleRenderer: React.FC<{
   const trailsRef = useRef<Map<string, ParticleTrail>>(new Map());
   const scopeRef = useRef<paper.PaperScope>();
   const { settings } = useSettings();
-  const MAX_TRAIL_POINTS = settings.particleTrailLength;
+  const MAX_TRAIL_POINTS = settings.PARTICLE_TRAIL_LENGTH;
 
   useEffect(() => {
     if (!canvasRef.current) return;
