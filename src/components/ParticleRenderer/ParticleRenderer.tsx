@@ -138,7 +138,6 @@ export const ParticleRenderer: React.FC<{
 
       // Update trail
       trail.path.add(new Point(position.x, position.y));
-
       // Remove old points if trail is too long
       if (trail.path.segments.length > MAX_TRAIL_POINTS) {
         trail.path.removeSegments(
@@ -148,7 +147,7 @@ export const ParticleRenderer: React.FC<{
       }
 
       // Update trail appearance
-      if (!trail.path || !trail.path.segments.length) return;
+      if (!trail.path) return;
 
       let paperColor: paper.Color;
       try {
