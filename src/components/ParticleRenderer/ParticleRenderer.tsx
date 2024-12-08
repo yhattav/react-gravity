@@ -30,7 +30,7 @@ export const ParticleRenderer: React.FC<{
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const trailsRef = useRef<Map<string, ParticleTrail>>(new Map());
   const scopeRef = useRef<paper.PaperScope>();
-  const MAX_TRAIL_POINTS = 100;
+  const MAX_TRAIL_POINTS = 30;
 
   useEffect(() => {
     if (!canvasRef.current) return;
