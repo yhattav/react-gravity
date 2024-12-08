@@ -132,8 +132,8 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
                 </div>
               )}
 
-              {Object.entries(settings).map(([key, value]) =>
-                shouldShowSetting(
+              {Object.entries(settings).map(([key, value]) => {
+                return shouldShowSetting(
                   key as keyof typeof DEFAULT_PHYSICS_CONFIG
                 ) ? (
                   <div key={key} style={{ marginBottom: "16px" }}>
@@ -256,8 +256,8 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
                       </>
                     )}
                   </div>
-                ) : null
-              )}
+                ) : null;
+              })}
             </div>
           </motion.div>
         )}

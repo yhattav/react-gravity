@@ -28,6 +28,7 @@ export interface PhysicsSettings {
   CONSTANT_FORCE_Y: number;
   SOLID_BOUNDARIES: boolean;
   PARTICLES_EXERT_GRAVITY: boolean;
+  PARTICLE_TRAIL_LENGTH: number;
 }
 export const DEFAULT_PHYSICS_CONFIG: PhysicsSettings = {
   NEW_PARTICLE_MASS: 0.1,
@@ -41,6 +42,7 @@ export const DEFAULT_PHYSICS_CONFIG: PhysicsSettings = {
   CONSTANT_FORCE_Y: 0,
   SOLID_BOUNDARIES: true,
   PARTICLES_EXERT_GRAVITY: false,
+  PARTICLE_TRAIL_LENGTH: 30,
 } as const;
 
 export const SETTINGS_METADATA: Record<
@@ -111,6 +113,13 @@ export const SETTINGS_METADATA: Record<
   PARTICLES_EXERT_GRAVITY: {
     type: "boolean",
     isDev: false,
+  },
+  PARTICLE_TRAIL_LENGTH: {
+    type: "slider",
+    isDev: false,
+    min: 0,
+    max: 100,
+    step: 1,
   },
 } as const;
 

@@ -42,13 +42,19 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 
   const loadFromStorage = <T,>(
     key: keyof typeof STORAGE_KEYS,
-    defaultValue: T
+    defaultValue: T,
+    getValue: (saved: string) => T
   ): T => {
     const storageKey = getStorageKey(key);
+
     if (!storageKey) return defaultValue;
 
     const saved = localStorage.getItem(storageKey);
-    return saved ? JSON.parse(saved) : defaultValue;
+    if (!saved) {
+      return defaultValue;
+    }
+    return getValue(saved);
+    //return { ...(defaultValue ? defaultValue : {}), ...JSON.parse(saved) };
   };
 
   const saveToStorage = useCallback(
@@ -61,15 +67,20 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
   );
 
   const [settings, setSettings] = useState<PhysicsSettings>(() => {
-    return loadFromStorage("SETTINGS", DEFAULT_PHYSICS_CONFIG);
+    return loadFromStorage("SETTINGS", DEFAULT_PHYSICS_CONFIG, (saved) => ({
+      ...DEFAULT_PHYSICS_CONFIG,
+      ...JSON.parse(saved),
+    }));
   });
 
   const [showDevSettings, setShowDevSettings] = useState(() => {
-    return loadFromStorage("SHOW_DEV", false);
+    return loadFromStorage("SHOW_DEV", false, Boolean);
   });
 
   const [savedScenarios, setSavedScenarios] = useState<Scenario[]>(() => {
-    return loadFromStorage("SAVED_SCENARIOS", []);
+    return loadFromStorage("SAVED_SCENARIOS", [], (saved) => [
+      ...JSON.parse(saved),
+    ]);
   });
 
   const updateSettings = useCallback(

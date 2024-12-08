@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import Paper, { Point } from "paper";
 import { Particle } from "../../types/particle";
 import { createArrow } from "../../utils/physics/vectorUtils";
+import { useSettings } from "../../contexts/SettingsContext";
 
 interface ParticleTrail {
   path: paper.Path & {
@@ -30,7 +31,8 @@ export const ParticleRenderer: React.FC<{
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const trailsRef = useRef<Map<string, ParticleTrail>>(new Map());
   const scopeRef = useRef<paper.PaperScope>();
-  const MAX_TRAIL_POINTS = 30;
+  const { settings } = useSettings();
+  const MAX_TRAIL_POINTS = settings.PARTICLE_TRAIL_LENGTH;
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -136,7 +138,6 @@ export const ParticleRenderer: React.FC<{
 
       // Update trail
       trail.path.add(new Point(position.x, position.y));
-
       // Remove old points if trail is too long
       if (trail.path.segments.length > MAX_TRAIL_POINTS) {
         trail.path.removeSegments(
@@ -146,7 +147,7 @@ export const ParticleRenderer: React.FC<{
       }
 
       // Update trail appearance
-      if (!trail.path || !trail.path.segments.length) return;
+      if (!trail.path) return;
 
       let paperColor: paper.Color;
       try {
