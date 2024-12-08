@@ -45,9 +45,8 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
     defaultValue: T,
     getValue: (saved: string) => T
   ): T => {
-    console.log(key, defaultValue);
     const storageKey = getStorageKey(key);
-    console.log(storageKey);
+
     if (!storageKey) return defaultValue;
 
     const saved = localStorage.getItem(storageKey);
