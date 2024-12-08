@@ -166,8 +166,8 @@ export const ParticleRenderer: React.FC<{
       // Create new segment paths
       for (let i = 0; i < segments.length - 1; i++) {
         const progress = i / segments.length; // 0 at start, 1 at end
-        const width = size * 0.8 * progress;
-        const opacity = 0.4 * progress;
+        const width = size * 1.2 * progress;
+        const opacity = 0.3 * progress;
 
         const currentPoint = segments[i].point;
         const nextPoint = segments[i + 1].point;
