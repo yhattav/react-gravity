@@ -3,10 +3,50 @@ import Paper, { Path, Point } from "paper";
 import { Particle } from "../../types/particle";
 
 interface ParticleTrail {
-  path: paper.Path & { lastCircle?: paper.Path.Circle };
+  path: paper.Path & {
+    lastCircle?: paper.Path.Circle;
+    vectors?: paper.Group[];
+  };
   segmentPaths?: paper.Path[];
   particle: Particle;
 }
+
+const createArrow = (
+  from: paper.Point,
+  direction: paper.Point,
+  color: string,
+  scale: number = 20,
+  arrowSize: number = 8
+): paper.Group => {
+  const to = from.add(direction.multiply(scale));
+
+  // Create the main line
+  const line = new Paper.Path({
+    segments: [from, to],
+    strokeColor: color,
+    strokeWidth: 2,
+    strokeCap: "round",
+  });
+
+  // Create arrowhead
+  const arrowHead = new Paper.Path({
+    strokeColor: color,
+    fillColor: color,
+    strokeWidth: 1,
+    closed: true,
+  });
+
+  const arrowDirection = direction.normalize(arrowSize);
+  const arrowLeft = to.subtract(arrowDirection.rotate(315, new Point(0, 0)));
+  const arrowRight = to.subtract(arrowDirection.rotate(45, new Point(0, 0)));
+
+  arrowHead.add(to);
+  arrowHead.add(arrowLeft);
+  arrowHead.add(arrowRight);
+
+  // Group the line and arrowhead
+  return new Paper.Group([line, arrowHead]);
+};
 
 export const PaperParticleRenderer: React.FC<{
   particles: Particle[];
@@ -14,7 +54,13 @@ export const PaperParticleRenderer: React.FC<{
   showForceArrows?: boolean;
   shouldReset?: boolean;
   onResetComplete?: () => void;
-}> = ({ particles, shouldReset, onResetComplete }) => {
+}> = ({
+  particles,
+  shouldReset,
+  showForceArrows,
+  showVelocityArrows,
+  onResetComplete,
+}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const trailsRef = useRef<Map<string, ParticleTrail>>(new Map());
   const MAX_TRAIL_POINTS = 100;
@@ -45,6 +91,11 @@ export const PaperParticleRenderer: React.FC<{
     if (shouldReset && Paper.project) {
       // Clear all paths
       Paper.project.activeLayer.removeChildren();
+      trailsRef.current.forEach((trail) => {
+        trail.path.vectors?.forEach((vector) => vector.remove());
+        trail.segmentPaths?.forEach((path) => path.remove());
+        trail.path.lastCircle?.remove();
+      });
       trailsRef.current.clear();
       Paper.view.update();
       onResetComplete?.();
@@ -153,6 +204,32 @@ export const PaperParticleRenderer: React.FC<{
         fillColor: color,
         dashArray: isNegativeMass ? [4, 4] : null,
       });
+
+      if (showVelocityArrows || showForceArrows) {
+        // Remove old vectors if they exist
+        trail.path.vectors?.forEach((vector) => vector.remove());
+        trail.path.vectors = [];
+
+        if (showVelocityArrows) {
+          const velocityArrow = createArrow(
+            new Paper.Point(position.x, position.y),
+            particle.velocity,
+            "#4CAF50", // Green
+            1
+          );
+          trail.path.vectors.push(velocityArrow);
+        }
+
+        if (showForceArrows) {
+          const forceArrow = createArrow(
+            new Paper.Point(position.x, position.y),
+            particle.force,
+            "#FF4081", // Pink
+            40
+          );
+          trail.path.vectors.push(forceArrow);
+        }
+      }
     });
 
     Paper.view.update();
@@ -165,7 +242,7 @@ export const PaperParticleRenderer: React.FC<{
         }
       });
     };
-  }, [particles]);
+  }, [particles, showForceArrows, showVelocityArrows]);
 
   return (
     <canvas

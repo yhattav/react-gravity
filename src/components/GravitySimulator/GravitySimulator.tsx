@@ -493,10 +493,13 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
   const handleSelectScenario = useCallback(
     (scenario: Scenario) => {
+      // First trigger the reset
+      setShouldResetRenderer(true);
+
       // First, ensure all gravity points have unique IDs
       const newGravityPoints = scenario.data.gravityPoints.map((point) => ({
         ...point,
-        id: point.id || Math.random().toString(36).substr(2, 9), // Ensure each point has an ID
+        id: point.id || Math.random().toString(36).substr(2, 9),
       }));
 
       // Reset the simulation state
