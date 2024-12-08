@@ -58,7 +58,7 @@ function App() {
       <Header className="app-header">
         <div className="header-content">
           <div style={{ display: "flex", alignItems: "center" }}>
-            {/* <ReactLogoIcon /> */}
+            <ReactLogoIcon />
             <h1 className="app-title">Gravity Simulator</h1>
           </div>
           <div className="header-icons">

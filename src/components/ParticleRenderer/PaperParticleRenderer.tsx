@@ -54,56 +54,84 @@ export const PaperParticleRenderer: React.FC<{
   showForceArrows?: boolean;
   shouldReset?: boolean;
   onResetComplete?: () => void;
+  simulatorId?: string;
 }> = ({
   particles,
   shouldReset,
   showForceArrows,
   showVelocityArrows,
   onResetComplete,
+  simulatorId = "default",
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const trailsRef = useRef<Map<string, ParticleTrail>>(new Map());
+  const scopeRef = useRef<paper.PaperScope>();
   const MAX_TRAIL_POINTS = 100;
 
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
+    // Create a new Paper.js scope for this canvas
+    const scope = new Paper.PaperScope();
+    scopeRef.current = scope;
 
+    // Get container dimensions instead of document
+    const container = canvasRef.current.parentElement;
+    if (!container) return;
+
+    const rect = container.getBoundingClientRect();
     const pixelRatio = 1;
-    canvasRef.current.width = viewportWidth * pixelRatio;
-    canvasRef.current.height = viewportHeight * pixelRatio;
 
-    Paper.setup(canvasRef.current);
-    Paper.view.viewSize = new Paper.Size(viewportWidth, viewportHeight);
-    Paper.view.scale(pixelRatio, pixelRatio);
+    canvasRef.current.width = rect.width * pixelRatio;
+    canvasRef.current.height = rect.height * pixelRatio;
+
+    // Setup with explicit scope
+    scope.setup(canvasRef.current);
+    scope.view.viewSize = new scope.Size(rect.width, rect.height);
+    scope.view.scale(pixelRatio, pixelRatio);
+
+    const handleResize = () => {
+      if (!container || !canvasRef.current || !scope.view) return;
+      scope.activate(); // Activate this scope before operations
+      const newRect = container.getBoundingClientRect();
+      canvasRef.current.width = newRect.width * pixelRatio;
+      canvasRef.current.height = newRect.height * pixelRatio;
+      scope.view.viewSize = new scope.Size(newRect.width, newRect.height);
+    };
+
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      // Clean up all trails
+      window.removeEventListener("resize", handleResize);
+      scope.activate(); // Activate this scope before cleanup
       trailsRef.current.forEach((trail) => trail.path.remove());
       trailsRef.current.clear();
-      Paper.project?.clear();
+      scope.project?.clear();
     };
-  }, []);
+  }, [simulatorId]);
 
   useEffect(() => {
-    if (shouldReset && Paper.project) {
-      // Clear all paths
-      Paper.project.activeLayer.removeChildren();
+    const scope = scopeRef.current;
+    if (!scope || !scope.project) return;
+
+    if (shouldReset) {
+      scope.project.activeLayer.removeChildren();
       trailsRef.current.forEach((trail) => {
         trail.path.vectors?.forEach((vector) => vector.remove());
         trail.segmentPaths?.forEach((path) => path.remove());
         trail.path.lastCircle?.remove();
       });
       trailsRef.current.clear();
-      Paper.view.update();
+      scope.view.update();
       onResetComplete?.();
     }
   }, [shouldReset, onResetComplete]);
 
   useEffect(() => {
-    if (!Paper.project) return;
+    const scope = scopeRef.current;
+    if (!scope || !scope.project) return;
+
+    scope.activate(); // Add this line at the start of each effect
 
     // Remove trails only for particles that no longer exist
     const currentParticleIds = new Set(particles.map((p) => p.id));
@@ -131,7 +159,7 @@ export const PaperParticleRenderer: React.FC<{
       let trail = trailsRef.current.get(id);
       if (!trail) {
         // Create new trail if it doesn't exist
-        const path = new Path({
+        const path = new scope.Path({
           strokeColor: color,
           strokeWidth: size * 0.8,
           strokeCap: "round",
@@ -179,7 +207,7 @@ export const PaperParticleRenderer: React.FC<{
         const currentPoint = segments[i].point;
         const nextPoint = segments[i + 1].point;
 
-        const segmentPath = new Paper.Path({
+        const segmentPath = new scope.Path({
           segments: [currentPoint, nextPoint],
           strokeColor: paperColor,
           strokeWidth: width,
@@ -232,11 +260,11 @@ export const PaperParticleRenderer: React.FC<{
       }
     });
 
-    Paper.view.update();
+    scope.view.update();
 
     // Cleanup function to remove circles (but keep trails)
     return () => {
-      Paper.project.activeLayer.children.forEach((child) => {
+      scope.project?.activeLayer?.children.forEach((child) => {
         if (child instanceof Paper.Path.Circle) {
           child.remove();
         }
@@ -247,13 +275,13 @@ export const PaperParticleRenderer: React.FC<{
   return (
     <canvas
       ref={canvasRef}
-      id="paper-canvas"
+      className={`paper-canvas-${simulatorId}`}
       style={{
-        position: "fixed",
+        position: "absolute",
         top: 0,
         left: 0,
-        width: "100vw",
-        height: "100vh",
+        width: "100%",
+        height: "100%",
         pointerEvents: "none",
         zIndex: 10,
       }}

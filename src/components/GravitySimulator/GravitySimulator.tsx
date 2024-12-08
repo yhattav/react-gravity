@@ -110,6 +110,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   initialScenario,
   blockInteractions = false,
   onApiReady,
+  simulatorId = "default",
 }) => {
   const [isSimulationStarted, setIsSimulationStarted] = useState(
     !!initialScenario
@@ -789,6 +790,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             showForceArrows={physicsConfig.SHOW_FORCE_ARROWS}
             shouldReset={shouldResetRenderer}
             onResetComplete={() => setShouldResetRenderer(false)}
+            simulatorId={simulatorId}
           />
         )}
 
