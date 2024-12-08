@@ -194,7 +194,7 @@ export const ParticleRenderer: React.FC<{
         radius: size / 2,
         strokeColor: color,
         strokeWidth: 2,
-        fillColor: color,
+        fillColor: null,
         dashArray: isNegativeMass ? [4, 4] : null,
       });
 
