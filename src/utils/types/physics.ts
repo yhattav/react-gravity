@@ -26,10 +26,6 @@ export interface SerializableGravityPoint {
   id?: string;
 }
 
-// Conversion utilities
-export const toVector = (v: Vector2D): Vector => new Point(v.x, v.y);
-export const toVector2D = (v: Vector): Vector2D => ({ x: v.x, y: v.y });
-
 export const toGravityPoint = (p: SerializableGravityPoint): GravityPoint => ({
   position: new Point(p.x, p.y),
   label: p.label,

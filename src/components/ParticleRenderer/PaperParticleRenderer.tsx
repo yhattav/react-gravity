@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import Paper, { Path, Point } from "paper";
+import Paper, { Point } from "paper";
 import { Particle } from "../../types/particle";
 
 interface ParticleTrail {
@@ -101,11 +101,12 @@ export const PaperParticleRenderer: React.FC<{
 
     window.addEventListener("resize", handleResize);
 
+    const currentTrails = trailsRef.current; // Capture the ref value
     return () => {
       window.removeEventListener("resize", handleResize);
-      scope.activate(); // Activate this scope before cleanup
-      trailsRef.current.forEach((trail) => trail.path.remove());
-      trailsRef.current.clear();
+      scope.activate();
+      currentTrails.forEach((trail) => trail.path.remove());
+      currentTrails.clear();
       scope.project?.clear();
     };
   }, [simulatorId]);
