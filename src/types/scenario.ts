@@ -3,7 +3,7 @@ import { SerializableParticle } from "./particle";
 import { PhysicsSettings } from "../constants/physics";
 
 export interface ScenarioData {
-  settings: PhysicsSettings;
+  settings: Partial<PhysicsSettings>;
   gravityPoints: Array<SerializableGravityPoint>;
   particles: Array<SerializableParticle>;
 }

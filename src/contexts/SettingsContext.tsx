@@ -44,11 +44,13 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
     key: keyof typeof STORAGE_KEYS,
     defaultValue: T
   ): T => {
+    console.log(key, defaultValue);
     const storageKey = getStorageKey(key);
+    console.log(storageKey);
     if (!storageKey) return defaultValue;
 
     const saved = localStorage.getItem(storageKey);
-    return saved ? JSON.parse(saved) : defaultValue;
+    return saved ? { ...defaultValue, ...JSON.parse(saved) } : defaultValue;
   };
 
   const saveToStorage = useCallback(
