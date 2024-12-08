@@ -281,8 +281,8 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       }
 
       const now = Date.now();
-      const newTrails = [
-        { x: particle.position.x, y: particle.position.y, timestamp: now },
+      const newTrails: TrailPoint[] = [
+        { position: particle.position.clone(), timestamp: now },
         ...particle.trails.filter((t) => now - t.timestamp < 5000),
       ].slice(0, 100);
 
