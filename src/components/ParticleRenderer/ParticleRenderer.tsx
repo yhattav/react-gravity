@@ -1,152 +1,261 @@
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { drawArrow } from "../../utils/physics/vectorUtils";
-import { TrailPoint } from "../../types/particle";
-import { Point2D } from "../../utils/types/physics";
-import { Force } from "../../utils/types/physics";
+import React, { useEffect, useRef } from "react";
+import Paper, { Point } from "paper";
+import { Particle } from "../../types/particle";
+import { createArrow } from "../../utils/physics/vectorUtils";
 
-interface ParticleRenderParams {
-  position: Point2D;
-  velocity: Point2D;
-  force: Force;
-  color?: string;
-  size?: number;
-  showVectors?: boolean;
-  showVelocityArrows?: boolean;
-  showForceArrows?: boolean;
-  trails?: TrailPoint[];
-  onDelete?: () => void;
-  disabled?: boolean;
-  mass?: number;
+interface ParticleTrail {
+  path: paper.Path & {
+    lastCircle?: paper.Path.Circle;
+    vectors?: paper.Group[];
+  };
+  segmentPaths?: paper.Path[];
+  particle: Particle;
 }
 
-export const ParticleRenderer: React.FC<ParticleRenderParams> = ({
-  position,
-  velocity,
-  force,
-  color = "#BADA55",
-  size = 10,
-  showVectors = true,
-  showVelocityArrows = true,
-  showForceArrows = true,
-  trails = [],
-  onDelete,
-  disabled = false,
-  mass = 0.1,
+export const ParticleRenderer: React.FC<{
+  particles: Particle[];
+  showVelocityArrows?: boolean;
+  showForceArrows?: boolean;
+  shouldReset?: boolean;
+  onResetComplete?: () => void;
+  simulatorId?: string;
+}> = ({
+  particles,
+  shouldReset,
+  showForceArrows,
+  showVelocityArrows,
+  onResetComplete,
+  simulatorId = "default",
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const isNegativeMass = mass < 0;
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const trailsRef = useRef<Map<string, ParticleTrail>>(new Map());
+  const scopeRef = useRef<paper.PaperScope>();
+  const MAX_TRAIL_POINTS = 30;
+
+  useEffect(() => {
+    if (!canvasRef.current) return;
+
+    // Create a new Paper.js scope for this canvas
+    const scope = new Paper.PaperScope();
+    scopeRef.current = scope;
+
+    // Get container dimensions instead of document
+    const container = canvasRef.current.parentElement;
+    if (!container) return;
+
+    const rect = container.getBoundingClientRect();
+    const pixelRatio = 1;
+
+    canvasRef.current.width = rect.width * pixelRatio;
+    canvasRef.current.height = rect.height * pixelRatio;
+
+    // Setup with explicit scope
+    scope.setup(canvasRef.current);
+    scope.view.viewSize = new scope.Size(rect.width, rect.height);
+    scope.view.scale(pixelRatio, pixelRatio);
+
+    const handleResize = () => {
+      if (!container || !canvasRef.current || !scope.view) return;
+      scope.activate(); // Activate this scope before operations
+      const newRect = container.getBoundingClientRect();
+      canvasRef.current.width = newRect.width * pixelRatio;
+      canvasRef.current.height = newRect.height * pixelRatio;
+      scope.view.viewSize = new scope.Size(newRect.width, newRect.height);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    const currentTrails = trailsRef.current; // Capture the ref value
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      scope.activate();
+      currentTrails.forEach((trail) => trail.path.remove());
+      currentTrails.clear();
+      scope.project?.clear();
+    };
+  }, [simulatorId]);
+
+  useEffect(() => {
+    const scope = scopeRef.current;
+    if (!scope || !scope.project) return;
+
+    if (shouldReset) {
+      scope.project.activeLayer.removeChildren();
+      trailsRef.current.forEach((trail) => {
+        trail.path.vectors?.forEach((vector) => vector.remove());
+        trail.segmentPaths?.forEach((path) => path.remove());
+        trail.path.lastCircle?.remove();
+      });
+      trailsRef.current.clear();
+      scope.view.update();
+      onResetComplete?.();
+    }
+  }, [shouldReset, onResetComplete]);
+
+  useEffect(() => {
+    const scope = scopeRef.current;
+    if (!scope || !scope.project) return;
+
+    scope.activate(); // Add this line at the start of each effect
+
+    // Remove trails only for particles that no longer exist
+    const currentParticleIds = new Set(particles.map((p) => p.id));
+    trailsRef.current.forEach((trail, id) => {
+      if (!currentParticleIds.has(id)) {
+        trail.path.remove();
+        trail.segmentPaths?.forEach((path) => path.remove());
+        trail.path.lastCircle?.remove();
+        trailsRef.current.delete(id);
+      }
+    });
+
+    particles.forEach((particle) => {
+      const {
+        id,
+        position,
+        color = "#BADA55",
+        size = 10,
+        mass = 0.1,
+      } = particle;
+
+      const isNegativeMass = mass < 0;
+
+      // Handle trail
+      let trail = trailsRef.current.get(id);
+      if (!trail) {
+        // Create new trail if it doesn't exist
+        const path = new scope.Path({
+          strokeColor: color,
+          strokeWidth: size * 0.8,
+          strokeCap: "round",
+          dashArray: isNegativeMass ? [4, 4] : null,
+        });
+        trail = { path, particle };
+        trailsRef.current.set(id, trail);
+      }
+
+      // Update trail
+      trail.path.add(new Point(position.x, position.y));
+
+      // Remove old points if trail is too long
+      if (trail.path.segments.length > MAX_TRAIL_POINTS) {
+        trail.path.removeSegments(
+          0,
+          trail.path.segments.length - MAX_TRAIL_POINTS
+        );
+      }
+
+      // Update trail appearance
+      if (!trail.path || !trail.path.segments.length) return;
+
+      let paperColor: paper.Color;
+      try {
+        paperColor = new Paper.Color(color);
+      } catch {
+        // Fallback for RGB strings
+        paperColor = new Paper.Color(color.match(/\d+/g)!.map(Number));
+      }
+
+      // Apply width and opacity gradients along the path
+      const segments = trail.path.segments;
+
+      // Clear old segment paths
+      trail.segmentPaths?.forEach((path) => path.remove());
+      trail.segmentPaths = [];
+
+      // Create new segment paths
+      for (let i = 0; i < segments.length - 1; i++) {
+        const progress = i / segments.length; // 0 at start, 1 at end
+        const width = size * 1.2 * progress;
+        const opacity = 0.3 * progress;
+
+        const currentPoint = segments[i].point;
+        const nextPoint = segments[i + 1].point;
+
+        const segmentPath = new scope.Path({
+          segments: [currentPoint, nextPoint],
+          strokeColor: paperColor,
+          strokeWidth: width,
+          opacity: opacity,
+          strokeCap: "round",
+          dashArray: isNegativeMass ? [4, 4] : null,
+        });
+
+        trail.segmentPaths.push(segmentPath);
+      }
+
+      // Hide the main path (we're using segment paths for display)
+      trail.path.strokeWidth = 0;
+
+      // Store particle circle in trail object
+      trail.path.lastCircle?.remove();
+      trail.path.lastCircle = new Paper.Path.Circle({
+        center: new Paper.Point(position.x, position.y),
+        radius: size / 2,
+        strokeColor: color,
+        strokeWidth: 2,
+        fillColor: null,
+        dashArray: isNegativeMass ? [4, 4] : null,
+      });
+
+      if (showVelocityArrows || showForceArrows) {
+        // Remove old vectors if they exist
+        trail.path.vectors?.forEach((vector) => vector.remove());
+        trail.path.vectors = [];
+
+        if (showVelocityArrows) {
+          const velocityArrow = createArrow(
+            new Paper.Point(position.x, position.y),
+            particle.velocity,
+            "#4CAF50",
+            1
+          );
+          trail.path.vectors.push(velocityArrow);
+        }
+
+        if (showForceArrows) {
+          const forceArrow = createArrow(
+            new Paper.Point(position.x, position.y),
+            isNegativeMass ? particle.force.multiply(-1) : particle.force,
+            "#FF4081",
+            40
+          );
+          trail.path.vectors.push(forceArrow);
+        }
+      } else {
+        // Remove vectors when arrows are disabled
+        trail.path.vectors?.forEach((vector) => vector.remove());
+        trail.path.vectors = [];
+      }
+    });
+
+    scope.view.update();
+
+    // Cleanup function to remove circles (but keep trails)
+    return () => {
+      scope.project?.activeLayer?.children.forEach((child) => {
+        if (child instanceof Paper.Path.Circle) {
+          child.remove();
+        }
+      });
+    };
+  }, [particles, showForceArrows, showVelocityArrows]);
 
   return (
-    <>
-      {/* Trail SVG - lowest layer */}
-      <svg
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          pointerEvents: "none",
-          overflow: "visible",
-          zIndex: 1,
-        }}
-      >
-        {trails.length > 1 &&
-          trails.slice(0, -1).map((point, i) => {
-            const nextPoint = trails[i + 1];
-            const progress = 1 - i / (trails.length - 1);
-            return (
-              <line
-                key={i}
-                x1={point.x}
-                y1={point.y}
-                x2={nextPoint.x}
-                y2={nextPoint.y}
-                stroke={color}
-                strokeWidth={size * progress * 0.8}
-                strokeOpacity={progress * 0.4}
-                strokeLinecap="round"
-                strokeDasharray={isNegativeMass ? "4,4" : "none"}
-              />
-            );
-          })}
-      </svg>
-
-      {/* Vector arrows - middle layer */}
-      {showVectors && (
-        <svg
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            pointerEvents: "none",
-            overflow: "visible",
-            zIndex: 2,
-          }}
-        >
-          {/* Velocity vector */}
-          {showVelocityArrows &&
-            drawArrow(
-              position.x,
-              position.y,
-              velocity.x,
-              velocity.y,
-              "#4CAF50",
-              2
-            )}
-
-          {/* Force/Acceleration vector */}
-          {showForceArrows &&
-            drawArrow(position.x, position.y, force.fx, force.fy, "#FF4081", 2)}
-        </svg>
-      )}
-
-      {/* Particle div - top layer */}
-      <motion.div
-        style={{
-          width: `${size}px`,
-          height: `${size}px`,
-          backgroundColor:
-            isHovered && !disabled ? "rgba(255, 82, 82, 0.6)" : "transparent",
-          border: `2px ${isNegativeMass ? "dashed" : "solid"} ${
-            isHovered && !disabled ? "#ff5252" : color
-          }`,
-          borderRadius: "50%",
-          position: "fixed",
-          left: position.x,
-          top: position.y,
-          transformOrigin: "center center",
-          cursor: disabled ? "default" : "pointer",
-          boxShadow:
-            isHovered && !disabled
-              ? "0 0 10px rgba(255, 82, 82, 0.5), inset 0 0 8px rgba(255, 255, 255, 0.3)"
-              : isNegativeMass
-              ? "0 0 20px rgba(0,0,0,0.3), inset 0 0 8px rgba(0,0,0,0.2)"
-              : "0 0 20px rgba(255,255,255,0.2)",
-          zIndex: 3,
-        }}
-        animate={{
-          transform:
-            isHovered && !disabled
-              ? `translate(-50%, -50%) scale(${Math.max(20 / size, 1.2)})`
-              : "translate(-50%, -50%) scale(1)",
-        }}
-        transition={{
-          duration: 0.2,
-          ease: "easeOut",
-        }}
-        onMouseEnter={() => !disabled && setIsHovered(true)}
-        onMouseLeave={() => !disabled && setIsHovered(false)}
-        onClick={(e) => {
-          if (!disabled) {
-            e.stopPropagation();
-            onDelete?.();
-          }
-        }}
-      />
-    </>
+    <canvas
+      ref={canvasRef}
+      className={`paper-canvas-${simulatorId}`}
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        pointerEvents: "none",
+        zIndex: 10,
+      }}
+    />
   );
 };
+
+export default ParticleRenderer;

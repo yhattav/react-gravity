@@ -1,4 +1,5 @@
 import { Scenario } from "../../types/scenario";
+import { DEFAULT_PHYSICS_CONFIG } from "../../constants/physics";
 
 const centerX = 500;
 const centerY = 400;
@@ -23,6 +24,7 @@ export const negativeMass: Scenario = {
   description: "Watch how a negative mass particle behaves in a ring of stars",
   data: {
     settings: {
+      ...DEFAULT_PHYSICS_CONFIG,
       NEW_PARTICLE_MASS: 0.1,
       NEW_PARTICLE_ELASTICITY: 0.8,
       FRICTION: 1,
@@ -39,11 +41,11 @@ export const negativeMass: Scenario = {
     particles: [
       {
         id: "negative-particle",
-        position: { x: centerX + 100, y: centerY }, // 100px from center
-        velocity: { x: 0, y: 20 }, // Initial velocity for interesting motion
-        mass: -0.01, // Negative mass
+        position: { x: centerX + 100, y: centerY },
+        velocity: { x: 0, y: 20 },
+        mass: -0.01,
         elasticity: 0.8,
-        color: "#FF69B4", // Hot pink for visibility
+        color: "#FF69B4",
         size: 12,
         showVectors: true,
       },

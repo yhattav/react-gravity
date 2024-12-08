@@ -69,7 +69,7 @@ export const GravityPointComponent: React.FC<GravityPointComponentProps> = ({
         isDraggingRef.current = true;
         onDrag();
       }}
-      initial={{ x: point.x, y: point.y }}
+      initial={{ x: point.position.x, y: point.position.y }}
       onDragEnd={onDragEnd}
       onPointerDown={disabled ? undefined : handlePointerDown}
       onPointerUp={disabled ? undefined : handlePointerUp}

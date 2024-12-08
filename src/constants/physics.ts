@@ -1,5 +1,6 @@
 import { StarTemplate } from "../types/star";
 import { GravityPoint } from "../utils/types/physics";
+import { Point } from "paper";
 
 export interface SliderSettingMetadata {
   type: "slider";
@@ -165,7 +166,7 @@ export const STAR_TEMPLATES: StarTemplate[] = [
 ];
 
 export const INITIAL_GRAVITY_POINTS: GravityPoint[] = [
-  { x: 700, y: 700, label: "Heavy", mass: 50000 },
-  { x: 500, y: 150, label: "Medium", mass: 30000 },
-  { x: 350, y: 250, label: "Light", mass: 10000 },
+  { position: new Point(700, 700), label: "Heavy", mass: 50000 },
+  { position: new Point(500, 150), label: "Medium", mass: 30000 },
+  { position: new Point(350, 250), label: "Light", mass: 10000 },
 ];

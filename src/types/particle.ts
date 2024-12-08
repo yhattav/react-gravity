@@ -1,23 +1,56 @@
-import { Point2D, Force } from "../utils/types/physics";
+import { Point } from "paper/dist/paper-core";
+import { Vector, Point2D } from "../utils/types/physics";
 
 export interface ParticleMechanics {
-  position: Point2D;
-  velocity: Point2D;
-  force?: Force;
+  position: Vector;
+  velocity: Vector;
+  force: Vector;
   mass: number;
   elasticity: number;
   outgoingForceRatio?: number;
-  trails?: TrailPoint[];
-}
-
-export interface TrailPoint extends Point2D {
-  timestamp: number;
 }
 
 export interface Particle extends ParticleMechanics {
   id: string;
-  color: string;
-  size: number;
-  showVectors: boolean;
-  trails: TrailPoint[];
+  color?: string;
+  size?: number;
+  showVectors?: boolean;
 }
+
+// Serializable versions
+export interface SerializableParticle {
+  id: string;
+  position: Point2D;
+  velocity: Point2D;
+  mass: number;
+  elasticity: number;
+  outgoingForceRatio?: number;
+  size?: number;
+  color?: string;
+  showVectors?: boolean;
+}
+
+// Conversion utilities
+export const toParticle = (p: SerializableParticle): Particle => ({
+  id: p.id,
+  position: new Point(p.position.x, p.position.y),
+  velocity: new Point(p.velocity.x, p.velocity.y),
+  mass: p.mass,
+  elasticity: p.elasticity,
+  outgoingForceRatio: p.outgoingForceRatio,
+  size: p.size,
+  color: p.color,
+  force: new Point(0, 0),
+});
+
+export const toSerializableParticle = (p: Particle): SerializableParticle => ({
+  id: p.id,
+  position: { x: p.position.x, y: p.position.y },
+  velocity: { x: p.velocity.x, y: p.velocity.y },
+  mass: p.mass,
+  elasticity: p.elasticity,
+  outgoingForceRatio: p.outgoingForceRatio,
+  size: p.size,
+  color: p.color,
+  showVectors: p.showVectors,
+});
