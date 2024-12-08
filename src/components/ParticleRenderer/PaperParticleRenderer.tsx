@@ -12,7 +12,9 @@ export const PaperParticleRenderer: React.FC<{
   particles: Particle[];
   showVelocityArrows?: boolean;
   showForceArrows?: boolean;
-}> = ({ particles }) => {
+  shouldReset?: boolean;
+  onResetComplete?: () => void;
+}> = ({ particles, shouldReset, onResetComplete }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const trailsRef = useRef<Map<string, ParticleTrail>>(new Map());
   const MAX_TRAIL_POINTS = 100;
@@ -40,12 +42,25 @@ export const PaperParticleRenderer: React.FC<{
   }, []);
 
   useEffect(() => {
+    if (shouldReset && Paper.project) {
+      // Clear all paths
+      Paper.project.activeLayer.removeChildren();
+      trailsRef.current.clear();
+      Paper.view.update();
+      onResetComplete?.();
+    }
+  }, [shouldReset, onResetComplete]);
+
+  useEffect(() => {
     if (!Paper.project) return;
 
-    // Remove trails for particles that no longer exist
+    // Remove trails only for particles that no longer exist
+    const currentParticleIds = new Set(particles.map((p) => p.id));
     trailsRef.current.forEach((trail, id) => {
-      if (!particles.find((p) => p.id === id)) {
+      if (!currentParticleIds.has(id)) {
         trail.path.remove();
+        trail.segmentPaths?.forEach((path) => path.remove());
+        trail.path.lastCircle?.remove();
         trailsRef.current.delete(id);
       }
     });

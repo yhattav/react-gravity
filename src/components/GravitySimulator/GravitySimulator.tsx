@@ -142,6 +142,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   const [isColorInverted, setIsColorInverted] = useState(false);
   const [offset, setOffset] = useState<Vector>(new Point(0, 0));
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [shouldResetRenderer, setShouldResetRenderer] = useState(false);
 
   useEffect(() => {
     const updateOffset = () => {
@@ -500,9 +501,9 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
       // Reset the simulation state
       setParticles([]);
-      setGravityPoints([]); // Clear existing points first
+      setGravityPoints([]);
 
-      // Update settings and state in the next frame to ensure clean rendering
+      // Update settings and state in the next frame
       requestAnimationFrame(() => {
         updateSettings(scenario.data.settings);
         setGravityPoints(newGravityPoints.map(toGravityPoint));
@@ -783,6 +784,8 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             particles={particles}
             showVelocityArrows={physicsConfig.SHOW_VELOCITY_ARROWS}
             showForceArrows={physicsConfig.SHOW_FORCE_ARROWS}
+            shouldReset={shouldResetRenderer}
+            onResetComplete={() => setShouldResetRenderer(false)}
           />
         )}
 
