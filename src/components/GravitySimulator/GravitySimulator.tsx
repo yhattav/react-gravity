@@ -2,14 +2,12 @@ import React, { useState, useCallback, useEffect } from "react";
 import { Point2D, GravityPoint, Vector } from "../../utils/types/physics";
 import { GravityPointComponent } from "../GravityPoint/GravityPoint";
 import { PaperParticleRenderer } from "../ParticleRenderer/PaperParticleRenderer";
-import { ParticleRenderer } from "../ParticleRenderer/ParticleRenderer";
 import { StarPalette } from "../StarPalette/StarPalette";
 import { StarTemplate } from "../../types/star";
 import {
   calculateTotalForce,
   calculateAcceleration,
   calculateNewVelocity,
-  calculateNewPosition,
   handleBoundaryCollision,
 } from "../../utils/physics/paperPhysicsUtils";
 //import { handleBoundaryCollision } from "../../utils/physics/physicsUtils";
@@ -142,7 +140,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   const [shareableLink, setShareableLink] = useState<string>("");
   const [isColorInverted, setIsColorInverted] = useState(false);
   const [offset, setOffset] = useState<Vector>(new Point(0, 0));
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [shouldResetRenderer, setShouldResetRenderer] = useState(false);
 
   useEffect(() => {
@@ -160,28 +157,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     window.addEventListener("resize", debounce(updateOffset, 250));
     return () => window.removeEventListener("resize", updateOffset);
   }, [gravityRef]);
-
-  useEffect(() => {
-    const updateDimensions = () => {
-      if (gravityRef.current) {
-        setDimensions({
-          width: gravityRef.current.clientWidth,
-          height: gravityRef.current.clientHeight,
-        });
-      }
-    };
-
-    // Initial dimensions
-    updateDimensions();
-
-    // Update dimensions when window resizes
-    const debouncedUpdateDimensions = debounce(updateDimensions, 250);
-    window.addEventListener("resize", debouncedUpdateDimensions);
-
-    return () => {
-      window.removeEventListener("resize", debouncedUpdateDimensions);
-    };
-  }, []);
 
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
@@ -358,7 +333,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       ]);
     },
     [
-      pointerPosRef,
       isSimulationStarted,
       isDragging,
       isDraggingNewStar,

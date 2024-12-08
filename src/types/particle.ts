@@ -31,9 +31,7 @@ export interface SerializableParticle {
 }
 
 // Conversion utilities
-export const toParticle = (
-  p: SerializableParticle
-): Omit<Particle, "force"> => ({
+export const toParticle = (p: SerializableParticle): Particle => ({
   id: p.id,
   position: new Point(p.position.x, p.position.y),
   velocity: new Point(p.velocity.x, p.velocity.y),
@@ -42,6 +40,7 @@ export const toParticle = (
   outgoingForceRatio: p.outgoingForceRatio,
   size: p.size,
   color: p.color,
+  force: new Point(0, 0),
 });
 
 export const toSerializableParticle = (p: Particle): SerializableParticle => ({

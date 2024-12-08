@@ -4,6 +4,7 @@ import { Card } from "antd";
 import { DebugData } from "../types/Debug";
 import { GravitySimulatorWithSettings } from "../components/GravitySimulatorWithSettings/GravitySimulatorWithSettings";
 import { Point } from "paper";
+import { Vector } from "../utils/types/physics";
 
 interface GravitySectionProps {
   onDebugData?: (data: DebugData) => void;
@@ -13,7 +14,7 @@ export const GravitySection: React.FC<GravitySectionProps> = ({
   onDebugData,
 }) => {
   const gravityRef = useRef<HTMLDivElement>(null);
-  const pointerPosRef = useRef<Point | null>(null);
+  const pointerPosRef = useRef<Vector | null>(null);
 
   const handleCursorMove = useCallback(async (x: number, y: number) => {
     await new Promise((resolve) => setTimeout(resolve, 0));

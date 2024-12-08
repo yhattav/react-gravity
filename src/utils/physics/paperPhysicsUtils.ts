@@ -134,11 +134,11 @@ export const calculateNewPosition = (
 };
 
 export const handleBoundaryCollision = (
-  position: Point,
-  velocity: Point,
+  position: Vector,
+  velocity: Vector,
   containerRef: React.RefObject<HTMLDivElement>,
   elasticity: number
-): { position: Point; velocity: Point } => {
+): { position: Vector; velocity: Vector } => {
   if (!containerRef.current) return { position, velocity };
 
   const bounds = containerRef.current.getBoundingClientRect();
