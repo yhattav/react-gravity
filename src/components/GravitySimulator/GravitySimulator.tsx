@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { Point2D, GravityPoint, Vector } from "../../utils/types/physics";
 import { GravityPointComponent } from "../GravityPoint/GravityPoint";
-import { PaperParticleRenderer } from "../ParticleRenderer/PaperParticleRenderer";
+import { ParticleRenderer } from "../ParticleRenderer/ParticleRenderer";
 import { StarPalette } from "../StarPalette/StarPalette";
 import { StarTemplate } from "../../types/star";
 import {
@@ -9,8 +9,7 @@ import {
   calculateAcceleration,
   calculateNewVelocity,
   handleBoundaryCollision,
-} from "../../utils/physics/paperPhysicsUtils";
-//import { handleBoundaryCollision } from "../../utils/physics/physicsUtils";
+} from "../../utils/physics/physicsUtils";
 import { getContainerOffset } from "../../utils/dom/domUtils";
 import {
   INITIAL_GRAVITY_POINTS,
@@ -758,7 +757,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         ))}
 
         {isSimulationStarted && (
-          <PaperParticleRenderer
+          <ParticleRenderer
             particles={particles}
             showVelocityArrows={physicsConfig.SHOW_VELOCITY_ARROWS}
             showForceArrows={physicsConfig.SHOW_FORCE_ARROWS}
