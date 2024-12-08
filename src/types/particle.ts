@@ -4,22 +4,16 @@ import { Vector, Force, Vector2D } from "../utils/types/physics";
 export interface ParticleMechanics {
   position: Vector;
   velocity: Vector;
-  force?: Force;
+  force: Vector;
   mass: number;
   elasticity: number;
   outgoingForceRatio?: number;
 }
 
-export interface TrailPoint {
-  position: Vector;
-  timestamp: number;
-}
-
 export interface Particle extends ParticleMechanics {
   id: string;
-  size: number;
-  color: string;
-  trails: TrailPoint[];
+  color?: string;
+  size?: number;
   showVectors?: boolean;
 }
 
@@ -46,7 +40,6 @@ export const toParticle = (p: SerializableParticle): Particle => ({
   outgoingForceRatio: p.outgoingForceRatio,
   size: p.size,
   color: p.color,
-  trails: [],
 });
 
 export const toSerializableParticle = (p: Particle): SerializableParticle => ({

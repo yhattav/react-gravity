@@ -1,156 +1,169 @@
 import React, { useEffect, useRef } from "react";
-import Paper from "paper";
+import Paper, { Path, Point } from "paper";
 import { Particle } from "../../types/particle";
+
+interface ParticleTrail {
+  path: paper.Path & { lastCircle?: paper.Path.Circle };
+  segmentPaths?: paper.Path[];
+  particle: Particle;
+}
 
 export const PaperParticleRenderer: React.FC<{
   particles: Particle[];
-  width: number;
-  height: number;
   showVelocityArrows?: boolean;
   showForceArrows?: boolean;
-}> = ({ particles, width, height }) => {
+}> = ({ particles }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const trailsRef = useRef<Map<string, ParticleTrail>>(new Map());
+  const MAX_TRAIL_POINTS = 100;
 
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    // Use viewport dimensions instead of passed props
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
-    // Setup Paper.js with the correct pixel ratio
     const pixelRatio = 1;
     canvasRef.current.width = viewportWidth * pixelRatio;
     canvasRef.current.height = viewportHeight * pixelRatio;
 
     Paper.setup(canvasRef.current);
     Paper.view.viewSize = new Paper.Size(viewportWidth, viewportHeight);
-    // Don't center the view - keep 0,0 at top left
     Paper.view.scale(pixelRatio, pixelRatio);
 
     return () => {
+      // Clean up all trails
+      trailsRef.current.forEach((trail) => trail.path.remove());
+      trailsRef.current.clear();
       Paper.project?.clear();
     };
-  }, []); // Remove width/height from dependencies since we're using viewport size
+  }, []);
 
   useEffect(() => {
     if (!Paper.project) return;
-    Paper.project.clear();
 
-    // Add debug log to verify particles data
+    // Remove trails for particles that no longer exist
+    trailsRef.current.forEach((trail, id) => {
+      if (!particles.find((p) => p.id === id)) {
+        trail.path.remove();
+        trailsRef.current.delete(id);
+      }
+    });
 
     particles.forEach((particle) => {
       const {
+        id,
         position,
         color = "#BADA55",
         size = 10,
-        trails = [],
         mass = 0.1,
       } = particle;
 
-      // Add debug log to verify each particle position
-
       const isNegativeMass = mass < 0;
 
-      // Draw trails with opacity gradient
-      if (trails.length > 1) {
-        trails.slice(0, -1).forEach((point, i) => {
-          const nextPoint = trails[i + 1];
-          const progress = 1 - i / (trails.length - 1);
-
-          new Paper.Path({
-            segments: [
-              new Paper.Point(point.position?.x || 0, point.position?.y || 0),
-              new Paper.Point(
-                nextPoint.position?.x || 0,
-                nextPoint.position?.y || 0
-              ),
-            ],
-            strokeColor: color,
-            strokeWidth: size * progress * 0.8,
-            opacity: progress * 0.4,
-            strokeCap: "round",
-            dashArray: isNegativeMass ? [4, 4] : null,
-          });
+      // Handle trail
+      let trail = trailsRef.current.get(id);
+      if (!trail) {
+        // Create new trail if it doesn't exist
+        const path = new Path({
+          strokeColor: color,
+          strokeWidth: size * 0.8,
+          strokeCap: "round",
+          dashArray: isNegativeMass ? [4, 4] : null,
         });
+        trail = { path, particle };
+        trailsRef.current.set(id, trail);
       }
-      // Draw particle
-      const particleCircle = new Paper.Path.Circle({
+
+      // Update trail
+      trail.path.add(new Point(position.x, position.y));
+
+      // Remove old points if trail is too long
+      if (trail.path.segments.length > MAX_TRAIL_POINTS) {
+        trail.path.removeSegments(
+          0,
+          trail.path.segments.length - MAX_TRAIL_POINTS
+        );
+      }
+
+      // Update trail appearance
+      if (!trail.path || !trail.path.segments.length) return;
+
+      let paperColor: paper.Color;
+      try {
+        paperColor = new Paper.Color(color);
+      } catch {
+        // Fallback for RGB strings
+        paperColor = new Paper.Color(color.match(/\d+/g)!.map(Number));
+      }
+
+      // Apply width and opacity gradients along the path
+      const segments = trail.path.segments;
+
+      // Clear old segment paths
+      trail.segmentPaths?.forEach((path) => path.remove());
+      trail.segmentPaths = [];
+
+      // Create new segment paths
+      for (let i = 0; i < segments.length - 1; i++) {
+        const progress = i / segments.length; // 0 at start, 1 at end
+        const width = size * 0.8 * progress;
+        const opacity = 0.4 * progress;
+
+        const currentPoint = segments[i].point;
+        const nextPoint = segments[i + 1].point;
+
+        const segmentPath = new Paper.Path({
+          segments: [currentPoint, nextPoint],
+          strokeColor: paperColor,
+          strokeWidth: width,
+          opacity: opacity,
+          strokeCap: "round",
+          dashArray: isNegativeMass ? [4, 4] : null,
+        });
+
+        trail.segmentPaths.push(segmentPath);
+      }
+
+      // Hide the main path (we're using segment paths for display)
+      trail.path.strokeWidth = 0;
+
+      // Store particle circle in trail object
+      trail.path.lastCircle?.remove();
+      trail.path.lastCircle = new Paper.Path.Circle({
         center: new Paper.Point(position.x, position.y),
         radius: size / 2,
         strokeColor: color,
         strokeWidth: 2,
         fillColor: color,
+        dashArray: isNegativeMass ? [4, 4] : null,
       });
-
-      if (isNegativeMass) {
-        particleCircle.dashArray = [4, 4];
-      }
-
-      // Draw vectors if enabled
-      //   if (showVectors) {
-      //     // Velocity vector (green)
-      //     if (showVelocityArrows) {
-      //       const velocityScale = 20;
-      //       new Paper.Path({
-      //         segments: [
-      //           new Paper.Point(position.x, position.y),
-      //           new Paper.Point(
-      //             position.x + velocity.x * velocityScale,
-      //             position.y + velocity.y * velocityScale
-      //           ),
-      //         ],
-      //         strokeColor: "#4CAF50",
-      //         strokeWidth: 2,
-      //         strokeCap: "round",
-      //         // Add arrowhead
-      //         onFrame: function () {
-      //           //   const arrowHead = new Paper.Path({
-      //           //     segments: this.segments,
-      //           //     strokeColor: "#4CAF50",
-      //           //     strokeWidth: 2,
-      //           //   });
-      //           // Add arrow head geometry here
-      //           //arrowHead.add(new Paper.Point(position.x, position.y));
-      //         },
-      //       });
-      //     }
-
-      //     // Force vector (pink)
-      //     if (showForceArrows) {
-      //       const forceScale = 50;
-      //       new Paper.Path({
-      //         segments: [
-      //           new Paper.Point(position.x, position.y),
-      //           new Paper.Point(
-      //             position.x + (force?.x || 0) * forceScale,
-      //             position.y + (force?.y || 0) * forceScale
-      //           ),
-      //         ],
-      //         strokeColor: "#FF4081",
-      //         strokeWidth: 2,
-      //         strokeCap: "round",
-      //         // Add similar arrowhead
-      //       });
-      //     }
-      //   }
     });
 
     Paper.view.update();
-  }, [particles, width, height]);
+
+    // Cleanup function to remove circles (but keep trails)
+    return () => {
+      Paper.project.activeLayer.children.forEach((child) => {
+        if (child instanceof Paper.Path.Circle) {
+          child.remove();
+        }
+      });
+    };
+  }, [particles]);
 
   return (
     <canvas
       ref={canvasRef}
       id="paper-canvas"
       style={{
-        position: "fixed", // Changed to fixed to cover viewport
+        position: "fixed",
         top: 0,
         left: 0,
-        width: "100vw", // Use viewport units
+        width: "100vw",
         height: "100vh",
-        pointerEvents: "none", // Allow clicks to pass through
-        zIndex: 10, // Ensure it's above other content but below UI
+        pointerEvents: "none",
+        zIndex: 10,
       }}
     />
   );

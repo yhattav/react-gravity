@@ -34,7 +34,7 @@ import { Scenario } from "../../types/scenario";
 import { SettingOutlined } from "@ant-design/icons";
 import { SaveScenarioModal } from "../SaveScenarioModal/SaveScenarioModal";
 import { createShareableLink } from "../../utils/compression";
-import { Particle, ParticleMechanics, TrailPoint } from "../../types/particle";
+import { Particle, ParticleMechanics } from "../../types/particle";
 import { Position } from "@yhattav/react-component-cursor";
 import { Point } from "paper";
 import {
@@ -236,8 +236,8 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
   const updateParticleMechanics = useCallback(
     (
-      particle: ParticleMechanics & { trails: TrailPoint[] },
-      allParticles: Array<ParticleMechanics & { trails: TrailPoint[] }> = []
+      particle: ParticleMechanics,
+      allParticles: Array<ParticleMechanics> = []
     ): ParticleMechanics => {
       const otherParticles = allParticles.filter((p) => p !== particle);
       const calculatedForce = calculateTotalForce(
@@ -280,19 +280,12 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         newVelocity = collision.velocity;
       }
 
-      const now = Date.now();
-      const newTrails: TrailPoint[] = [
-        { position: particle.position.clone(), timestamp: now },
-        ...particle.trails.filter((t) => now - t.timestamp < 5000),
-      ].slice(0, 100);
-
       return {
         position: newPosition,
         velocity: newVelocity,
         force,
         mass: particle.mass,
         elasticity: particle.elasticity,
-        trails: newTrails,
       };
     },
     [gravityPoints, physicsConfig, gravityRef, offset, pointerPosRef]
@@ -337,7 +330,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         color: generatePastelColor(),
         size: 10,
         showVectors: true,
-        trails: [{ position: new Point(newPosition), timestamp: Date.now() }],
         ...options,
       };
     },
@@ -517,9 +509,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         setParticles(
           scenario.data.particles.map((particle) => ({
             ...toParticle(particle),
-            trails: [
-              { position: new Point(particle.position), timestamp: Date.now() },
-            ],
             force: new Point(0, 0),
           }))
         );
@@ -789,31 +778,9 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           />
         ))}
 
-        {/* {isSimulationStarted &&
-          particles.map((particle) => (
-            <ParticleRenderer
-              key={particle.id}
-              position={particle.position}
-              velocity={particle.velocity}
-              force={particle.force || { fx: 0, fy: 0 }}
-              color={particle.color}
-              size={particle.size}
-              showVectors={particle.showVectors}
-              trails={particle.trails}
-              showVelocityArrows={physicsConfig.SHOW_VELOCITY_ARROWS}
-              showForceArrows={physicsConfig.SHOW_FORCE_ARROWS}
-              mass={particle.mass}
-              onDelete={() => {
-                setParticles(particles.filter((p) => p.id !== particle.id));
-              }}
-              disabled={blockInteractions}
-            />
-          ))} */}
         {isSimulationStarted && (
           <PaperParticleRenderer
             particles={particles}
-            width={dimensions.width}
-            height={dimensions.height}
             showVelocityArrows={physicsConfig.SHOW_VELOCITY_ARROWS}
             showForceArrows={physicsConfig.SHOW_FORCE_ARROWS}
           />
