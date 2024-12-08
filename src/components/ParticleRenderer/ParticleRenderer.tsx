@@ -222,6 +222,10 @@ export const ParticleRenderer: React.FC<{
           );
           trail.path.vectors.push(forceArrow);
         }
+      } else {
+        // Remove vectors when arrows are disabled
+        trail.path.vectors?.forEach((vector) => vector.remove());
+        trail.path.vectors = [];
       }
     });
 
