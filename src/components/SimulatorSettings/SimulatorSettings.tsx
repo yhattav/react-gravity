@@ -4,8 +4,11 @@ import {
   DEFAULT_PHYSICS_CONFIG,
   SETTINGS_METADATA,
   SliderSettingMetadata,
+  VectorSettingMetadata,
 } from "../../constants/physics";
 import { useSettings } from "../../contexts/SettingsContext";
+import { VectorController } from "../VectorController/VectorController";
+import { Point2D } from "../../utils/types/physics";
 
 interface SimulatorSettingsProps {
   onSettingsChange: (settings: typeof DEFAULT_PHYSICS_CONFIG) => void;
@@ -25,7 +28,10 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
     isDevelopment,
   } = useSettings();
 
-  const handleSettingChange = (key: keyof typeof settings, value: number) => {
+  const handleSettingChange = (
+    key: keyof typeof settings,
+    value: number | Point2D
+  ) => {
     const newSettings = { [key]: value };
     updateSettings(newSettings);
     onSettingsChange({ ...settings, ...newSettings });
@@ -44,7 +50,7 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
   };
 
   const shouldShowSetting = (key: keyof typeof DEFAULT_PHYSICS_CONFIG) => {
-    const isDevSetting = SETTINGS_METADATA[key].isDev;
+    const isDevSetting = SETTINGS_METADATA[key]?.isDev;
     return !isDevSetting || (isDevelopment && showDevSettings);
   };
 
@@ -139,7 +145,46 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
                   <div key={key} style={{ marginBottom: "16px" }}>
                     {SETTINGS_METADATA[
                       key as keyof typeof DEFAULT_PHYSICS_CONFIG
-                    ].type === "boolean" ? (
+                    ].type === "vector" ? (
+                      <div key={key} style={{ marginBottom: "16px" }}>
+                        <label style={{ fontSize: "0.9rem" }}>
+                          {key.replace(/_/g, " ")}
+                        </label>
+                        <VectorController
+                          value={value as Point2D}
+                          onChange={(newValue) =>
+                            handleSettingChange(
+                              key as keyof typeof DEFAULT_PHYSICS_CONFIG,
+                              newValue
+                            )
+                          }
+                          max={
+                            (
+                              SETTINGS_METADATA[
+                                key as keyof typeof DEFAULT_PHYSICS_CONFIG
+                              ] as VectorSettingMetadata
+                            ).max
+                          }
+                          width={100}
+                          height={100}
+                        />
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            marginTop: "8px",
+                            fontSize: "0.85rem",
+                            fontFamily: "monospace",
+                            color: "rgba(255, 255, 255, 0.7)",
+                          }}
+                        >
+                          <span>x: {(value as Point2D).x.toFixed(3)}</span>
+                          <span>y: {(value as Point2D).y.toFixed(3)}</span>
+                        </div>
+                      </div>
+                    ) : SETTINGS_METADATA[
+                        key as keyof typeof DEFAULT_PHYSICS_CONFIG
+                      ].type === "boolean" ? (
                       <label
                         style={{
                           display: "flex",

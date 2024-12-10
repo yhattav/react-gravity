@@ -67,10 +67,22 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
   );
 
   const [settings, setSettings] = useState<PhysicsSettings>(() => {
-    return loadFromStorage("SETTINGS", DEFAULT_PHYSICS_CONFIG, (saved) => ({
-      ...DEFAULT_PHYSICS_CONFIG,
-      ...JSON.parse(saved),
-    }));
+    return loadFromStorage("SETTINGS", DEFAULT_PHYSICS_CONFIG, (saved) => {
+      const parsedSettings = JSON.parse(saved);
+      // Only keep known keys from DEFAULT_PHYSICS_CONFIG
+      return Object.keys(DEFAULT_PHYSICS_CONFIG).reduce(
+        (cleanSettings: PhysicsSettings, key) => {
+          const typedKey = key as keyof typeof DEFAULT_PHYSICS_CONFIG;
+          // @ts-expect-error todo later
+          cleanSettings[typedKey] =
+            key in parsedSettings
+              ? (parsedSettings[key] as PhysicsSettings[typeof typedKey])
+              : DEFAULT_PHYSICS_CONFIG[typedKey];
+          return cleanSettings;
+        },
+        {} as PhysicsSettings
+      );
+    });
   });
 
   const [showDevSettings, setShowDevSettings] = useState(() => {

@@ -1,3 +1,5 @@
+import { Scenario } from "../../types/scenario";
+
 export const galaxyCollision: Scenario = {
   id: "galaxy-collision",
   name: "Galaxy Collision",
@@ -12,8 +14,7 @@ export const galaxyCollision: Scenario = {
       POINTER_MASS: 250000,
       SHOW_VELOCITY_ARROWS: true,
       SHOW_FORCE_ARROWS: false,
-      CONSTANT_FORCE_X: 0,
-      CONSTANT_FORCE_Y: 0,
+      CONSTANT_FORCE: { x: 0, y: 0 },
       SOLID_BOUNDARIES: true,
     },
     gravityPoints: [
@@ -23,21 +24,18 @@ export const galaxyCollision: Scenario = {
         y: 200,
         label: "Galaxy 1 Core",
         mass: 100000,
-        color: "#FF6B6B",
       },
       {
         x: 250,
         y: 150,
         label: "Star 1",
         mass: 20000,
-        color: "#FF8E8E",
       },
       {
         x: 150,
         y: 250,
         label: "Star 2",
         mass: 20000,
-        color: "#FF8E8E",
       },
       // Second galaxy
       {
@@ -45,21 +43,18 @@ export const galaxyCollision: Scenario = {
         y: 600,
         label: "Galaxy 2 Core",
         mass: 100000,
-        color: "#4ECDC4",
       },
       {
         x: 750,
         y: 650,
         label: "Star 3",
         mass: 20000,
-        color: "#6BE5DC",
       },
       {
         x: 850,
         y: 550,
         label: "Star 4",
         mass: 20000,
-        color: "#6BE5DC",
       },
     ],
     particles: [

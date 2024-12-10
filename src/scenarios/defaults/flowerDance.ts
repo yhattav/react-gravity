@@ -14,8 +14,7 @@ export const flowerDance: Scenario = {
       POINTER_MASS: 0,
       SHOW_VELOCITY_ARROWS: false,
       SHOW_FORCE_ARROWS: false,
-      CONSTANT_FORCE_X: 0,
-      CONSTANT_FORCE_Y: 0,
+      CONSTANT_FORCE: { x: 0, y: 0 },
       SOLID_BOUNDARIES: true,
     },
     gravityPoints: [
@@ -24,7 +23,6 @@ export const flowerDance: Scenario = {
         y: 403,
         label: "Brown Dwarf",
         mass: 600302.2939903878,
-        color: "#8B4513",
       },
     ],
     particles: [

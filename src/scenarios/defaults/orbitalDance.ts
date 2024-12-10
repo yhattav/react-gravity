@@ -1,3 +1,5 @@
+import { Scenario } from "../../types/scenario";
+
 export const orbitalDance: Scenario = {
   id: "orbital-dance",
   name: "Orbital Dance",
@@ -12,8 +14,7 @@ export const orbitalDance: Scenario = {
       POINTER_MASS: 250000,
       SHOW_VELOCITY_ARROWS: false,
       SHOW_FORCE_ARROWS: false,
-      CONSTANT_FORCE_X: 0,
-      CONSTANT_FORCE_Y: 0,
+      CONSTANT_FORCE: { x: 0, y: 0 },
       SOLID_BOUNDARIES: true,
     },
     gravityPoints: [
@@ -22,35 +23,30 @@ export const orbitalDance: Scenario = {
         y: 400,
         label: "Center",
         mass: 80000,
-        color: "#FFD93D",
       },
       {
         x: 300,
         y: 400,
         label: "Orbit 1",
         mass: 15000,
-        color: "#6BCB77",
       },
       {
         x: 700,
         y: 400,
         label: "Orbit 2",
         mass: 15000,
-        color: "#4D96FF",
       },
       {
         x: 500,
         y: 200,
         label: "Orbit 3",
         mass: 15000,
-        color: "#FF6B6B",
       },
       {
         x: 500,
         y: 600,
         label: "Orbit 4",
         mass: 15000,
-        color: "#9D3C72",
       },
     ],
     particles: [

@@ -13,8 +13,7 @@ export const threeStars: Scenario = {
       POINTER_MASS: 250000,
       SHOW_VELOCITY_ARROWS: false,
       SHOW_FORCE_ARROWS: false,
-      CONSTANT_FORCE_X: 0,
-      CONSTANT_FORCE_Y: 0,
+      CONSTANT_FORCE: { x: 0, y: 0 },
       SOLID_BOUNDARIES: true,
     },
     gravityPoints: [
@@ -23,21 +22,18 @@ export const threeStars: Scenario = {
         y: 700,
         label: "Heavy",
         mass: 50000,
-        color: "#FF6B6B",
       },
       {
         x: 500,
         y: 150,
         label: "Medium",
         mass: 30000,
-        color: "#4ECDC4",
       },
       {
         x: 350,
         y: 250,
         label: "Light",
         mass: 10000,
-        color: "#45B7D1",
       },
     ],
     particles: [
