@@ -65,6 +65,21 @@ export const VectorController: React.FC<VectorControllerProps> = ({
       fillColor: "rgba(255, 255, 255, 0.1)",
     });
 
+    // Draw x and y axes
+    new scope.Path.Line({
+      from: [0, height / 2],
+      to: [width, height / 2],
+      strokeColor: "rgba(255, 255, 255, 0.2)",
+      strokeWidth: 1,
+    });
+
+    new scope.Path.Line({
+      from: [width / 2, 0],
+      to: [width / 2, height],
+      strokeColor: "rgba(255, 255, 255, 0.2)",
+      strokeWidth: 1,
+    });
+
     // Create center point
     new scope.Path.Circle({
       center,
@@ -74,7 +89,12 @@ export const VectorController: React.FC<VectorControllerProps> = ({
 
     // Only create arrow if there's a direction
     if (direction.length > 0) {
-      createArrow(center, direction, "white", Math.min(width, height) / 2 - 10);
+      createArrow(
+        center,
+        direction,
+        "#FF4081",
+        Math.min(width, height) / 2 - 10
+      );
     }
 
     scope.view.update();
@@ -104,6 +124,19 @@ export const VectorController: React.FC<VectorControllerProps> = ({
       x: e.clientX - rect.left,
       y: e.clientY - rect.top,
     };
+
+    // Check if click is in the center area (10px radius from center)
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const distanceFromCenter = Math.sqrt(
+      Math.pow(pixel.x - centerX, 2) + Math.pow(pixel.y - centerY, 2)
+    );
+
+    if (distanceFromCenter <= 10) {
+      // Reset to 0,0 if clicking center
+      onChange({ x: 0, y: 0 });
+      return;
+    }
 
     const normalized = pixelToNormalized(pixel);
     const clampedNormalized = {

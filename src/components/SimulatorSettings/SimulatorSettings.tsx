@@ -165,9 +165,22 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
                               ] as VectorSettingMetadata
                             ).max
                           }
-                          width={200}
-                          height={200}
+                          width={100}
+                          height={100}
                         />
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            marginTop: "8px",
+                            fontSize: "0.85rem",
+                            fontFamily: "monospace",
+                            color: "rgba(255, 255, 255, 0.7)",
+                          }}
+                        >
+                          <span>x: {(value as Point2D).x.toFixed(3)}</span>
+                          <span>y: {(value as Point2D).y.toFixed(3)}</span>
+                        </div>
                       </div>
                     ) : SETTINGS_METADATA[
                         key as keyof typeof DEFAULT_PHYSICS_CONFIG
