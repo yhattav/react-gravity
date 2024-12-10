@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Point2D } from "../../utils/types/physics";
 import Paper from "paper";
 import { createArrow } from "../../utils/physics/vectorUtils";
@@ -20,99 +20,35 @@ export const VectorController: React.FC<VectorControllerProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const scopeRef = useRef<typeof Paper.PaperScope>();
+  const scopeRef = useRef<paper.PaperScope>();
   const [isDragging, setIsDragging] = useState(false);
 
-  // Initialize Paper.js when the component mounts
-  useEffect(() => {
-    if (!canvasRef.current) return;
+  const pixelToNormalized = useCallback(
+    (pixel: Point2D): Point2D => ({
+      x: pixel.x / (width / 2) - 1,
+      y: pixel.y / (height / 2) - 1,
+    }),
+    [width, height]
+  );
 
-    // Create a new scope for this instance
-    scopeRef.current = new Paper.PaperScope();
-    scopeRef.current.setup(canvasRef.current);
+  const normalizedToValue = useCallback(
+    (normalized: Point2D): Point2D => ({
+      x: normalized.x * max.x,
+      y: normalized.y * max.y,
+    }),
+    [max]
+  );
 
-    return () => {
-      if (scopeRef.current) {
-        scopeRef.current.project?.clear();
-        scopeRef.current.remove();
-      }
-    };
-  }, []);
+  const valueToNormalized = useCallback(
+    (val: Point2D): Point2D => ({
+      x: val.x / max.x,
+      y: val.y / max.y,
+    }),
+    [max]
+  );
 
-  // Convert pixel coordinates to normalized coordinates
-  const pixelToNormalized = (pixel: Point2D): Point2D => ({
-    x: pixel.x / (width / 2) - 1,
-    y: pixel.y / (height / 2) - 1,
-  });
-
-  // Convert normalized coordinates to actual values using max
-  const normalizedToValue = (normalized: Point2D): Point2D => ({
-    x: normalized.x * max.x,
-    y: normalized.y * max.y,
-  });
-
-  // Convert actual values to normalized coordinates using max
-  const valueToNormalized = (val: Point2D): Point2D => ({
-    x: val.x / max.x,
-    y: val.y / max.y,
-  });
-
-  const handlePointerDown = (e: React.PointerEvent) => {
-    if (!containerRef.current) return;
-
-    const rect = containerRef.current.getBoundingClientRect();
-    const pixel: Point2D = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    };
-
-    const normalized = pixelToNormalized(pixel);
-    const clampedNormalized = {
-      x: Math.max(-1, Math.min(1, normalized.x)),
-      y: Math.max(-1, Math.min(1, normalized.y)),
-    };
-
-    onChange(normalizedToValue(clampedNormalized));
-    setIsDragging(true);
-  };
-
-  const handlePointerMove = (e: PointerEvent) => {
-    if (!isDragging || !containerRef.current) return;
-
-    const rect = containerRef.current.getBoundingClientRect();
-    const pixel: Point2D = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    };
-
-    const normalized = pixelToNormalized(pixel);
-    const clampedNormalized = {
-      x: Math.max(-1, Math.min(1, normalized.x)),
-      y: Math.max(-1, Math.min(1, normalized.y)),
-    };
-
-    onChange(normalizedToValue(clampedNormalized));
-  };
-
-  const handlePointerUp = () => {
-    setIsDragging(false);
-  };
-
-  useEffect(() => {
-    if (isDragging) {
-      window.addEventListener("pointermove", handlePointerMove);
-      window.addEventListener("pointerup", handlePointerUp);
-
-      return () => {
-        window.removeEventListener("pointermove", handlePointerMove);
-        window.removeEventListener("pointerup", handlePointerUp);
-      };
-    }
-  }, [isDragging]);
-
-  // Draw the arrow whenever the value changes
-  useEffect(() => {
-    if (!scopeRef.current?.project) return;
+  const drawArrow = useCallback(() => {
+    if (!scopeRef.current) return;
 
     const scope = scopeRef.current;
     scope.activate();
@@ -142,7 +78,83 @@ export const VectorController: React.FC<VectorControllerProps> = ({
     }
 
     scope.view.update();
-  }, [value, width, height]);
+  }, [width, height, value, valueToNormalized]);
+
+  useEffect(() => {
+    if (!canvasRef.current) return;
+
+    scopeRef.current = new Paper.PaperScope();
+    scopeRef.current.setup(canvasRef.current);
+
+    requestAnimationFrame(drawArrow);
+
+    return () => {
+      if (scopeRef.current) {
+        scopeRef.current.project.clear();
+        scopeRef.current.remove();
+      }
+    };
+  }, [drawArrow]);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (!containerRef.current) return;
+
+    const rect = containerRef.current.getBoundingClientRect();
+    const pixel: Point2D = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    };
+
+    const normalized = pixelToNormalized(pixel);
+    const clampedNormalized = {
+      x: Math.max(-1, Math.min(1, normalized.x)),
+      y: Math.max(-1, Math.min(1, normalized.y)),
+    };
+
+    onChange(normalizedToValue(clampedNormalized));
+    setIsDragging(true);
+  };
+
+  const handlePointerMove = useCallback(
+    (e: PointerEvent) => {
+      if (!isDragging || !containerRef.current) return;
+
+      const rect = containerRef.current.getBoundingClientRect();
+      const pixel: Point2D = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      };
+
+      const normalized = pixelToNormalized(pixel);
+      const clampedNormalized = {
+        x: Math.max(-1, Math.min(1, normalized.x)),
+        y: Math.max(-1, Math.min(1, normalized.y)),
+      };
+
+      onChange(normalizedToValue(clampedNormalized));
+    },
+    [isDragging, normalizedToValue, pixelToNormalized, onChange]
+  );
+
+  const handlePointerUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener("pointermove", handlePointerMove);
+      window.addEventListener("pointerup", handlePointerUp);
+
+      return () => {
+        window.removeEventListener("pointermove", handlePointerMove);
+        window.removeEventListener("pointerup", handlePointerUp);
+      };
+    }
+  }, [isDragging, handlePointerMove, handlePointerUp]);
+
+  useEffect(() => {
+    drawArrow();
+  }, [drawArrow]);
 
   return (
     <div
