@@ -111,7 +111,6 @@ export const VectorController: React.FC<VectorControllerProps> = ({
     return () => {
       if (scopeRef.current) {
         scopeRef.current.project.clear();
-        scopeRef.current.remove();
       }
     };
   }, [drawArrow]);

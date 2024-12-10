@@ -73,6 +73,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
       return Object.keys(DEFAULT_PHYSICS_CONFIG).reduce(
         (cleanSettings: PhysicsSettings, key) => {
           const typedKey = key as keyof typeof DEFAULT_PHYSICS_CONFIG;
+          // @ts-expect-error todo later
           cleanSettings[typedKey] =
             key in parsedSettings
               ? (parsedSettings[key] as PhysicsSettings[typeof typedKey])

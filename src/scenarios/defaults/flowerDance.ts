@@ -23,7 +23,6 @@ export const flowerDance: Scenario = {
         y: 403,
         label: "Brown Dwarf",
         mass: 600302.2939903878,
-        color: "#8B4513",
       },
     ],
     particles: [
