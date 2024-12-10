@@ -12,8 +12,7 @@ export const orbitalDance: Scenario = {
       POINTER_MASS: 250000,
       SHOW_VELOCITY_ARROWS: false,
       SHOW_FORCE_ARROWS: false,
-      CONSTANT_FORCE_X: 0,
-      CONSTANT_FORCE_Y: 0,
+      CONSTANT_FORCE: { x: 0, y: 0 },
       SOLID_BOUNDARIES: true,
     },
     gravityPoints: [

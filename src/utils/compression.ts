@@ -14,8 +14,7 @@ const modSettings = (settings: ScenarioData["settings"]): string => {
     settings.POINTER_MASS,
     settings.SHOW_VELOCITY_ARROWS ? 1 : 0,
     settings.SHOW_FORCE_ARROWS ? 1 : 0,
-    settings.CONSTANT_FORCE_X,
-    settings.CONSTANT_FORCE_Y,
+    settings.CONSTANT_FORCE,
     settings.SOLID_BOUNDARIES ? 1 : 0,
     settings.PARTICLES_EXERT_GRAVITY ? 1 : 0,
   ].join("|");
@@ -63,8 +62,7 @@ const demodSettings = (str: string): ScenarioData["settings"] => {
     POINTER_MASS: Number(pointerMass),
     SHOW_VELOCITY_ARROWS: showVelocity === "1",
     SHOW_FORCE_ARROWS: showForce === "1",
-    CONSTANT_FORCE_X: Number(forceX),
-    CONSTANT_FORCE_Y: Number(forceY),
+    CONSTANT_FORCE: { x: Number(forceX), y: Number(forceY) },
     SOLID_BOUNDARIES: solidBoundaries === "1",
     PARTICLES_EXERT_GRAVITY: particlesExertGravity === "1",
   };

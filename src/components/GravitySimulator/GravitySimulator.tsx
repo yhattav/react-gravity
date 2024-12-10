@@ -227,10 +227,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         physicsConfig.PARTICLES_EXERT_GRAVITY
       );
       const force = new Point(calculatedForce.x, calculatedForce.y).add(
-        new Point(
-          physicsConfig.CONSTANT_FORCE_X,
-          physicsConfig.CONSTANT_FORCE_Y
-        )
+        new Point(physicsConfig.CONSTANT_FORCE)
       );
 
       const acceleration = calculateAcceleration(force, particle.mass);
