@@ -111,6 +111,8 @@ export const VectorController: React.FC<VectorControllerProps> = ({
     return () => {
       if (scopeRef.current) {
         scopeRef.current.project.clear();
+        // @ts-expect-error todo later
+        scopeRef.current.remove();
       }
     };
   }, [drawArrow]);
