@@ -45,6 +45,9 @@ export const MassSlider: React.FC<MassSliderProps> = ({
         alignItems: "center",
         justifyContent: "center",
       }}
+      onClick={(e) => {
+        e.stopPropagation();
+      }}
     >
       <div
         style={{
