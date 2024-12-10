@@ -1,5 +1,5 @@
 import { StarTemplate } from "../types/star";
-import { GravityPoint } from "../utils/types/physics";
+import { GravityPoint, Point2D } from "../utils/types/physics";
 import { Point } from "paper";
 
 export interface SliderSettingMetadata {
@@ -15,7 +15,19 @@ export interface BooleanSettingMetadata {
   isDev: boolean;
 }
 
-type SettingMetadata = SliderSettingMetadata | BooleanSettingMetadata;
+export interface VectorSettingMetadata {
+  type: "vector";
+  isDev: boolean;
+  max: Point2D;
+  min: Point2D;
+  label?: string;
+}
+
+type SettingMetadata =
+  | SliderSettingMetadata
+  | BooleanSettingMetadata
+  | VectorSettingMetadata;
+
 export interface PhysicsSettings {
   NEW_PARTICLE_MASS: number;
   NEW_PARTICLE_ELASTICITY: number;
@@ -24,8 +36,7 @@ export interface PhysicsSettings {
   POINTER_MASS: number;
   SHOW_VELOCITY_ARROWS: boolean;
   SHOW_FORCE_ARROWS: boolean;
-  CONSTANT_FORCE_X: number;
-  CONSTANT_FORCE_Y: number;
+  CONSTANT_FORCE: Point2D;
   SOLID_BOUNDARIES: boolean;
   PARTICLES_EXERT_GRAVITY: boolean;
   PARTICLE_TRAIL_LENGTH: number;
@@ -38,8 +49,7 @@ export const DEFAULT_PHYSICS_CONFIG: PhysicsSettings = {
   POINTER_MASS: 500000,
   SHOW_VELOCITY_ARROWS: true,
   SHOW_FORCE_ARROWS: true,
-  CONSTANT_FORCE_X: 0,
-  CONSTANT_FORCE_Y: 0,
+  CONSTANT_FORCE: { x: 0, y: 0 },
   SOLID_BOUNDARIES: true,
   PARTICLES_EXERT_GRAVITY: false,
   PARTICLE_TRAIL_LENGTH: 30,
@@ -92,19 +102,11 @@ export const SETTINGS_METADATA: Record<
     type: "boolean",
     isDev: false,
   },
-  CONSTANT_FORCE_X: {
-    type: "slider",
+  CONSTANT_FORCE: {
+    type: "vector",
     isDev: false,
-    min: -10,
-    max: 10,
-    step: 0.1,
-  },
-  CONSTANT_FORCE_Y: {
-    type: "slider",
-    isDev: false,
-    min: -10,
-    max: 10,
-    step: 0.1,
+    max: { x: 2, y: 2 },
+    min: { x: -2, y: -2 },
   },
   SOLID_BOUNDARIES: {
     type: "boolean",
