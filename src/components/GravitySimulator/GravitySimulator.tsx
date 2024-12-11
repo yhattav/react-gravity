@@ -200,7 +200,10 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       setGravityPoints((points) =>
         points.map((point2, i) =>
           i === index
-            ? { ...point2, x: point.x - offset.x, y: point.y - offset.y }
+            ? {
+                ...point2,
+                position: new Point(point.x - offset.x, point.y - offset.y),
+              }
             : point2
         )
       );
@@ -524,7 +527,11 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     });
 
     // Add pointer if it exists
-    if (pointerPosRef.current) {
+    if (
+      pointerPosRef.current &&
+      pointerPosRef.current.x &&
+      pointerPosRef.current.y
+    ) {
       warpPoints.push({
         position: new Point(
           pointerPosRef.current.x,
