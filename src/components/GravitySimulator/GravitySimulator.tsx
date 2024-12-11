@@ -1,5 +1,10 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { Point2D, GravityPoint, Vector } from "../../utils/types/physics";
+import {
+  Point2D,
+  GravityPoint,
+  Vector,
+  WarpPoint,
+} from "../../utils/types/physics";
 import { GravityPointComponent } from "../GravityPoint/GravityPoint";
 import { ParticleRenderer } from "../ParticleRenderer/ParticleRenderer";
 import { StarPalette } from "../StarPalette/StarPalette";
@@ -39,6 +44,7 @@ import {
   toSerializableGravityPoint,
 } from "../../utils/types/physics";
 import { toParticle, toSerializableParticle } from "../../types/particle";
+import { GravityVision } from "../GravityVision/GravityVision";
 
 const generatePastelColor = () => {
   const r = Math.floor(Math.random() * 75 + 180);
@@ -194,7 +200,10 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       setGravityPoints((points) =>
         points.map((point2, i) =>
           i === index
-            ? { ...point2, x: point.x - offset.x, y: point.y - offset.y }
+            ? {
+                ...point2,
+                position: new Point(point.x - offset.x, point.y - offset.y),
+              }
             : point2
         )
       );
@@ -506,6 +515,45 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     setIsSettingsPanelOpen(false);
   }, []);
 
+  const generateWarpPoints = useCallback((): WarpPoint[] => {
+    const warpPoints: WarpPoint[] = [];
+
+    // Add gravity points
+    gravityPoints.forEach((point) => {
+      warpPoints.push({
+        position: point.position,
+        effectiveMass: point.mass,
+      });
+    });
+
+    // Add pointer if it exists
+    if (
+      pointerPosRef.current &&
+      pointerPosRef.current.x &&
+      pointerPosRef.current.y
+    ) {
+      warpPoints.push({
+        position: new Point(
+          pointerPosRef.current.x,
+          pointerPosRef.current.y
+        ).subtract(offset),
+        effectiveMass: physicsConfig.POINTER_MASS,
+      });
+    }
+
+    // Add particles if they exert gravity
+    if (physicsConfig.PARTICLES_EXERT_GRAVITY) {
+      particles.forEach((particle) => {
+        warpPoints.push({
+          position: particle.position,
+          effectiveMass: particle.mass * (particle.outgoingForceRatio ?? 1),
+        });
+      });
+    }
+
+    return warpPoints;
+  }, [gravityPoints, particles, pointerPosRef, offset, physicsConfig]);
+
   // Create and expose the API
   useEffect(
     () => {
@@ -760,6 +808,15 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             showForceArrows={physicsConfig.SHOW_FORCE_ARROWS}
             shouldReset={shouldResetRenderer}
             onResetComplete={() => setShouldResetRenderer(false)}
+            simulatorId={simulatorId}
+          />
+        )}
+
+        {!removeOverlay && (
+          <GravityVision
+            warpPoints={generateWarpPoints()}
+            settings={physicsConfig}
+            containerRef={gravityRef}
             simulatorId={simulatorId}
           />
         )}
