@@ -5,7 +5,10 @@ export interface Point2D {
   x: number;
   y: number;
 }
-
+export interface WarpPoint {
+  position: Vector;
+  effectiveMass: number;
+}
 // Paper.js Point type - use the actual instance type
 export type Vector = InstanceType<typeof Point>;
 export type Force = Vector;

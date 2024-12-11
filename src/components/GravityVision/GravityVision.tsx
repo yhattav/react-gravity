@@ -1,25 +1,17 @@
 import React, { useEffect, useRef } from "react";
 import paper from "paper";
-import { GravityPoint } from "../../utils/types/physics";
-import { Particle } from "../../types/particle";
-import { calculateTotalForce } from "../../utils/physics/physicsUtils";
+import { WarpPoint } from "../../utils/types/physics";
 import { PhysicsSettings } from "../../constants/physics";
-import { Position } from "@yhattav/react-component-cursor";
-import { Point } from "paper/dist/paper-core";
 
 interface GravityVisionProps {
-  gravityPoints: GravityPoint[];
-  particles: Particle[];
-  pointerPos: Position | null;
+  warpPoints: WarpPoint[];
   settings: PhysicsSettings;
   containerRef: React.RefObject<HTMLDivElement>;
   simulatorId: string;
 }
 
 export const GravityVision: React.FC<GravityVisionProps> = ({
-  gravityPoints,
-  particles,
-  pointerPos,
+  warpPoints,
   settings,
   containerRef,
   simulatorId,
@@ -76,169 +68,59 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
     const rows = Math.ceil(height / cellSize);
     const cols = Math.ceil(width / cellSize);
 
-    // Create horizontal lines
-    for (let i = 0; i <= rows; i++) {
-      const path = new scope.Path();
-      path.strokeColor = new scope.Color(1, 1, 1, 0.1);
-      path.strokeWidth = 1;
+    // Create horizontal and vertical lines with displacement
+    const createGridLines = (isHorizontal: boolean) => {
+      const outerLoop = isHorizontal ? rows : cols;
+      const innerLoop = isHorizontal ? cols : rows;
 
-      // Add points along the horizontal line
-      for (let j = 0; j <= cols; j++) {
-        const x = j * cellSize;
-        const y = i * cellSize;
+      for (let i = 0; i <= outerLoop; i++) {
+        const path = new scope.Path();
+        path.strokeColor = new scope.Color(1, 1, 1, 0.1);
+        path.strokeWidth = 1;
 
-        // Calculate combined displacement from all gravity points
-        let totalDisplacementX = 0;
-        let totalDisplacementY = 0;
+        for (let j = 0; j <= innerLoop; j++) {
+          const x = isHorizontal ? j * cellSize : i * cellSize;
+          const y = isHorizontal ? i * cellSize : j * cellSize;
 
-        gravityPoints.forEach((gravityPoint) => {
-          const pointPos = gravityPoint.position;
-          const dx = x - pointPos.x;
-          const dy = y - pointPos.y;
-          const distSq = dx * dx + dy * dy;
-          const dist = Math.max(Math.sqrt(distSq), 1);
+          let totalDisplacementX = 0;
+          let totalDisplacementY = 0;
 
-          const strength = 100;
-          const falloff = 200;
-          const massScale = gravityPoint.mass / 1000000; // Normalize to our test mass
-
-          totalDisplacementX +=
-            (dx / dist) * strength * massScale * Math.exp(-dist / falloff);
-          totalDisplacementY +=
-            (dy / dist) * strength * massScale * Math.exp(-dist / falloff);
-        });
-
-        // Add pointer influence if it exists
-        if (pointerPos) {
-          const strength = 200;
-          const falloff = 400;
-          const massScale = settings.POINTER_MASS / 1000000;
-
-          const dx = x - (pointerPos.x || 0);
-          const dy = y - (pointerPos.y || 0);
-          const distSq = dx * dx + dy * dy;
-          const dist = Math.max(Math.sqrt(distSq), 1);
-
-          totalDisplacementX +=
-            (dx / dist) * strength * massScale * Math.exp(-dist / falloff);
-          totalDisplacementY +=
-            (dy / dist) * strength * massScale * Math.exp(-dist / falloff);
-        }
-
-        // Add particles if they exert gravity
-        if (settings.PARTICLES_EXERT_GRAVITY) {
-          particles.forEach((particle) => {
-            const dx = x - particle.position.x;
-            const dy = y - particle.position.y;
+          // Calculate displacement from all warp points
+          warpPoints.forEach((warpPoint) => {
+            const dx = x - warpPoint.position.x;
+            const dy = y - warpPoint.position.y;
             const distSq = dx * dx + dy * dy;
             const dist = Math.max(Math.sqrt(distSq), 1);
 
             const strength = 200;
             const falloff = 400;
-            const massScale = particle.mass / 1000000;
+            const massScale = warpPoint.effectiveMass / 1000000;
 
             totalDisplacementX +=
               (dx / dist) * strength * massScale * Math.exp(-dist / falloff);
             totalDisplacementY +=
               (dy / dist) * strength * massScale * Math.exp(-dist / falloff);
           });
+
+          const displacement = new scope.Point(
+            totalDisplacementX,
+            totalDisplacementY
+          );
+
+          path.add(new scope.Point(x, y).add(displacement));
         }
-
-        const displacement = new scope.Point(
-          totalDisplacementX,
-          totalDisplacementY
-        );
-
-        path.add(new scope.Point(x, y).add(displacement));
       }
-    }
+    };
 
-    // Create vertical lines
-    for (let j = 0; j <= cols; j++) {
-      const path = new scope.Path();
-      path.strokeColor = new scope.Color(1, 1, 1, 0.1);
-      path.strokeWidth = 1;
-
-      // Add points along the vertical line
-      for (let i = 0; i <= rows; i++) {
-        const x = j * cellSize;
-        const y = i * cellSize;
-
-        // Calculate combined displacement from all gravity points
-        let totalDisplacementX = 0;
-        let totalDisplacementY = 0;
-
-        gravityPoints.forEach((gravityPoint) => {
-          const pointPos = gravityPoint.position;
-          const dx = x - pointPos.x;
-          const dy = y - pointPos.y;
-          const distSq = dx * dx + dy * dy;
-          const dist = Math.max(Math.sqrt(distSq), 1);
-
-          const strength = 200;
-          const falloff = 400;
-          const massScale = gravityPoint.mass / 1000000; // Normalize to our test mass
-
-          totalDisplacementX +=
-            (dx / dist) * strength * massScale * Math.exp(-dist / falloff);
-          totalDisplacementY +=
-            (dy / dist) * strength * massScale * Math.exp(-dist / falloff);
-        });
-
-        // Add pointer influence if it exists
-        if (pointerPos) {
-          const strength = 200;
-          const falloff = 400;
-          const massScale = settings.POINTER_MASS / 1000000;
-
-          const dx = x - (pointerPos.x || 0);
-          const dy = y - (pointerPos.y || 0);
-          const distSq = dx * dx + dy * dy;
-          const dist = Math.max(Math.sqrt(distSq), 1);
-
-          totalDisplacementX +=
-            (dx / dist) * strength * massScale * Math.exp(-dist / falloff);
-          totalDisplacementY +=
-            (dy / dist) * strength * massScale * Math.exp(-dist / falloff);
-        }
-
-        // Add particles if they exert gravity
-        if (settings.PARTICLES_EXERT_GRAVITY) {
-          particles.forEach((particle) => {
-            const dx = x - particle.position.x;
-            const dy = y - particle.position.y;
-            const distSq = dx * dx + dy * dy;
-            const dist = Math.max(Math.sqrt(distSq), 1);
-
-            const strength = 200;
-            const falloff = 400;
-            const massScale = particle.mass / 1000000;
-
-            totalDisplacementX +=
-              (dx / dist) * strength * massScale * Math.exp(-dist / falloff);
-            totalDisplacementY +=
-              (dy / dist) * strength * massScale * Math.exp(-dist / falloff);
-          });
-        }
-
-        const displacement = new scope.Point(
-          totalDisplacementX,
-          totalDisplacementY
-        );
-
-        path.add(new scope.Point(x, y).add(displacement));
-      }
-    }
+    // Create both horizontal and vertical lines
+    createGridLines(true);
+    createGridLines(false);
 
     scope.view.update();
   }, [
-    gravityPoints,
-    particles,
-    pointerPos,
+    warpPoints,
     settings.SHOW_GRAVITY_VISION,
     settings.GRAVITY_GRID_DENSITY,
-    settings.PARTICLES_EXERT_GRAVITY,
-    settings.POINTER_MASS,
     containerRef,
   ]);
 
