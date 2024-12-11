@@ -72,6 +72,13 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
     const createGridLines = (isHorizontal: boolean) => {
       const outerLoop = isHorizontal ? rows : cols;
       const innerLoop = isHorizontal ? cols : rows;
+      const averageEffectiveMass =
+        warpPoints.length > 0
+          ? warpPoints.reduce(
+              (sum, point) => sum + Math.abs(point.effectiveMass),
+              0
+            ) / warpPoints.length
+          : 1;
 
       for (let i = 0; i <= outerLoop; i++) {
         const path = new scope.Path();
@@ -97,7 +104,7 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
 
             const strength = 100;
             const falloff = 100;
-            const massScale = warpPoint.effectiveMass / 1000000;
+            const massScale = warpPoint.effectiveMass / averageEffectiveMass;
 
             // Calculate displacement
             let displacementX =
