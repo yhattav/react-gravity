@@ -96,9 +96,9 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
             const falloff = 400;
             const massScale = warpPoint.effectiveMass / 1000000;
 
-            totalDisplacementX +=
+            totalDisplacementX -=
               (dx / dist) * strength * massScale * Math.exp(-dist / falloff);
-            totalDisplacementY +=
+            totalDisplacementY -=
               (dy / dist) * strength * massScale * Math.exp(-dist / falloff);
           });
 
