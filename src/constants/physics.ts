@@ -40,6 +40,8 @@ export interface PhysicsSettings {
   SOLID_BOUNDARIES: boolean;
   PARTICLES_EXERT_GRAVITY: boolean;
   PARTICLE_TRAIL_LENGTH: number;
+  SHOW_GRAVITY_VISION: boolean;
+  GRAVITY_GRID_DENSITY: number;
 }
 export const DEFAULT_PHYSICS_CONFIG: PhysicsSettings = {
   NEW_PARTICLE_MASS: 0.1,
@@ -53,6 +55,8 @@ export const DEFAULT_PHYSICS_CONFIG: PhysicsSettings = {
   SOLID_BOUNDARIES: true,
   PARTICLES_EXERT_GRAVITY: false,
   PARTICLE_TRAIL_LENGTH: 30,
+  SHOW_GRAVITY_VISION: false,
+  GRAVITY_GRID_DENSITY: 20,
 } as const;
 
 export const SETTINGS_METADATA: Record<
@@ -121,6 +125,17 @@ export const SETTINGS_METADATA: Record<
     isDev: false,
     min: 0,
     max: 100,
+    step: 1,
+  },
+  SHOW_GRAVITY_VISION: {
+    type: "boolean",
+    isDev: false,
+  },
+  GRAVITY_GRID_DENSITY: {
+    type: "slider",
+    isDev: false,
+    min: 10,
+    max: 40,
     step: 1,
   },
 } as const;

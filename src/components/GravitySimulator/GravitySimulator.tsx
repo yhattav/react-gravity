@@ -39,6 +39,7 @@ import {
   toSerializableGravityPoint,
 } from "../../utils/types/physics";
 import { toParticle, toSerializableParticle } from "../../types/particle";
+import { GravityVision } from "../GravityVision/GravityVision";
 
 const generatePastelColor = () => {
   const r = Math.floor(Math.random() * 75 + 180);
@@ -760,6 +761,17 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             showForceArrows={physicsConfig.SHOW_FORCE_ARROWS}
             shouldReset={shouldResetRenderer}
             onResetComplete={() => setShouldResetRenderer(false)}
+            simulatorId={simulatorId}
+          />
+        )}
+
+        {!removeOverlay && (
+          <GravityVision
+            gravityPoints={gravityPoints}
+            particles={particles}
+            pointerPos={pointerPosRef.current || null}
+            settings={physicsConfig}
+            containerRef={gravityRef}
             simulatorId={simulatorId}
           />
         )}
