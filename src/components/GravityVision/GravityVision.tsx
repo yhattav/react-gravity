@@ -76,57 +76,170 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
     const rows = Math.ceil(height / cellSize);
     const cols = Math.ceil(width / cellSize);
 
-    // Create grid points
+    // Create horizontal lines
     for (let i = 0; i <= rows; i++) {
+      const path = new scope.Path();
+      path.strokeColor = new scope.Color(1, 1, 1, 0.1);
+      path.strokeWidth = 1;
+
+      // Add points along the horizontal line
       for (let j = 0; j <= cols; j++) {
         const x = j * cellSize;
         const y = i * cellSize;
-        const point = new scope.Point(x, y);
 
-        // Calculate gravity force at this point
-        const force = calculateTotalForce(
-          new Point({ x, y }),
-          new Point({ x: pointerPos?.x || 0, y: pointerPos?.y || 0 }),
-          gravityPoints,
-          settings.POINTER_MASS,
-          settings.PARTICLES_EXERT_GRAVITY ? particles : [],
-          settings.PARTICLES_EXERT_GRAVITY
-        );
+        // Calculate combined displacement from all gravity points
+        let totalDisplacementX = 0;
+        let totalDisplacementY = 0;
 
-        // Calculate displacement based on force
-        const displacement = new scope.Point(
-          force.x * 0.00001, // Adjust these multipliers to control the effect strength
-          force.y * 0.00001
-        );
+        gravityPoints.forEach((gravityPoint) => {
+          const pointPos = gravityPoint.position;
+          const dx = x - pointPos.x;
+          const dy = y - pointPos.y;
+          const distSq = dx * dx + dy * dy;
+          const dist = Math.max(Math.sqrt(distSq), 1);
 
-        // Create path segment
-        if (i < rows && j < cols) {
-          const path = new scope.Path();
-          path.strokeColor = new scope.Color(1, 1, 1, 0.1);
-          path.strokeWidth = 1;
+          const strength = 100;
+          const falloff = 200;
+          const massScale = gravityPoint.mass / 1000000; // Normalize to our test mass
 
-          // Add the four points of the grid cell with displacement
-          path.add(point.add(displacement));
-          path.add(new scope.Point(x + cellSize, y).add(displacement));
-          path.add(
-            new scope.Point(x + cellSize, y + cellSize).add(displacement)
-          );
-          path.add(new scope.Point(x, y + cellSize).add(displacement));
-          path.closed = true;
+          totalDisplacementX +=
+            (dx / dist) * strength * massScale * Math.exp(-dist / falloff);
+          totalDisplacementY +=
+            (dy / dist) * strength * massScale * Math.exp(-dist / falloff);
+        });
+
+        // Add pointer influence if it exists
+        if (pointerPos) {
+          const strength = 200;
+          const falloff = 400;
+          const massScale = settings.POINTER_MASS / 1000000;
+
+          const dx = x - (pointerPos.x || 0);
+          const dy = y - (pointerPos.y || 0);
+          const distSq = dx * dx + dy * dy;
+          const dist = Math.max(Math.sqrt(distSq), 1);
+
+          totalDisplacementX +=
+            (dx / dist) * strength * massScale * Math.exp(-dist / falloff);
+          totalDisplacementY +=
+            (dy / dist) * strength * massScale * Math.exp(-dist / falloff);
         }
+
+        // Add particles if they exert gravity
+        if (settings.PARTICLES_EXERT_GRAVITY) {
+          particles.forEach((particle) => {
+            const dx = x - particle.position.x;
+            const dy = y - particle.position.y;
+            const distSq = dx * dx + dy * dy;
+            const dist = Math.max(Math.sqrt(distSq), 1);
+
+            const strength = 200;
+            const falloff = 400;
+            const massScale = particle.mass / 1000000;
+
+            totalDisplacementX +=
+              (dx / dist) * strength * massScale * Math.exp(-dist / falloff);
+            totalDisplacementY +=
+              (dy / dist) * strength * massScale * Math.exp(-dist / falloff);
+          });
+        }
+
+        const displacement = new scope.Point(
+          totalDisplacementX,
+          totalDisplacementY
+        );
+
+        path.add(new scope.Point(x, y).add(displacement));
+      }
+    }
+
+    // Create vertical lines
+    for (let j = 0; j <= cols; j++) {
+      const path = new scope.Path();
+      path.strokeColor = new scope.Color(1, 1, 1, 0.1);
+      path.strokeWidth = 1;
+
+      // Add points along the vertical line
+      for (let i = 0; i <= rows; i++) {
+        const x = j * cellSize;
+        const y = i * cellSize;
+
+        // Calculate combined displacement from all gravity points
+        let totalDisplacementX = 0;
+        let totalDisplacementY = 0;
+
+        gravityPoints.forEach((gravityPoint) => {
+          const pointPos = gravityPoint.position;
+          const dx = x - pointPos.x;
+          const dy = y - pointPos.y;
+          const distSq = dx * dx + dy * dy;
+          const dist = Math.max(Math.sqrt(distSq), 1);
+
+          const strength = 200;
+          const falloff = 400;
+          const massScale = gravityPoint.mass / 1000000; // Normalize to our test mass
+
+          totalDisplacementX +=
+            (dx / dist) * strength * massScale * Math.exp(-dist / falloff);
+          totalDisplacementY +=
+            (dy / dist) * strength * massScale * Math.exp(-dist / falloff);
+        });
+
+        // Add pointer influence if it exists
+        if (pointerPos) {
+          const strength = 200;
+          const falloff = 400;
+          const massScale = settings.POINTER_MASS / 1000000;
+
+          const dx = x - (pointerPos.x || 0);
+          const dy = y - (pointerPos.y || 0);
+          const distSq = dx * dx + dy * dy;
+          const dist = Math.max(Math.sqrt(distSq), 1);
+
+          totalDisplacementX +=
+            (dx / dist) * strength * massScale * Math.exp(-dist / falloff);
+          totalDisplacementY +=
+            (dy / dist) * strength * massScale * Math.exp(-dist / falloff);
+        }
+
+        // Add particles if they exert gravity
+        if (settings.PARTICLES_EXERT_GRAVITY) {
+          particles.forEach((particle) => {
+            const dx = x - particle.position.x;
+            const dy = y - particle.position.y;
+            const distSq = dx * dx + dy * dy;
+            const dist = Math.max(Math.sqrt(distSq), 1);
+
+            const strength = 200;
+            const falloff = 400;
+            const massScale = particle.mass / 1000000;
+
+            totalDisplacementX +=
+              (dx / dist) * strength * massScale * Math.exp(-dist / falloff);
+            totalDisplacementY +=
+              (dy / dist) * strength * massScale * Math.exp(-dist / falloff);
+          });
+        }
+
+        const displacement = new scope.Point(
+          totalDisplacementX,
+          totalDisplacementY
+        );
+
+        path.add(new scope.Point(x, y).add(displacement));
       }
     }
 
     scope.view.update();
   }, [
     gravityPoints,
-    containerRef,
     particles,
     pointerPos,
     settings.SHOW_GRAVITY_VISION,
     settings.GRAVITY_GRID_DENSITY,
     settings.PARTICLES_EXERT_GRAVITY,
     settings.POINTER_MASS,
+    containerRef,
   ]);
 
   if (!settings.SHOW_GRAVITY_VISION) return null;
