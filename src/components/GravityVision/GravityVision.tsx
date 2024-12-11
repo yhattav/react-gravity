@@ -78,15 +78,17 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
         path.strokeColor = new scope.Color(1, 1, 1, 0.1);
         path.strokeWidth = 1;
 
+        // Collect points first
+        const points: paper.Point[] = [];
         for (let j = 0; j <= innerLoop; j++) {
           const x = isHorizontal ? j * cellSize : i * cellSize;
           const y = isHorizontal ? i * cellSize : j * cellSize;
 
           let totalDisplacementX = 0;
           let totalDisplacementY = 0;
+          let killer: WarpPoint | null = null;
 
           // Calculate displacement from all warp points
-          let killer: WarpPoint | null = null;
           warpPoints.forEach((warpPoint) => {
             const dx = x - warpPoint.position.x;
             const dy = y - warpPoint.position.y;
@@ -94,7 +96,7 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
             const dist = Math.max(Math.sqrt(distSq), 1);
 
             const strength = 100;
-            const falloff = 20;
+            const falloff = 100;
             const massScale = warpPoint.effectiveMass / 1000000;
 
             // Calculate displacement
@@ -102,6 +104,7 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
               (dx / dist) * strength * massScale * Math.exp(-dist / falloff);
             let displacementY =
               (dy / dist) * strength * massScale * Math.exp(-dist / falloff);
+
             // Clamp displacement to prevent crossing over the warp point
             if (Math.abs(displacementX) > Math.abs(dx)) {
               displacementX = dx;
@@ -116,19 +119,31 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
             totalDisplacementY -= displacementY;
           });
 
-          const displacement = new scope.Point(
-            totalDisplacementX,
-            totalDisplacementY
-          );
-
-          path.add(
+          points.push(
             killer
-              ? new scope.Point(
-                  (killer as WarpPoint).position.x,
-                  (killer as WarpPoint).position.y
+              ? new scope.Point(killer.position.x, killer.position.y)
+              : new scope.Point(x, y).add(
+                  new scope.Point(totalDisplacementX, totalDisplacementY)
                 )
-              : new scope.Point(x, y).add(displacement)
           );
+        }
+
+        // Create a smooth path through the points
+        path.moveTo(points[0]);
+        for (let j = 1; j < points.length - 2; j++) {
+          const current = points[j];
+          const next = points[j + 1];
+          const midPoint = current.add(next).divide(2);
+          path.quadraticCurveTo(current, midPoint);
+        }
+        // Add the last two points
+        if (points.length > 2) {
+          path.quadraticCurveTo(
+            points[points.length - 2],
+            points[points.length - 1]
+          );
+        } else if (points.length === 2) {
+          path.lineTo(points[1]);
         }
       }
     };
