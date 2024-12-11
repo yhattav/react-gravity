@@ -86,20 +86,34 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
           let totalDisplacementY = 0;
 
           // Calculate displacement from all warp points
+          let killer: WarpPoint | null = null;
           warpPoints.forEach((warpPoint) => {
             const dx = x - warpPoint.position.x;
             const dy = y - warpPoint.position.y;
             const distSq = dx * dx + dy * dy;
             const dist = Math.max(Math.sqrt(distSq), 1);
 
-            const strength = 200;
-            const falloff = 400;
+            const strength = 100;
+            const falloff = 20;
             const massScale = warpPoint.effectiveMass / 1000000;
 
-            totalDisplacementX -=
+            // Calculate displacement
+            let displacementX =
               (dx / dist) * strength * massScale * Math.exp(-dist / falloff);
-            totalDisplacementY -=
+            let displacementY =
               (dy / dist) * strength * massScale * Math.exp(-dist / falloff);
+            // Clamp displacement to prevent crossing over the warp point
+            if (Math.abs(displacementX) > Math.abs(dx)) {
+              displacementX = dx;
+              killer = warpPoint;
+            }
+            if (Math.abs(displacementY) > Math.abs(dy)) {
+              displacementY = dy;
+              killer = warpPoint;
+            }
+
+            totalDisplacementX -= displacementX;
+            totalDisplacementY -= displacementY;
           });
 
           const displacement = new scope.Point(
@@ -107,7 +121,14 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
             totalDisplacementY
           );
 
-          path.add(new scope.Point(x, y).add(displacement));
+          path.add(
+            killer
+              ? new scope.Point(
+                  (killer as WarpPoint).position.x,
+                  (killer as WarpPoint).position.y
+                )
+              : new scope.Point(x, y).add(displacement)
+          );
         }
       }
     };
