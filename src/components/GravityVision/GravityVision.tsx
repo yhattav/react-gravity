@@ -128,7 +128,10 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
 
           points.push(
             killer
-              ? new scope.Point(killer.position.x, killer.position.y)
+              ? new scope.Point(
+                  (killer as WarpPoint).position.x,
+                  (killer as WarpPoint).position.y
+                )
               : new scope.Point(x, y).add(
                   new scope.Point(totalDisplacementX, totalDisplacementY)
                 )
