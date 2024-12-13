@@ -17,7 +17,6 @@ export const PathRenderer: React.FC<PathRendererProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const scopeRef = useRef<paper.PaperScope>();
-  const renderCountRef = useRef(0);
   const mountedRef = useRef(false);
 
   // Initialize Paper.js scope
@@ -95,9 +94,6 @@ export const PathRenderer: React.FC<PathRendererProps> = ({
     if (!scope || !scope.project) {
       return;
     }
-
-    renderCountRef.current++;
-    const renderCount = renderCountRef.current;
 
     scope.activate();
 
