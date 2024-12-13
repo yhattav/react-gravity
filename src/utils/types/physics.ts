@@ -1,4 +1,4 @@
-import { Point } from "paper";
+import { Point, Path } from "paper";
 
 // Basic vector type for x,y coordinates (JSON serializable)
 export interface Point2D {
@@ -11,6 +11,7 @@ export interface WarpPoint {
 }
 // Paper.js Point type - use the actual instance type
 export type Vector = InstanceType<typeof Point>;
+export type SerializablePath = InstanceType<typeof Path>;
 export type Force = Vector;
 
 export interface GravityPoint {

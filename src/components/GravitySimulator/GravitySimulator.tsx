@@ -45,6 +45,12 @@ import {
 } from "../../utils/types/physics";
 import { toParticle, toSerializableParticle } from "../../types/particle";
 import { GravityVision } from "../GravityVision/GravityVision";
+import {
+  SimulatorPath,
+  toSerializableSimulatorPath,
+  toSimulatorPath,
+} from "../../utils/types/path";
+import { PathRenderer } from "../PathRenderer/PathRenderer";
 
 const generatePastelColor = () => {
   const r = Math.floor(Math.random() * 75 + 180);
@@ -146,6 +152,9 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   const [isColorInverted, setIsColorInverted] = useState(false);
   const [offset, setOffset] = useState<Vector>(new Point(0, 0));
   const [shouldResetRenderer, setShouldResetRenderer] = useState(false);
+  const [paths, setPaths] = useState<SimulatorPath[]>(
+    initialScenario?.data.paths?.map(toSimulatorPath) || []
+  );
 
   useEffect(() => {
     const updateOffset = () => {
@@ -233,6 +242,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         gravityPoints,
         physicsConfig.POINTER_MASS,
         otherParticles,
+        paths,
         physicsConfig.PARTICLES_EXERT_GRAVITY
       );
       const force = new Point(calculatedForce.x, calculatedForce.y).add(
@@ -270,7 +280,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         elasticity: particle.elasticity,
       };
     },
-    [gravityPoints, physicsConfig, gravityRef, offset, pointerPosRef]
+    [gravityPoints, paths, physicsConfig, gravityRef, offset, pointerPosRef]
   );
 
   useEffect(() => {
@@ -490,12 +500,15 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       requestAnimationFrame(() => {
         updateSettings(scenario.data.settings);
         setGravityPoints(newGravityPoints.map(toGravityPoint));
+        console.log(scenario.data.particles);
         setParticles(
-          scenario.data.particles.map((particle) => ({
+          scenario.data.particles?.map((particle) => ({
             ...toParticle(particle),
             force: new Point(0, 0),
           }))
         );
+        setPaths(scenario.data.paths?.map(toSimulatorPath));
+        console.log(scenario.data.paths?.map(toSimulatorPath));
         setIsSimulationStarted(true);
         setIsScenarioPanelOpen(false);
       });
@@ -802,14 +815,22 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         ))}
 
         {isSimulationStarted && (
-          <ParticleRenderer
-            particles={particles}
-            showVelocityArrows={physicsConfig.SHOW_VELOCITY_ARROWS}
-            showForceArrows={physicsConfig.SHOW_FORCE_ARROWS}
-            shouldReset={shouldResetRenderer}
-            onResetComplete={() => setShouldResetRenderer(false)}
-            simulatorId={simulatorId}
-          />
+          <>
+            <ParticleRenderer
+              particles={particles}
+              showVelocityArrows={physicsConfig.SHOW_VELOCITY_ARROWS}
+              showForceArrows={physicsConfig.SHOW_FORCE_ARROWS}
+              shouldReset={shouldResetRenderer}
+              onResetComplete={() => setShouldResetRenderer(false)}
+              simulatorId={simulatorId}
+            />
+            <PathRenderer
+              paths={paths}
+              shouldReset={shouldResetRenderer}
+              onResetComplete={() => setShouldResetRenderer(false)}
+              simulatorId={simulatorId}
+            />
+          </>
         )}
 
         {!removeOverlay && (

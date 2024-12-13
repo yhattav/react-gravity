@@ -1,6 +1,7 @@
 import { Point } from "paper";
 import { Vector, Force, GravityPoint } from "../types/physics";
 import { ParticleMechanics } from "../../types/particle";
+import { SimulatorPath } from "../types/path";
 
 // Newton's law of universal gravitation (simplified)
 const calculateGravityMagnitude = (
@@ -67,6 +68,7 @@ export const calculateTotalForce = (
   gravityPoints: GravityPoint[],
   pointerMass = 50000,
   particles: Array<ParticleMechanics> = [],
+  paths: Array<SimulatorPath> = [],
   particlesExertGravity = false
 ): Force => {
   let totalForce = new Point(0, 0);
@@ -88,6 +90,26 @@ export const calculateTotalForce = (
       point.mass
     );
     totalForce = totalForce.add(pointForce);
+  });
+
+  // Add path gravity
+  paths.forEach((path) => {
+    // Find the nearest point on the path to the particle
+    const nearestPoint = path.path.getNearestPoint(selfPosition);
+
+    // Calculate force using the nearest point instead of path center
+    const pathForce = calculateGravitationalForceVector(
+      selfPosition,
+      nearestPoint,
+      path.mass
+    );
+
+    // Optional: Scale force based on distance to path
+    // const distanceToPath = path.path.getOffsetOf(nearestPoint) / path.path.length;
+    // const scaleFactor = Math.exp(-distanceToPath * 2); // Exponential falloff
+    // pathForce.multiply(scaleFactor);
+
+    totalForce = totalForce.add(pathForce);
   });
 
   // Add particle gravity if enabled
