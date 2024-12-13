@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import paper from "paper";
+import Paper from "paper";
 import { WarpPoint } from "../../utils/types/physics";
 import { PhysicsSettings } from "../../constants/physics";
 
@@ -17,51 +17,64 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
   simulatorId,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const paperScopeRef = useRef<paper.PaperScope>();
+  const scopeRef = useRef<paper.PaperScope>();
 
+  // Initialize Paper.js scope
   useEffect(() => {
     if (!canvasRef.current || !containerRef.current) return;
 
-    // Initialize Paper.js
-    const canvas = canvasRef.current;
-    const scope = new paper.PaperScope();
-    paperScopeRef.current = scope;
+    // Create a new Paper.js scope for this canvas
+    const scope = new Paper.PaperScope();
+    scopeRef.current = scope;
 
-    // Set up canvas dimensions
+    // Get container dimensions
     const container = containerRef.current;
     const rect = container.getBoundingClientRect();
     const pixelRatio = 1;
 
-    canvas.width = rect.width * pixelRatio;
-    canvas.height = rect.height * pixelRatio;
+    canvasRef.current.width = rect.width * pixelRatio;
+    canvasRef.current.height = rect.height * pixelRatio;
 
     // Setup with explicit scope
-    scope.setup(canvas);
+    scope.setup(canvasRef.current);
     scope.view.viewSize = new scope.Size(rect.width, rect.height);
     scope.view.scale(pixelRatio, pixelRatio);
 
-    return () => {
-      if (paperScopeRef.current) {
-        paperScopeRef.current.project.clear();
-      }
+    const handleResize = () => {
+      if (!container || !canvasRef.current || !scope.view) return;
+      scope.activate(); // Activate this scope before operations
+      const newRect = container.getBoundingClientRect();
+      canvasRef.current.width = newRect.width * pixelRatio;
+      canvasRef.current.height = newRect.height * pixelRatio;
+      scope.view.viewSize = new scope.Size(newRect.width, newRect.height);
     };
-  }, []);
 
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      scope.activate();
+      scope.project?.clear();
+    };
+  }, [simulatorId]); // Add simulatorId dependency like other components
+
+  // Update grid
   useEffect(() => {
+    const scope = scopeRef.current;
     if (
-      !paperScopeRef.current ||
+      !scope ||
+      !scope.project ||
       !containerRef.current ||
       !settings.SHOW_GRAVITY_VISION
     )
       return;
 
-    const scope = paperScopeRef.current;
     scope.activate();
 
     const { width, height } = containerRef.current.getBoundingClientRect();
 
     // Clear previous content
-    scope.project.clear();
+    scope.project.activeLayer.removeChildren();
 
     // Create grid
     const cellSize = Math.min(width, height) / settings.GRAVITY_GRID_DENSITY;
@@ -162,12 +175,13 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
     createGridLines(true);
     createGridLines(false);
 
-    scope.view.update();
+    scope.view.update(); // Use update instead of draw
   }, [
     warpPoints,
     settings.SHOW_GRAVITY_VISION,
     settings.GRAVITY_GRID_DENSITY,
     containerRef,
+    simulatorId, // Add simulatorId dependency
   ]);
 
   if (!settings.SHOW_GRAVITY_VISION) return null;
@@ -175,6 +189,7 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
   return (
     <canvas
       ref={canvasRef}
+      className={`gravity-vision-${simulatorId}`} // Use className instead of id
       style={{
         position: "absolute",
         top: 0,
@@ -183,7 +198,6 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
         height: "100%",
         pointerEvents: "none",
       }}
-      id={`gravity-vision-${simulatorId}`}
     />
   );
 };

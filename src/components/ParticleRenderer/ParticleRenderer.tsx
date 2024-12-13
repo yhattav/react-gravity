@@ -245,7 +245,7 @@ export const ParticleRenderer: React.FC<{
   return (
     <canvas
       ref={canvasRef}
-      className={`paper-canvas-${simulatorId}`}
+      className={`particle-canvas-${simulatorId}`}
       style={{
         position: "absolute",
         top: 0,

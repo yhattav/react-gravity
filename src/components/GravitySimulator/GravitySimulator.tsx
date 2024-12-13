@@ -543,7 +543,8 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     if (
       pointerPosRef.current &&
       pointerPosRef.current.x &&
-      pointerPosRef.current.y
+      pointerPosRef.current.y &&
+      physicsConfig.POINTER_MASS > 0
     ) {
       warpPoints.push({
         position: new Point(
@@ -814,24 +815,20 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           />
         ))}
 
-        {isSimulationStarted && (
-          <>
-            <ParticleRenderer
-              particles={particles}
-              showVelocityArrows={physicsConfig.SHOW_VELOCITY_ARROWS}
-              showForceArrows={physicsConfig.SHOW_FORCE_ARROWS}
-              shouldReset={shouldResetRenderer}
-              onResetComplete={() => setShouldResetRenderer(false)}
-              simulatorId={simulatorId}
-            />
-            <PathRenderer
-              paths={paths}
-              shouldReset={shouldResetRenderer}
-              onResetComplete={() => setShouldResetRenderer(false)}
-              simulatorId={simulatorId}
-            />
-          </>
-        )}
+        <ParticleRenderer
+          particles={particles}
+          showVelocityArrows={physicsConfig.SHOW_VELOCITY_ARROWS}
+          showForceArrows={physicsConfig.SHOW_FORCE_ARROWS}
+          shouldReset={shouldResetRenderer}
+          onResetComplete={() => setShouldResetRenderer(false)}
+          simulatorId={simulatorId}
+        />
+        <PathRenderer
+          paths={paths}
+          shouldReset={shouldResetRenderer}
+          onResetComplete={() => setShouldResetRenderer(false)}
+          simulatorId={simulatorId}
+        />
 
         {!removeOverlay && (
           <GravityVision
