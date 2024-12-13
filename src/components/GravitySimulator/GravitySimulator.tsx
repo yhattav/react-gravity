@@ -138,6 +138,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     updateSettings,
     saveScenario,
   } = useSettings();
+  console.log("physicsConfig", physicsConfig.SHOW_GRAVITY_VISION);
   useEffect(() => {
     if (initialScenario?.data.settings) {
       updateSettings(initialScenario.data.settings);
@@ -454,13 +455,14 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           settings: physicsConfig,
           gravityPoints: gravityPoints.map(toSerializableGravityPoint),
           particles: particles.map(toSerializableParticle),
+          paths: paths.map(toSerializableSimulatorPath),
         },
       };
       setShareableLink(createShareableLink(scenario));
       setIsPaused(true);
       setIsSaveModalOpen(true);
     },
-    [physicsConfig, gravityPoints, particles]
+    [physicsConfig, gravityPoints, particles, paths]
   );
 
   const handleSaveScenario = useCallback(
@@ -473,12 +475,13 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           settings: physicsConfig,
           gravityPoints: gravityPoints.map(toSerializableGravityPoint),
           particles: particles.map(toSerializableParticle),
+          paths: paths.map(toSerializableSimulatorPath),
         },
       };
       saveScenario(scenario);
       setIsSaveModalOpen(false);
     },
-    [physicsConfig, gravityPoints, particles, saveScenario]
+    [physicsConfig, gravityPoints, particles, paths, saveScenario]
   );
 
   const handleSelectScenario = useCallback(
@@ -508,7 +511,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           }))
         );
         setPaths(scenario.data.paths?.map(toSimulatorPath));
-        console.log(scenario.data.paths?.map(toSimulatorPath));
         setIsSimulationStarted(true);
         setIsScenarioPanelOpen(false);
       });
@@ -530,9 +532,8 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
   const generateWarpPoints = useCallback((): WarpPoint[] => {
     const warpPoints: WarpPoint[] = [];
-
     // Add gravity points
-    gravityPoints.forEach((point) => {
+    gravityPoints?.forEach((point) => {
       warpPoints.push({
         position: point.position,
         effectiveMass: point.mass,
@@ -557,7 +558,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
     // Add particles if they exert gravity
     if (physicsConfig.PARTICLES_EXERT_GRAVITY) {
-      particles.forEach((particle) => {
+      particles?.forEach((particle) => {
         warpPoints.push({
           position: particle.position,
           effectiveMass: particle.mass * (particle.outgoingForceRatio ?? 1),
@@ -622,6 +623,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             settings: physicsConfig,
             gravityPoints: gravityPoints.map(toSerializableGravityPoint),
             particles: particles.map(toSerializableParticle),
+            paths: paths.map(toSerializableSimulatorPath),
           },
         }),
 
@@ -814,15 +816,17 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             disabled={blockInteractions}
           />
         ))}
+        {isSimulationStarted && (
+          <ParticleRenderer
+            particles={particles}
+            showVelocityArrows={physicsConfig.SHOW_VELOCITY_ARROWS}
+            showForceArrows={physicsConfig.SHOW_FORCE_ARROWS}
+            shouldReset={shouldResetRenderer}
+            onResetComplete={() => setShouldResetRenderer(false)}
+            simulatorId={simulatorId}
+          />
+        )}
 
-        <ParticleRenderer
-          particles={particles}
-          showVelocityArrows={physicsConfig.SHOW_VELOCITY_ARROWS}
-          showForceArrows={physicsConfig.SHOW_FORCE_ARROWS}
-          shouldReset={shouldResetRenderer}
-          onResetComplete={() => setShouldResetRenderer(false)}
-          simulatorId={simulatorId}
-        />
         <PathRenderer
           paths={paths}
           shouldReset={shouldResetRenderer}
@@ -830,7 +834,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           simulatorId={simulatorId}
         />
 
-        {!removeOverlay && (
+        {physicsConfig.SHOW_GRAVITY_VISION && (
           <GravityVision
             warpPoints={generateWarpPoints()}
             settings={physicsConfig}

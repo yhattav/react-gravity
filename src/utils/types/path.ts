@@ -61,7 +61,7 @@ export const toSimulatorPath = (
   });
 
   return {
-    id: serialized.id,
+    id: serialized.id || Math.random().toString(36).substr(2, 9),
     path,
     position: new Point(serialized.position),
     label: serialized.label,
