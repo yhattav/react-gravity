@@ -33,16 +33,30 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
   const lastShowVisionRef = useRef(settings.SHOW_GRAVITY_VISION);
   const onFrameHandlerRef = useRef<((event: paper.Event) => void) | null>(null);
   const lastWarpPointsKeyRef = useRef<string>("");
+  const averageEffectiveMassRef = useRef<number>(1);
+
+  // Helper function to calculate average mass
+  const calculateAverageMass = (points: WarpPoint[]): number => {
+    const activePoints = points.filter((point) => point.effectiveMass > 0);
+    return activePoints.length > 0
+      ? activePoints.reduce(
+          (sum, point) => sum + Math.abs(point.effectiveMass),
+          0
+        ) / activePoints.length
+      : 1;
+  };
 
   // Helper function to generate a key from warp points
   const getWarpPointsKey = (points: WarpPoint[]): string => {
     return points
-      .filter((point) => point.effectiveMass > 0) // Only include points with gravity
+      .filter(
+        (point) => point.effectiveMass > 0.01 * averageEffectiveMassRef.current
+      )
       .map(
         (point) =>
           `${point.position.x},${point.position.y},${point.effectiveMass}`
       )
-      .sort() // Sort to ensure consistent order
+      .sort()
       .join("|");
   };
 
@@ -135,20 +149,15 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
 
       // Check if warp points have changed
       const currentKey = getWarpPointsKey(warpPoints);
-      console.log("CURRENT KEY", currentKey);
-      console.log("LAST WARP POINTS KEY", lastWarpPointsKeyRef.current);
       if (currentKey === lastWarpPointsKeyRef.current) {
         return; // Skip update if warp points haven't changed
       }
+
+      // Update key and recalculate average mass when points change
       lastWarpPointsKeyRef.current = currentKey;
+      averageEffectiveMassRef.current = calculateAverageMass(warpPoints);
+
       console.log("UPDATE GRID LINES");
-      const averageEffectiveMass =
-        warpPoints.length > 0
-          ? warpPoints.reduce(
-              (sum, point) => sum + Math.abs(point.effectiveMass),
-              0
-            ) / warpPoints.length
-          : 1;
 
       const updateGridLine = (gridLine: GridLine) => {
         const { path, points } = gridLine;
@@ -171,7 +180,8 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
 
             const strength = 200;
             const falloff = 20;
-            const massScale = warpPoint.effectiveMass / averageEffectiveMass;
+            const massScale =
+              warpPoint.effectiveMass / averageEffectiveMassRef.current;
 
             let displacementX =
               (dx / dist) * strength * massScale * Math.exp(-dist / falloff);
