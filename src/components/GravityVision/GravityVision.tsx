@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import Paper from "paper";
-import { WarpPoint } from "../../utils/types/physics";
+import { Vector, WarpPoint } from "../../utils/types/physics";
 import { PhysicsSettings } from "../../constants/physics";
 
 interface GravityVisionProps {
@@ -18,10 +18,14 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const scopeRef = useRef<paper.PaperScope>();
+  const isInitializedRef = useRef(false);
 
   // Initialize Paper.js scope
   useEffect(() => {
-    if (!canvasRef.current || !containerRef.current) return;
+    if (isInitializedRef.current || !canvasRef.current || !containerRef.current)
+      return;
+
+    console.log("GravityVision initializing new scope");
 
     // Create a new Paper.js scope for this canvas
     const scope = new Paper.PaperScope();
@@ -42,7 +46,7 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
 
     const handleResize = () => {
       if (!container || !canvasRef.current || !scope.view) return;
-      scope.activate(); // Activate this scope before operations
+      scope.activate();
       const newRect = container.getBoundingClientRect();
       canvasRef.current.width = newRect.width * pixelRatio;
       canvasRef.current.height = newRect.height * pixelRatio;
@@ -50,49 +54,83 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
     };
 
     window.addEventListener("resize", handleResize);
+    isInitializedRef.current = true;
 
     return () => {
+      console.log("GravityVision cleanup");
       window.removeEventListener("resize", handleResize);
-      scope.activate();
-      scope.project?.clear();
+      if (scope && scope.project) {
+        scope.activate();
+        scope.project.clear();
+      }
+      isInitializedRef.current = false;
     };
-  }, [simulatorId]); // Add simulatorId dependency like other components
+  }, [containerRef]);
 
   // Update grid
   useEffect(() => {
     const scope = scopeRef.current;
-    if (
-      !scope ||
-      !scope.project ||
-      !containerRef.current ||
-      !settings.SHOW_GRAVITY_VISION
-    )
+    if (!scope || !scope.project || !containerRef.current) {
+      console.log("GravityVision missing requirements:", {
+        hasScope: !!scope,
+        hasProject: !!scope?.project,
+        hasContainer: !!containerRef.current,
+      });
       return;
+    }
+
+    console.log("GravityVision drawing grid:", {
+      showGravityVision: settings.SHOW_GRAVITY_VISION,
+      warpPoints: warpPoints.length,
+    });
 
     scope.activate();
+    scope.project.activeLayer.removeChildren();
+
+    if (!settings.SHOW_GRAVITY_VISION) {
+      scope.view.update();
+      return;
+    }
 
     const { width, height } = containerRef.current.getBoundingClientRect();
-
-    // Clear previous content
-    scope.project.activeLayer.removeChildren();
 
     // Create grid
     const cellSize = Math.min(width, height) / settings.GRAVITY_GRID_DENSITY;
     const rows = Math.ceil(height / cellSize);
     const cols = Math.ceil(width / cellSize);
 
-    // Create horizontal and vertical lines with displacement
+    // Calculate average mass only if there are warp points
+    const averageEffectiveMass =
+      warpPoints.length > 0
+        ? warpPoints.reduce(
+            (sum, point) => sum + Math.abs(point.effectiveMass),
+            0
+          ) / warpPoints.length
+        : 1;
+
     const createGridLines = (isHorizontal: boolean) => {
       const outerLoop = isHorizontal ? rows : cols;
       const innerLoop = isHorizontal ? cols : rows;
-      const averageEffectiveMass =
-        warpPoints.length > 0
-          ? warpPoints.reduce(
-              (sum, point) => sum + Math.abs(point.effectiveMass),
-              0
-            ) / warpPoints.length
-          : 1;
 
+      // If no warp points, create straight grid lines
+      if (warpPoints.length === 0) {
+        for (let i = 0; i <= outerLoop; i++) {
+          const path = new scope.Path();
+          path.strokeColor = new scope.Color(1, 1, 1, 0.1);
+          path.strokeWidth = 1;
+
+          if (isHorizontal) {
+            path.moveTo(new scope.Point(0, i * cellSize));
+            path.lineTo(new scope.Point(width, i * cellSize));
+          } else {
+            path.moveTo(new scope.Point(i * cellSize, 0));
+            path.lineTo(new scope.Point(i * cellSize, height));
+          }
+        }
+        return;
+      }
+
+      // Create horizontal and vertical lines with displacement
       for (let i = 0; i <= outerLoop; i++) {
         const path = new scope.Path();
         path.strokeColor = new scope.Color(1, 1, 1, 0.1);
@@ -106,33 +144,30 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
 
           let totalDisplacementX = 0;
           let totalDisplacementY = 0;
-          let killer: WarpPoint | null = null;
+          let killer: Vector | null = null;
 
           // Calculate displacement from all warp points
           warpPoints.forEach((warpPoint) => {
             const dx = x - warpPoint.position.x;
             const dy = y - warpPoint.position.y;
-            const distSq = dx * dx + dy * dy;
-            const dist = Math.max(Math.sqrt(distSq), 1);
+            const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
 
             const strength = 200;
             const falloff = 20;
             const massScale = warpPoint.effectiveMass / averageEffectiveMass;
 
-            // Calculate displacement
             let displacementX =
               (dx / dist) * strength * massScale * Math.exp(-dist / falloff);
             let displacementY =
               (dy / dist) * strength * massScale * Math.exp(-dist / falloff);
 
-            // Clamp displacement to prevent crossing over the warp point
             if (Math.abs(displacementX) > Math.abs(dx)) {
               displacementX = dx;
-              killer = warpPoint;
+              killer = warpPoint.position;
             }
             if (Math.abs(displacementY) > Math.abs(dy)) {
               displacementY = dy;
-              killer = warpPoint;
+              killer = warpPoint.position;
             }
 
             totalDisplacementX -= displacementX;
@@ -141,10 +176,7 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
 
           points.push(
             killer
-              ? new scope.Point(
-                  (killer as WarpPoint).position.x,
-                  (killer as WarpPoint).position.y
-                )
+              ? new scope.Point(killer.x, killer.y)
               : new scope.Point(x, y).add(
                   new scope.Point(totalDisplacementX, totalDisplacementY)
                 )
@@ -175,21 +207,18 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
     createGridLines(true);
     createGridLines(false);
 
-    scope.view.update(); // Use update instead of draw
+    scope.view.update();
   }, [
     warpPoints,
     settings.SHOW_GRAVITY_VISION,
     settings.GRAVITY_GRID_DENSITY,
     containerRef,
-    simulatorId, // Add simulatorId dependency
   ]);
-
-  if (!settings.SHOW_GRAVITY_VISION) return null;
 
   return (
     <canvas
       ref={canvasRef}
-      className={`gravity-vision-${simulatorId}`} // Use className instead of id
+      className={`gravity-vision-${simulatorId}`}
       style={{
         position: "absolute",
         top: 0,
@@ -197,6 +226,7 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
         width: "100%",
         height: "100%",
         pointerEvents: "none",
+        opacity: settings.SHOW_GRAVITY_VISION ? 1 : 0,
       }}
     />
   );

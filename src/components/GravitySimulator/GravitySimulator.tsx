@@ -531,7 +531,21 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   }, []);
 
   const generateWarpPoints = useCallback((): WarpPoint[] => {
+    console.log("generateWarpPoints called:", {
+      isSimulationStarted,
+      showGravityVision: physicsConfig.SHOW_GRAVITY_VISION,
+    });
+
     const warpPoints: WarpPoint[] = [];
+
+    console.log("Generating warp points:", {
+      gravityPointsCount: gravityPoints?.length,
+      hasPointer: !!(pointerPosRef.current?.x && pointerPosRef.current?.y),
+      pointerMass: physicsConfig.POINTER_MASS,
+      particlesCount: particles?.length,
+      particlesExertGravity: physicsConfig.PARTICLES_EXERT_GRAVITY,
+    });
+
     // Add gravity points
     gravityPoints?.forEach((point) => {
       warpPoints.push({
@@ -566,8 +580,31 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       });
     }
 
+    console.log("Generated warp points:", warpPoints.length);
     return warpPoints;
-  }, [gravityPoints, particles, pointerPosRef, offset, physicsConfig]);
+  }, [
+    gravityPoints,
+    particles,
+    pointerPosRef,
+    offset,
+    physicsConfig,
+    isSimulationStarted,
+  ]);
+
+  // Add logging to track SHOW_GRAVITY_VISION changes
+  useEffect(() => {
+    console.log("Vision settings changed:", {
+      showGravityVision: physicsConfig.SHOW_GRAVITY_VISION,
+      isSimulationStarted,
+      removeOverlay,
+      hasGravityPoints: gravityPoints?.length > 0,
+    });
+  }, [
+    physicsConfig.SHOW_GRAVITY_VISION,
+    isSimulationStarted,
+    removeOverlay,
+    gravityPoints,
+  ]);
 
   // Create and expose the API
   useEffect(
@@ -834,7 +871,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           simulatorId={simulatorId}
         />
 
-        {physicsConfig.SHOW_GRAVITY_VISION && (
+        {!removeOverlay && physicsConfig.SHOW_GRAVITY_VISION && (
           <GravityVision
             warpPoints={generateWarpPoints()}
             settings={physicsConfig}
