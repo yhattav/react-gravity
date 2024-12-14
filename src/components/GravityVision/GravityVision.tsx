@@ -2,163 +2,373 @@ import React, { useEffect, useRef } from "react";
 import { Vector, WarpPoint } from "../../utils/types/physics";
 import { PhysicsSettings } from "../../constants/physics";
 
+// Types
 interface GravityVisionProps {
   scope: paper.PaperScope;
   warpPoints: WarpPoint[];
   settings: PhysicsSettings;
   containerRef: React.RefObject<HTMLDivElement>;
+  isPausedRef: React.RefObject<boolean>;
 }
 
-export const GravityVision: React.FC<GravityVisionProps> = ({
-  scope,
-  warpPoints,
-  settings,
-  containerRef,
-}) => {
-  const layerRef = useRef<paper.Layer | null>(null);
+interface GridLine {
+  path: paper.Path;
+  points: paper.Point[];
+}
 
-  // Update grid
+// Constants
+const GRID_CONSTANTS = {
+  STRENGTH: 200,
+  FALLOFF: 20,
+  MASS_THRESHOLD: 0.01,
+  LINE_OPACITY: 0.1,
+  LINE_WIDTH: 1,
+} as const;
+
+// Helper functions
+const calculateDisplacement = (
+  originalPoint: paper.Point,
+  warpPoint: WarpPoint,
+  averageMass: number
+): { dx: number; dy: number; isKiller: boolean } => {
+  const dx = originalPoint.x - warpPoint.position.x;
+  const dy = originalPoint.y - warpPoint.position.y;
+  const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
+
+  const massScale = warpPoint.effectiveMass / averageMass;
+  let displacementX =
+    (dx / dist) *
+    GRID_CONSTANTS.STRENGTH *
+    massScale *
+    Math.exp(-dist / GRID_CONSTANTS.FALLOFF);
+  let displacementY =
+    (dy / dist) *
+    GRID_CONSTANTS.STRENGTH *
+    massScale *
+    Math.exp(-dist / GRID_CONSTANTS.FALLOFF);
+
+  const isKiller =
+    Math.abs(displacementX) > Math.abs(dx) ||
+    Math.abs(displacementY) > Math.abs(dy);
+  if (isKiller) {
+    displacementX = dx;
+    displacementY = dy;
+  }
+
+  return { dx: -displacementX, dy: -displacementY, isKiller };
+};
+
+const createGridLine = (
+  scope: paper.PaperScope,
+  isHorizontal: boolean,
+  i: number,
+  cellSize: number,
+  dimensions: { cols: number; rows: number }
+): GridLine => {
+  const { cols, rows } = dimensions;
+  const path = new scope.Path({
+    strokeColor: new scope.Color(1, 1, 1, GRID_CONSTANTS.LINE_OPACITY),
+    strokeWidth: GRID_CONSTANTS.LINE_WIDTH,
+  });
+
+  const points: paper.Point[] = [];
+  const innerLoop = isHorizontal ? cols : rows;
+
+  for (let j = 0; j <= innerLoop; j++) {
+    const x = isHorizontal ? j * cellSize : i * cellSize;
+    const y = isHorizontal ? i * cellSize : j * cellSize;
+    points.push(new scope.Point(x, y));
+  }
+
+  path.moveTo(points[0]);
+  path.lineTo(points[points.length - 1]);
+
+  return { path, points };
+};
+
+// Additional helper functions
+const calculateAverageMass = (points: WarpPoint[]): number => {
+  const activePoints = points.filter((point) => point.effectiveMass > 0);
+  return activePoints.length > 0
+    ? activePoints.reduce(
+        (sum, point) => sum + Math.abs(point.effectiveMass),
+        0
+      ) / activePoints.length
+    : 1;
+};
+
+const getWarpPointsKey = (points: WarpPoint[], averageMass: number): string => {
+  return points
+    .filter(
+      (point) =>
+        point.effectiveMass > GRID_CONSTANTS.MASS_THRESHOLD * averageMass
+    )
+    .map(
+      (point) =>
+        `${point.position.x},${point.position.y},${point.effectiveMass}`
+    )
+    .sort()
+    .join("|");
+};
+
+const updateGridPath = (
+  path: paper.Path,
+  displacedPoints: paper.Point[]
+): void => {
+  path.removeSegments();
+  path.moveTo(displacedPoints[0]);
+
+  for (let i = 1; i < displacedPoints.length - 2; i++) {
+    const current = displacedPoints[i];
+    const next = displacedPoints[i + 1];
+    const midPoint = current.add(next).divide(2);
+    path.quadraticCurveTo(current, midPoint);
+  }
+
+  if (displacedPoints.length > 2) {
+    path.quadraticCurveTo(
+      displacedPoints[displacedPoints.length - 2],
+      displacedPoints[displacedPoints.length - 1]
+    );
+  } else if (displacedPoints.length === 2) {
+    path.lineTo(displacedPoints[1]);
+  }
+};
+
+// Grid Management Hooks
+const useGridCreation = (
+  scope: paper.PaperScope,
+  settings: PhysicsSettings,
+  containerRef: React.RefObject<HTMLDivElement>,
+  layerRef: React.MutableRefObject<paper.Layer>,
+  gridLinesRef: React.MutableRefObject<{
+    horizontal: GridLine[];
+    vertical: GridLine[];
+  }>,
+  lastDensityRef: React.MutableRefObject<number>,
+  lastShowVisionRef: React.MutableRefObject<boolean>,
+  lastWarpPointsKeyRef: React.MutableRefObject<string>
+) => {
   useEffect(() => {
-    if (!scope || !containerRef.current || !settings.SHOW_GRAVITY_VISION)
+    if (!scope || !containerRef.current) return;
+
+    if (
+      lastDensityRef.current === settings.GRAVITY_GRID_DENSITY &&
+      lastShowVisionRef.current === settings.SHOW_GRAVITY_VISION &&
+      layerRef.current
+    ) {
       return;
+    }
 
+    lastDensityRef.current = settings.GRAVITY_GRID_DENSITY;
+    lastShowVisionRef.current = settings.SHOW_GRAVITY_VISION;
+    lastWarpPointsKeyRef.current = "";
     scope.activate();
-
-    // Create or get our layer
     if (!layerRef.current) {
       layerRef.current = new scope.Layer();
     }
+    layerRef.current.activate();
 
     const layer = layerRef.current;
     layer.removeChildren();
 
-    const { width, height } = containerRef.current.getBoundingClientRect();
+    if (!settings.SHOW_GRAVITY_VISION) {
+      gridLinesRef.current = { horizontal: [], vertical: [] };
+      return;
+    }
 
-    // Create grid
+    const { width, height } = containerRef.current.getBoundingClientRect();
     const cellSize = Math.min(width, height) / settings.GRAVITY_GRID_DENSITY;
     const rows = Math.ceil(height / cellSize);
     const cols = Math.ceil(width / cellSize);
 
-    // Calculate average mass only if there are warp points
-    const averageEffectiveMass =
-      warpPoints.length > 0
-        ? warpPoints.reduce(
-            (sum, point) => sum + Math.abs(point.effectiveMass),
-            0
-          ) / warpPoints.length
-        : 1;
-
-    const createGridLines = (isHorizontal: boolean) => {
+    const createLines = (isHorizontal: boolean) => {
+      const lines: GridLine[] = [];
       const outerLoop = isHorizontal ? rows : cols;
-      const innerLoop = isHorizontal ? cols : rows;
 
-      // If no warp points, create straight grid lines
-      if (warpPoints.length === 0) {
-        for (let i = 0; i <= outerLoop; i++) {
-          const path = new scope.Path();
-          path.strokeColor = new scope.Color(1, 1, 1, 0.1);
-          path.strokeWidth = 1;
+      for (let i = 0; i <= outerLoop; i++) {
+        const gridLine = createGridLine(scope, isHorizontal, i, cellSize, {
+          cols,
+          rows,
+        });
+        layer.addChild(gridLine.path);
+        lines.push(gridLine);
+      }
+      return lines;
+    };
 
-          if (isHorizontal) {
-            path.moveTo(new scope.Point(0, i * cellSize));
-            path.lineTo(new scope.Point(width, i * cellSize));
-          } else {
-            path.moveTo(new scope.Point(i * cellSize, 0));
-            path.lineTo(new scope.Point(i * cellSize, height));
-          }
-          layer.addChild(path);
-        }
+    gridLinesRef.current = {
+      horizontal: createLines(true),
+      vertical: createLines(false),
+    };
+
+    scope.view.update();
+  }, [
+    scope,
+    settings.GRAVITY_GRID_DENSITY,
+    settings.SHOW_GRAVITY_VISION,
+    containerRef,
+  ]);
+};
+
+const useGridUpdates = (
+  scope: paper.PaperScope,
+  warpPoints: WarpPoint[],
+  settings: PhysicsSettings,
+  containerRef: React.RefObject<HTMLDivElement>,
+  isPausedRef: React.RefObject<boolean>,
+  gridLinesRef: React.MutableRefObject<{
+    horizontal: GridLine[];
+    vertical: GridLine[];
+  }>,
+  lastWarpPointsKeyRef: React.MutableRefObject<string>,
+  averageEffectiveMassRef: React.MutableRefObject<number>,
+  onFrameHandlerRef: React.MutableRefObject<
+    ((event: paper.Event) => void) | null
+  >
+) => {
+  useEffect(() => {
+    if (!scope || !containerRef.current || !settings.SHOW_GRAVITY_VISION) {
+      if (onFrameHandlerRef.current) {
+        scope?.view.off("frame", onFrameHandlerRef.current);
+        onFrameHandlerRef.current = null;
+      }
+      return;
+    }
+
+    const updateGridLines = () => {
+      if (isPausedRef.current) return;
+
+      const { horizontal, vertical } = gridLinesRef.current;
+      if (horizontal.length === 0 || vertical.length === 0) return;
+
+      const currentKey = getWarpPointsKey(
+        warpPoints,
+        averageEffectiveMassRef.current
+      );
+      if (currentKey === lastWarpPointsKeyRef.current) {
         return;
       }
 
-      // Create horizontal and vertical lines with displacement
-      for (let i = 0; i <= outerLoop; i++) {
-        const path = new scope.Path();
-        path.strokeColor = new scope.Color(1, 1, 1, 0.1);
-        path.strokeWidth = 1;
+      lastWarpPointsKeyRef.current = currentKey;
+      averageEffectiveMassRef.current = calculateAverageMass(warpPoints);
 
-        // Collect points first
-        const points: paper.Point[] = [];
-        for (let j = 0; j <= innerLoop; j++) {
-          const x = isHorizontal ? j * cellSize : i * cellSize;
-          const y = isHorizontal ? i * cellSize : j * cellSize;
+      const updateGridLine = (gridLine: GridLine) => {
+        const { path, points } = gridLine;
+        const displacedPoints: paper.Point[] = [];
+
+        points.forEach((originalPoint) => {
+          if (warpPoints.length === 0) {
+            displacedPoints.push(originalPoint);
+            return;
+          }
 
           let totalDisplacementX = 0;
           let totalDisplacementY = 0;
           let killer: Vector | null = null;
 
-          // Calculate displacement from all warp points
           warpPoints.forEach((warpPoint) => {
-            const dx = x - warpPoint.position.x;
-            const dy = y - warpPoint.position.y;
-            const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
+            const { dx, dy, isKiller } = calculateDisplacement(
+              originalPoint,
+              warpPoint,
+              averageEffectiveMassRef.current
+            );
 
-            const strength = 200;
-            const falloff = 20;
-            const massScale = warpPoint.effectiveMass / averageEffectiveMass;
-
-            let displacementX =
-              (dx / dist) * strength * massScale * Math.exp(-dist / falloff);
-            let displacementY =
-              (dy / dist) * strength * massScale * Math.exp(-dist / falloff);
-
-            if (Math.abs(displacementX) > Math.abs(dx)) {
-              displacementX = dx;
+            if (isKiller) {
               killer = warpPoint.position;
+            } else {
+              totalDisplacementX += dx;
+              totalDisplacementY += dy;
             }
-            if (Math.abs(displacementY) > Math.abs(dy)) {
-              displacementY = dy;
-              killer = warpPoint.position;
-            }
-
-            totalDisplacementX -= displacementX;
-            totalDisplacementY -= displacementY;
           });
 
-          points.push(
+          displacedPoints.push(
             killer
               ? new scope.Point((killer as Vector).x, (killer as Vector).y)
-              : new scope.Point(x, y).add(
+              : originalPoint.add(
                   new scope.Point(totalDisplacementX, totalDisplacementY)
                 )
           );
-        }
+        });
 
-        // Create a smooth path through the points
-        path.moveTo(points[0]);
-        for (let j = 1; j < points.length - 2; j++) {
-          const current = points[j];
-          const next = points[j + 1];
-          const midPoint = current.add(next).divide(2);
-          path.quadraticCurveTo(current, midPoint);
-        }
-        // Add the last two points
-        if (points.length > 2) {
-          path.quadraticCurveTo(
-            points[points.length - 2],
-            points[points.length - 1]
-          );
-        } else if (points.length === 2) {
-          path.lineTo(points[1]);
-        }
+        updateGridPath(path, displacedPoints);
+      };
 
-        layer.addChild(path);
-      }
+      horizontal.forEach(updateGridLine);
+      vertical.forEach(updateGridLine);
+      scope.view.update();
     };
 
-    // Create both horizontal and vertical lines
-    createGridLines(true);
-    createGridLines(false);
-
-    scope.view.update();
+    onFrameHandlerRef.current = updateGridLines;
+    scope.view.on("frame", updateGridLines);
 
     return () => {
-      if (layerRef.current) {
-        layerRef.current.remove();
-        layerRef.current = null;
+      if (onFrameHandlerRef.current) {
+        scope.view.off("frame", onFrameHandlerRef.current);
+        onFrameHandlerRef.current = null;
       }
     };
-  }, [scope, warpPoints, settings, containerRef]);
+  }, [scope, warpPoints, settings.SHOW_GRAVITY_VISION, containerRef]);
+};
+
+// Main Component
+export const GravityVision: React.FC<GravityVisionProps> = ({
+  scope,
+  warpPoints,
+  settings,
+  containerRef,
+  isPausedRef,
+}) => {
+  // Refs - using null! to make them mutable
+  const layerRef = useRef<paper.Layer>(null!);
+  const gridLinesRef = useRef<{ horizontal: GridLine[]; vertical: GridLine[] }>(
+    {
+      horizontal: [],
+      vertical: [],
+    }
+  );
+  const lastDensityRef = useRef(settings.GRAVITY_GRID_DENSITY);
+  const lastShowVisionRef = useRef(settings.SHOW_GRAVITY_VISION);
+  const onFrameHandlerRef = useRef<((event: paper.Event) => void) | null>(null);
+  const lastWarpPointsKeyRef = useRef<string>("");
+  const averageEffectiveMassRef = useRef<number>(1);
+
+  // Use custom hooks
+  useGridCreation(
+    scope,
+    settings,
+    containerRef,
+    layerRef,
+    gridLinesRef,
+    lastDensityRef,
+    lastShowVisionRef,
+    lastWarpPointsKeyRef
+  );
+  useGridUpdates(
+    scope,
+    warpPoints,
+    settings,
+    containerRef,
+    isPausedRef,
+    gridLinesRef,
+    lastWarpPointsKeyRef,
+    averageEffectiveMassRef,
+    onFrameHandlerRef
+  );
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (onFrameHandlerRef.current) {
+        scope?.view.off("frame", onFrameHandlerRef.current);
+        onFrameHandlerRef.current = null;
+      }
+      if (layerRef.current) {
+        layerRef.current.remove();
+        layerRef.current = null!;
+      }
+    };
+  }, [scope]);
 
   return null;
 };

@@ -54,7 +54,6 @@ export const ParticleRenderer: React.FC<ParticleRendererProps> = ({
   }, [scope, shouldReset, onResetComplete]);
 
   useEffect(() => {
-    console.log("ParticleRenderer useEffect");
     if (!scope) return;
 
     scope.activate();
@@ -205,7 +204,7 @@ export const ParticleRenderer: React.FC<ParticleRendererProps> = ({
         layerRef.current = null;
       }
     };
-  }, [scope, particlesRef]);
+  }, [scope, particlesRef, isPausedRef]);
 
   return null;
 };
