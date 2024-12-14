@@ -39,7 +39,29 @@ export const ParticleRenderer: React.FC<ParticleRendererProps> = ({
     maxTrailPointsRef.current = settings.PARTICLE_TRAIL_LENGTH;
     showForceArrowsRef.current = settings.SHOW_FORCE_ARROWS;
     showVelocityArrowsRef.current = settings.SHOW_VELOCITY_ARROWS;
-  }, [settings]);
+
+    // When trail length changes, we need to update segment paths
+    trailsRef.current.forEach((trail) => {
+      // Remove existing segment paths
+      trail.segmentPaths.forEach((path) => path.remove());
+      trail.segmentPaths.length = 0;
+
+      // Create new segment paths with the updated length
+      for (let i = 0; i < maxTrailPointsRef.current - 1; i++) {
+        const segmentPath = new scope.Path({
+          segments: [new Point(0, 0), new Point(0, 0)],
+          strokeColor: trail.path.strokeColor,
+          strokeWidth: 0,
+          opacity: 0,
+          strokeCap: "round",
+          dashArray: trail.path.dashArray,
+          visible: false,
+        });
+        layerRef.current?.addChild(segmentPath);
+        trail.segmentPaths.push(segmentPath);
+      }
+    });
+  }, [settings, scope]);
 
   useEffect(() => {
     if (!scope || !shouldReset) return;
