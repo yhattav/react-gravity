@@ -46,7 +46,9 @@ const modSettings = (settings: ScenarioData["settings"]): string => {
 };
 
 const modGravityPoint = (point: SerializableGravityPoint): string => {
-  return `${point.x}|${point.y}|${point.label}|${point.mass}`;
+  return `${point.x + SEPARATORS[3]}${point.y + SEPARATORS[3]}${
+    point.label + SEPARATORS[3]
+  }${point.mass}`;
 };
 
 const modParticle = (particle: SerializableParticle): string => {
@@ -119,7 +121,7 @@ const demodSettings = (str: string): ScenarioData["settings"] => {
 };
 
 const demodGravityPoint = (str: string): SerializableGravityPoint => {
-  const [x, y, label, mass] = str.split(SEPARATORS[2]);
+  const [x, y, label, mass] = str.split(SEPARATORS[3]);
   return {
     x: Number(x),
     y: Number(y),
@@ -172,18 +174,6 @@ const demodPath = (str: string): SerializableSimulatorPath => {
         ? { x: Number(handleOutX), y: Number(handleOutY) }
         : undefined,
     };
-  });
-  console.log("demodPath", {
-    id,
-    points,
-    closed: closed === "1",
-    position: { x: Number(posX), y: Number(posY) },
-    label,
-    mass: Number(mass),
-    strokeColor,
-    ...(fillColor ? { fillColor } : {}),
-    strokeWidth: strokeWidth ? Number(strokeWidth) : undefined,
-    opacity: opacity ? Number(opacity) : undefined,
   });
   return {
     id,
