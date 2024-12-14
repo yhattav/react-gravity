@@ -9,31 +9,37 @@ interface ParticleTrail {
     lastCircle?: paper.Path.Circle;
     vectors?: paper.Group[];
   };
-  segmentPaths?: paper.Path[];
-  particle: Particle;
+  segmentPaths: paper.Path[];
 }
 
 interface ParticleRendererProps {
   scope: paper.PaperScope;
-  particles: Particle[];
-  showVelocityArrows?: boolean;
-  showForceArrows?: boolean;
+  particlesRef: React.RefObject<Particle[]>;
+  isPausedRef: React.RefObject<boolean>;
   shouldReset?: boolean;
   onResetComplete?: () => void;
 }
 
 export const ParticleRenderer: React.FC<ParticleRendererProps> = ({
   scope,
-  particles,
+  particlesRef,
+  isPausedRef,
   shouldReset,
-  showForceArrows,
-  showVelocityArrows,
   onResetComplete,
 }) => {
   const trailsRef = useRef<Map<string, ParticleTrail>>(new Map());
   const layerRef = useRef<paper.Layer | null>(null);
   const { settings } = useSettings();
-  const MAX_TRAIL_POINTS = settings.PARTICLE_TRAIL_LENGTH;
+
+  const maxTrailPointsRef = useRef(settings.PARTICLE_TRAIL_LENGTH);
+  const showForceArrowsRef = useRef(settings.SHOW_FORCE_ARROWS);
+  const showVelocityArrowsRef = useRef(settings.SHOW_VELOCITY_ARROWS);
+
+  useEffect(() => {
+    maxTrailPointsRef.current = settings.PARTICLE_TRAIL_LENGTH;
+    showForceArrowsRef.current = settings.SHOW_FORCE_ARROWS;
+    showVelocityArrowsRef.current = settings.SHOW_VELOCITY_ARROWS;
+  }, [settings]);
 
   useEffect(() => {
     if (!scope || !shouldReset) return;
@@ -48,122 +54,121 @@ export const ParticleRenderer: React.FC<ParticleRendererProps> = ({
   }, [scope, shouldReset, onResetComplete]);
 
   useEffect(() => {
+    console.log("ParticleRenderer useEffect");
     if (!scope) return;
 
     scope.activate();
-
     if (!layerRef.current) {
       layerRef.current = new scope.Layer();
+      layerRef.current.activate();
     }
 
-    const layer = layerRef.current;
-    layer.removeChildren();
+    scope.view.onFrame = () => {
+      if (isPausedRef.current) return;
 
-    // Remove trails only for particles that no longer exist
-    const currentParticleIds = new Set(particles.map((p) => p.id));
-    trailsRef.current.forEach((trail, id) => {
-      if (!currentParticleIds.has(id)) {
-        trail.path.remove();
-        trail.segmentPaths?.forEach((path) => path.remove());
-        trail.path.lastCircle?.remove();
-        trailsRef.current.delete(id);
-      }
-    });
+      const currentParticles = particlesRef.current;
+      if (!currentParticles || !layerRef.current) return;
 
-    particles.forEach((particle) => {
-      const {
-        id,
-        position,
-        color = "#BADA55",
-        size = 10,
-        mass = 0.1,
-      } = particle;
-
-      const isNegativeMass = mass < 0;
-
-      // Handle trail
-      let trail = trailsRef.current.get(id);
-      if (!trail) {
-        // Create new trail if it doesn't exist
-        const path = new scope.Path({
-          strokeColor: color,
-          strokeWidth: size * 0.8,
-          strokeCap: "round",
-          dashArray: isNegativeMass ? [4, 4] : null,
-        });
-        trail = { path, particle };
-        trailsRef.current.set(id, trail);
-      }
-
-      // Update trail
-      trail.path.add(new Point(position.x, position.y));
-      // Remove old points if trail is too long
-      if (trail.path.segments.length > MAX_TRAIL_POINTS) {
-        trail.path.removeSegments(
-          0,
-          trail.path.segments.length - MAX_TRAIL_POINTS
-        );
-      }
-
-      // Update trail appearance
-      if (!trail.path) return;
-
-      let paperColor: paper.Color;
-      try {
-        paperColor = new Paper.Color(color);
-      } catch {
-        // Fallback for RGB strings
-        paperColor = new Paper.Color(color.match(/\d+/g)!.map(Number));
-      }
-
-      // Apply width and opacity gradients along the path
-      const segments = trail.path.segments;
-
-      // Clear old segment paths
-      trail.segmentPaths?.forEach((path) => path.remove());
-      trail.segmentPaths = [];
-
-      // Create new segment paths
-      for (let i = 0; i < segments.length - 1; i++) {
-        const progress = i / segments.length; // 0 at start, 1 at end
-        const width = size * 1.2 * progress;
-        const opacity = 0.3 * progress;
-
-        const currentPoint = segments[i].point;
-        const nextPoint = segments[i + 1].point;
-
-        const segmentPath = new scope.Path({
-          segments: [currentPoint, nextPoint],
-          strokeColor: paperColor,
-          strokeWidth: width,
-          opacity: opacity,
-          strokeCap: "round",
-          dashArray: isNegativeMass ? [4, 4] : null,
-        });
-
-        trail.segmentPaths.push(segmentPath);
-      }
-
-      // Hide the main path (we're using segment paths for display)
-      trail.path.strokeWidth = 0;
-
-      // Store particle circle in trail object
-      trail.path.lastCircle?.remove();
-      trail.path.lastCircle = new Paper.Path.Circle({
-        center: new Paper.Point(position.x, position.y),
-        radius: size / 2,
-        strokeColor: color,
-        strokeWidth: 2,
-        fillColor: null,
-        dashArray: isNegativeMass ? [4, 4] : null,
+      const currentParticleIds = new Set(currentParticles.map((p) => p.id));
+      trailsRef.current.forEach((trail, id) => {
+        if (!currentParticleIds.has(id)) {
+          trail.path.remove();
+          trail.segmentPaths.forEach((path) => path.remove());
+          trail.path.lastCircle?.remove();
+          trail.path.vectors?.forEach((vector) => vector.remove());
+          trailsRef.current.delete(id);
+        }
       });
 
-      if (showVelocityArrows || showForceArrows) {
-        // Remove old vectors if they exist
+      currentParticles.forEach((particle) => {
+        const {
+          id,
+          position,
+          color = "#BADA55",
+          size = 10,
+          mass = 0.1,
+        } = particle;
+        const isNegativeMass = mass < 0;
+
+        if (!trailsRef.current.has(id)) {
+          const path: ParticleTrail["path"] = new scope.Path({
+            strokeColor: color,
+            strokeWidth: 0,
+            strokeCap: "round",
+            dashArray: isNegativeMass ? [4, 4] : null,
+          });
+
+          const segmentPaths: paper.Path[] = [];
+          for (let i = 0; i < maxTrailPointsRef.current - 1; i++) {
+            const segmentPath = new scope.Path({
+              segments: [new Point(0, 0), new Point(0, 0)],
+              strokeColor: color,
+              strokeWidth: 0,
+              opacity: 0,
+              strokeCap: "round",
+              dashArray: isNegativeMass ? [4, 4] : null,
+              visible: false,
+            });
+            layerRef.current?.addChild(segmentPath);
+            segmentPaths.push(segmentPath);
+          }
+
+          path.lastCircle = new Paper.Path.Circle({
+            center: new Paper.Point(position.x, position.y),
+            radius: size / 2,
+            strokeColor: color,
+            strokeWidth: 2,
+            fillColor: null,
+            dashArray: isNegativeMass ? [4, 4] : null,
+          });
+          layerRef.current?.addChild(path.lastCircle);
+          layerRef.current?.addChild(path);
+
+          trailsRef.current.set(id, { path, segmentPaths });
+        }
+
+        const trail = trailsRef.current.get(id)!;
+
+        trail.path.add(new Point(position.x, position.y));
+        if (trail.path.segments.length > maxTrailPointsRef.current) {
+          trail.path.removeSegments(
+            0,
+            trail.path.segments.length - maxTrailPointsRef.current
+          );
+        } else if (trail.path.segments.length < maxTrailPointsRef.current) {
+          const lastPosition = trail.path.lastSegment.point;
+          while (trail.path.segments.length < maxTrailPointsRef.current) {
+            trail.path.insert(0, lastPosition);
+          }
+        }
+
+        const segments = trail.path.segments;
+        const totalSegments = segments.length - 1;
+
+        trail.segmentPaths.forEach((segmentPath, i) => {
+          if (i < totalSegments) {
+            segmentPath.visible = true;
+            segmentPath.segments[0].point = segments[i].point;
+            segmentPath.segments[1].point = segments[i + 1].point;
+
+            const progress = i / totalSegments;
+            segmentPath.strokeWidth = size * 1.2 * progress;
+            segmentPath.opacity = 0.3 * progress;
+          } else {
+            segmentPath.visible = false;
+          }
+        });
+
+        if (trail.path.lastCircle) {
+          trail.path.lastCircle.position = new Paper.Point(
+            position.x,
+            position.y
+          );
+        }
+
         trail.path.vectors?.forEach((vector) => vector.remove());
         trail.path.vectors = [];
-
-        if (showVelocityArrows) {
+        if (showVelocityArrowsRef.current) {
           const velocityArrow = createArrow(
             new Paper.Point(position.x, position.y),
             particle.velocity,
@@ -173,7 +178,7 @@ export const ParticleRenderer: React.FC<ParticleRendererProps> = ({
           trail.path.vectors.push(velocityArrow);
         }
 
-        if (showForceArrows) {
+        if (showForceArrowsRef.current) {
           const forceArrow = createArrow(
             new Paper.Point(position.x, position.y),
             isNegativeMass ? particle.force.multiply(-1) : particle.force,
@@ -182,23 +187,19 @@ export const ParticleRenderer: React.FC<ParticleRendererProps> = ({
           );
           trail.path.vectors.push(forceArrow);
         }
-      } else {
-        // Remove vectors when arrows are disabled
-        trail.path.vectors?.forEach((vector) => vector.remove());
-        trail.path.vectors = [];
-      }
-    });
+      });
 
-    scope.view.update();
+      scope.view.update();
+    };
 
-    // Cleanup function to remove circles (but keep trails)
     return () => {
+      scope.view.onFrame = null;
       if (layerRef.current) {
         layerRef.current.remove();
         layerRef.current = null;
       }
     };
-  }, [scope, particles, showForceArrows, showVelocityArrows, MAX_TRAIL_POINTS]);
+  }, [scope, particlesRef]);
 
   return null;
 };

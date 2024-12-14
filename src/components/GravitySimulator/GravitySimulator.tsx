@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import {
   Point2D,
   GravityPoint,
@@ -128,6 +128,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   const [particles, setParticles] = useState<Particle[]>(
     initialScenario?.data.particles?.map(toParticle) || []
   );
+  const particlesRef = useRef<Particle[]>([]);
   const [gravityPoints, setGravityPoints] = useState<GravityPoint[]>(
     initialScenario?.data.gravityPoints?.map(toGravityPoint) ||
       INITIAL_GRAVITY_POINTS
@@ -147,6 +148,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   }, [initialScenario, updateSettings]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const isPausedRef = useRef(false);
   const [isScenarioPanelOpen, setIsScenarioPanelOpen] = useState(false);
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
@@ -666,6 +668,15 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     ]
   );
 
+  useEffect(() => {
+    particlesRef.current = particles;
+  }, [particles]);
+
+  // Update ref when isPaused changes
+  useEffect(() => {
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
+
   const content = (
     <>
       <style>
@@ -852,9 +863,8 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             {isSimulationStarted && (
               <ParticleRenderer
                 scope={paperScope}
-                particles={particles}
-                showVelocityArrows={physicsConfig.SHOW_VELOCITY_ARROWS}
-                showForceArrows={physicsConfig.SHOW_FORCE_ARROWS}
+                particlesRef={particlesRef}
+                isPausedRef={isPausedRef}
                 shouldReset={shouldResetRenderer}
                 onResetComplete={() => setShouldResetRenderer(false)}
               />
