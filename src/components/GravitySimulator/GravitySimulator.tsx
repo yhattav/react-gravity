@@ -139,7 +139,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     updateSettings,
     saveScenario,
   } = useSettings();
-  console.log("physicsConfig", physicsConfig.SHOW_GRAVITY_VISION);
+
   useEffect(() => {
     if (initialScenario?.data.settings) {
       updateSettings(initialScenario.data.settings);
@@ -506,7 +506,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       requestAnimationFrame(() => {
         updateSettings(scenario.data.settings);
         setGravityPoints(newGravityPoints.map(toGravityPoint));
-        console.log(scenario.data.particles);
         setParticles(
           scenario.data.particles?.map((particle) => ({
             ...toParticle(particle),
@@ -534,20 +533,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   }, []);
 
   const generateWarpPoints = useCallback((): WarpPoint[] => {
-    console.log("generateWarpPoints called:", {
-      isSimulationStarted,
-      showGravityVision: physicsConfig.SHOW_GRAVITY_VISION,
-    });
-
     const warpPoints: WarpPoint[] = [];
-
-    console.log("Generating warp points:", {
-      gravityPointsCount: gravityPoints?.length,
-      hasPointer: !!(pointerPosRef.current?.x && pointerPosRef.current?.y),
-      pointerMass: physicsConfig.POINTER_MASS,
-      particlesCount: particles?.length,
-      particlesExertGravity: physicsConfig.PARTICLES_EXERT_GRAVITY,
-    });
 
     // Add gravity points
     gravityPoints?.forEach((point) => {
@@ -583,31 +569,8 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       });
     }
 
-    console.log("Generated warp points:", warpPoints.length);
     return warpPoints;
-  }, [
-    gravityPoints,
-    particles,
-    pointerPosRef,
-    offset,
-    physicsConfig,
-    isSimulationStarted,
-  ]);
-
-  // Add logging to track SHOW_GRAVITY_VISION changes
-  useEffect(() => {
-    console.log("Vision settings changed:", {
-      showGravityVision: physicsConfig.SHOW_GRAVITY_VISION,
-      isSimulationStarted,
-      removeOverlay,
-      hasGravityPoints: gravityPoints?.length > 0,
-    });
-  }, [
-    physicsConfig.SHOW_GRAVITY_VISION,
-    isSimulationStarted,
-    removeOverlay,
-    gravityPoints,
-  ]);
+  }, [gravityPoints, particles, pointerPosRef, offset, physicsConfig]);
 
   const handleCanvasReady = useCallback((scope: paper.PaperScope) => {
     setPaperScope(scope);
