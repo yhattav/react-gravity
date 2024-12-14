@@ -45,6 +45,7 @@ export const PaperCanvas: React.FC<PaperCanvasProps> = ({
 
     return () => {
       scope.project.clear();
+      // @ts-expect-error next line
       scope.remove();
     };
   }, [onCanvasReady]);

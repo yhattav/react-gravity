@@ -42,8 +42,8 @@ export const toSimulatorPath = (
     segments: serialized.points.map((point) => {
       return new Segment(
         new Point(point.x, point.y),
-        point.handleIn ? new Point(point.handleIn) : null,
-        point.handleOut ? new Point(point.handleOut) : null
+        point.handleIn ? new Point(point.handleIn) : undefined,
+        point.handleOut ? new Point(point.handleOut) : undefined
       );
     }),
     closed: serialized.closed,
@@ -90,8 +90,8 @@ export const toSerializableSimulatorPath = (
     position: { x: simulatorPath.position.x, y: simulatorPath.position.y },
     label: simulatorPath.label,
     mass: simulatorPath.mass,
-    strokeColor: simulatorPath.path.strokeColor?.toCSS(),
-    fillColor: simulatorPath.path.fillColor?.toCSS(),
+    strokeColor: simulatorPath.path.strokeColor?.toCSS(true),
+    fillColor: simulatorPath.path.fillColor?.toCSS(true),
     strokeWidth: simulatorPath.path.strokeWidth,
     opacity: simulatorPath.path.opacity,
   };
