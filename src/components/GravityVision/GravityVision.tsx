@@ -32,6 +32,19 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
   const lastDensityRef = useRef(settings.GRAVITY_GRID_DENSITY);
   const lastShowVisionRef = useRef(settings.SHOW_GRAVITY_VISION);
   const onFrameHandlerRef = useRef<((event: paper.Event) => void) | null>(null);
+  const lastWarpPointsKeyRef = useRef<string>("");
+
+  // Helper function to generate a key from warp points
+  const getWarpPointsKey = (points: WarpPoint[]): string => {
+    return points
+      .filter((point) => point.effectiveMass > 0) // Only include points with gravity
+      .map(
+        (point) =>
+          `${point.position.x},${point.position.y},${point.effectiveMass}`
+      )
+      .sort() // Sort to ensure consistent order
+      .join("|");
+  };
 
   // Create or recreate grid when density or visibility changes
   useEffect(() => {
@@ -120,6 +133,15 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
       const { horizontal, vertical } = gridLinesRef.current;
       if (horizontal.length === 0 || vertical.length === 0) return;
 
+      // Check if warp points have changed
+      const currentKey = getWarpPointsKey(warpPoints);
+      console.log("CURRENT KEY", currentKey);
+      console.log("LAST WARP POINTS KEY", lastWarpPointsKeyRef.current);
+      if (currentKey === lastWarpPointsKeyRef.current) {
+        return; // Skip update if warp points haven't changed
+      }
+      lastWarpPointsKeyRef.current = currentKey;
+      console.log("UPDATE GRID LINES");
       const averageEffectiveMass =
         warpPoints.length > 0
           ? warpPoints.reduce(
