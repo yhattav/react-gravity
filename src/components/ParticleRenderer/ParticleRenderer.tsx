@@ -15,6 +15,7 @@ interface ParticleTrail {
 interface ParticleRendererProps {
   scope: paper.PaperScope;
   particlesRef: React.RefObject<Particle[]>;
+  isPausedRef: React.RefObject<boolean>;
   shouldReset?: boolean;
   onResetComplete?: () => void;
 }
@@ -22,6 +23,7 @@ interface ParticleRendererProps {
 export const ParticleRenderer: React.FC<ParticleRendererProps> = ({
   scope,
   particlesRef,
+  isPausedRef,
   shouldReset,
   onResetComplete,
 }) => {
@@ -62,6 +64,8 @@ export const ParticleRenderer: React.FC<ParticleRendererProps> = ({
     }
 
     scope.view.onFrame = () => {
+      if (isPausedRef.current) return;
+
       const currentParticles = particlesRef.current;
       if (!currentParticles || !layerRef.current) return;
 

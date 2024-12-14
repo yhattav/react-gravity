@@ -148,6 +148,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   }, [initialScenario, updateSettings]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const isPausedRef = useRef(false);
   const [isScenarioPanelOpen, setIsScenarioPanelOpen] = useState(false);
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
@@ -671,6 +672,11 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     particlesRef.current = particles;
   }, [particles]);
 
+  // Update ref when isPaused changes
+  useEffect(() => {
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
+
   const content = (
     <>
       <style>
@@ -858,8 +864,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
               <ParticleRenderer
                 scope={paperScope}
                 particlesRef={particlesRef}
-                showVelocityArrows={physicsConfig.SHOW_VELOCITY_ARROWS}
-                showForceArrows={physicsConfig.SHOW_FORCE_ARROWS}
+                isPausedRef={isPausedRef}
                 shouldReset={shouldResetRenderer}
                 onResetComplete={() => setShouldResetRenderer(false)}
               />
