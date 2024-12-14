@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import {
   Point2D,
   GravityPoint,
@@ -128,6 +128,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   const [particles, setParticles] = useState<Particle[]>(
     initialScenario?.data.particles?.map(toParticle) || []
   );
+  const particlesRef = useRef<Particle[]>([]);
   const [gravityPoints, setGravityPoints] = useState<GravityPoint[]>(
     initialScenario?.data.gravityPoints?.map(toGravityPoint) ||
       INITIAL_GRAVITY_POINTS
@@ -666,6 +667,10 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     ]
   );
 
+  useEffect(() => {
+    particlesRef.current = particles;
+  }, [particles]);
+
   const content = (
     <>
       <style>
@@ -852,7 +857,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             {isSimulationStarted && (
               <ParticleRenderer
                 scope={paperScope}
-                particles={particles}
+                particlesRef={particlesRef}
                 showVelocityArrows={physicsConfig.SHOW_VELOCITY_ARROWS}
                 showForceArrows={physicsConfig.SHOW_FORCE_ARROWS}
                 shouldReset={shouldResetRenderer}
