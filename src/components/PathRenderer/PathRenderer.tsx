@@ -25,6 +25,8 @@ export const PathRenderer: React.FC<PathRendererProps> = ({
     scope.activate();
     if (layerRef.current) {
       layerRef.current.removeChildren();
+      layerRef.current.remove();
+      layerRef.current = null;
     }
     scope.view.update();
     onResetComplete?.();
@@ -47,6 +49,7 @@ export const PathRenderer: React.FC<PathRendererProps> = ({
     paths?.forEach((simulatorPath, index) => {
       try {
         const pathCopy = simulatorPath.path.clone();
+        pathCopy.fillColor = null;
         layer.addChild(pathCopy);
       } catch (error) {
         console.error(
@@ -60,6 +63,7 @@ export const PathRenderer: React.FC<PathRendererProps> = ({
 
     return () => {
       if (layerRef.current) {
+        layerRef.current.removeChildren();
         layerRef.current.remove();
         layerRef.current = null;
       }

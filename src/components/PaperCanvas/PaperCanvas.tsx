@@ -1,69 +1,64 @@
 import React, { useEffect, useRef } from "react";
-import Paper from "paper";
+import paper from "paper";
 
 interface PaperCanvasProps {
-  simulatorId: string;
+  simulatorId?: string;
   onCanvasReady: (scope: paper.PaperScope) => void;
+  shouldReset?: boolean;
+  onResetComplete?: () => void;
 }
 
 export const PaperCanvas: React.FC<PaperCanvasProps> = ({
-  simulatorId,
+  simulatorId = "default",
   onCanvasReady,
+  shouldReset = false,
+  onResetComplete,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const scopeRef = useRef<paper.PaperScope>();
+  const scopeRef = useRef<paper.PaperScope | null>(null);
 
+  // Handle reset
+  useEffect(() => {
+    if (!shouldReset || !scopeRef.current) return;
+
+    // Clear the canvas
+    scopeRef.current.project.clear();
+
+    // Create a new project
+    const newScope = new paper.PaperScope();
+    newScope.setup(canvasRef.current!);
+    scopeRef.current = newScope;
+
+    // Notify parent of new scope
+    onCanvasReady(newScope);
+    onResetComplete?.();
+  }, [shouldReset, onCanvasReady, onResetComplete]);
+
+  // Initial setup
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    // Create a new Paper.js scope for this canvas
-    const scope = new Paper.PaperScope();
-    scopeRef.current = scope;
-
-    // Setup with explicit scope
+    const scope = new paper.PaperScope();
     scope.setup(canvasRef.current);
-
-    // Get container dimensions
-    const container = canvasRef.current.parentElement;
-    if (!container) return;
-
-    const rect = container.getBoundingClientRect();
-    const pixelRatio = 1;
-
-    canvasRef.current.width = rect.width * pixelRatio;
-    canvasRef.current.height = rect.height * pixelRatio;
-    scope.view.viewSize = new scope.Size(rect.width, rect.height);
-    scope.view.scale(pixelRatio, pixelRatio);
-
-    const handleResize = () => {
-      if (!container || !canvasRef.current || !scope.view) return;
-      const newRect = container.getBoundingClientRect();
-      canvasRef.current.width = newRect.width * pixelRatio;
-      canvasRef.current.height = newRect.height * pixelRatio;
-      scope.view.viewSize = new scope.Size(newRect.width, newRect.height);
-      scope.view.update();
-    };
-
-    window.addEventListener("resize", handleResize);
+    scopeRef.current = scope;
     onCanvasReady(scope);
 
     return () => {
-      window.removeEventListener("resize", handleResize);
-      scope.project?.clear();
+      scope.project.clear();
+      scope.remove();
     };
   }, [onCanvasReady]);
 
   return (
     <canvas
       ref={canvasRef}
-      className={`paper-canvas-${simulatorId}`}
+      id={`gravity-canvas-${simulatorId}`}
       style={{
+        width: "100%",
+        height: "100%",
         position: "absolute",
         top: 0,
         left: 0,
-        width: "100%",
-        height: "100%",
-        pointerEvents: "none",
       }}
     />
   );

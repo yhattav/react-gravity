@@ -488,33 +488,49 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
   const handleSelectScenario = useCallback(
     (scenario: Scenario) => {
-      // First trigger the reset
+      // First pause the simulation
+      setIsPaused(true);
+
+      // Trigger reset for all renderers
       setShouldResetRenderer(true);
 
-      // First, ensure all gravity points have unique IDs
-      const newGravityPoints =
-        scenario.data.gravityPoints?.map((point) => ({
-          ...point,
-          id: point.id || Math.random().toString(36).substr(2, 9),
-        })) ?? [];
-
-      // Reset the simulation state
+      // Clear current state
       setParticles([]);
       setGravityPoints([]);
+      setPaths([]);
+      setPaperScope(null);
 
-      // Update settings and state in the next frame
+      // Wait for cleanup to complete before setting new data
       requestAnimationFrame(() => {
+        // Update settings
         updateSettings(scenario.data.settings);
-        setGravityPoints(newGravityPoints.map(toGravityPoint));
-        setParticles(
-          scenario.data.particles?.map((particle) => ({
-            ...toParticle(particle),
-            force: new Point(0, 0),
-          })) ?? []
-        );
-        setPaths(scenario.data.paths?.map(toSimulatorPath) ?? []);
-        setIsSimulationStarted(true);
-        setIsScenarioPanelOpen(false);
+
+        // Set new data in the next frame
+        requestAnimationFrame(() => {
+          setGravityPoints(
+            (scenario.data.gravityPoints?.map(toGravityPoint) || []).map(
+              (point) => ({
+                ...point,
+                id: point.id || Math.random().toString(36).substr(2, 9),
+              })
+            )
+          );
+
+          setParticles(
+            scenario.data.particles?.map((particle) => ({
+              ...toParticle(particle),
+              force: new Point(0, 0),
+            })) || []
+          );
+
+          setPaths(scenario.data.paths?.map(toSimulatorPath) || []);
+
+          // Complete reset and resume simulation
+          setShouldResetRenderer(false);
+          setIsSimulationStarted(true);
+          setIsScenarioPanelOpen(false);
+          setIsPaused(false);
+        });
       });
     },
     [updateSettings]
@@ -722,6 +738,8 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         <PaperCanvas
           simulatorId={simulatorId}
           onCanvasReady={handleCanvasReady}
+          shouldReset={shouldResetRenderer}
+          onResetComplete={() => setShouldResetRenderer(false)}
         />
 
         {!removeOverlay && (
@@ -846,7 +864,9 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
               scope={paperScope}
               paths={paths}
               shouldReset={shouldResetRenderer}
-              onResetComplete={() => setShouldResetRenderer(false)}
+              onResetComplete={() => {
+                setShouldResetRenderer(false);
+              }}
               simulatorId={simulatorId}
             />
 
