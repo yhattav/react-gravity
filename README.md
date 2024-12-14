@@ -21,6 +21,7 @@ An interactive gravity simulation built with React, TypeScript, and Vite. This p
 - Ant Design
 - Framer Motion
 - Custom Physics Engine
+- Paper.js
 
 ## Getting Started
 
