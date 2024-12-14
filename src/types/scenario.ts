@@ -5,9 +5,9 @@ import { SerializableSimulatorPath } from "../utils/types/path";
 
 export interface ScenarioData {
   settings: Partial<PhysicsSettings>;
-  gravityPoints: Array<SerializableGravityPoint>;
-  particles: Array<SerializableParticle>;
-  paths: Array<SerializableSimulatorPath>;
+  gravityPoints?: Array<SerializableGravityPoint>;
+  particles?: Array<SerializableParticle>;
+  paths?: Array<SerializableSimulatorPath>;
 }
 
 export interface Scenario {

@@ -13,92 +13,51 @@ interface ParticleTrail {
   particle: Particle;
 }
 
-export const ParticleRenderer: React.FC<{
+interface ParticleRendererProps {
+  scope: paper.PaperScope;
   particles: Particle[];
   showVelocityArrows?: boolean;
   showForceArrows?: boolean;
   shouldReset?: boolean;
   onResetComplete?: () => void;
-  simulatorId?: string;
-}> = ({
+}
+
+export const ParticleRenderer: React.FC<ParticleRendererProps> = ({
+  scope,
   particles,
   shouldReset,
   showForceArrows,
   showVelocityArrows,
   onResetComplete,
-  simulatorId = "default",
 }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const trailsRef = useRef<Map<string, ParticleTrail>>(new Map());
-  const scopeRef = useRef<paper.PaperScope>();
+  const layerRef = useRef<paper.Layer | null>(null);
   const { settings } = useSettings();
   const MAX_TRAIL_POINTS = settings.PARTICLE_TRAIL_LENGTH;
 
   useEffect(() => {
-    if (!canvasRef.current) return;
+    if (!scope || !shouldReset) return;
 
-    // Create a new Paper.js scope for this canvas
-    const scope = new Paper.PaperScope();
-    scopeRef.current = scope;
-
-    // Get container dimensions instead of document
-    const container = canvasRef.current.parentElement;
-    if (!container) return;
-
-    const rect = container.getBoundingClientRect();
-    const pixelRatio = 1;
-
-    canvasRef.current.width = rect.width * pixelRatio;
-    canvasRef.current.height = rect.height * pixelRatio;
-
-    // Setup with explicit scope
-    scope.setup(canvasRef.current);
-    scope.view.viewSize = new scope.Size(rect.width, rect.height);
-    scope.view.scale(pixelRatio, pixelRatio);
-
-    const handleResize = () => {
-      if (!container || !canvasRef.current || !scope.view) return;
-      scope.activate(); // Activate this scope before operations
-      const newRect = container.getBoundingClientRect();
-      canvasRef.current.width = newRect.width * pixelRatio;
-      canvasRef.current.height = newRect.height * pixelRatio;
-      scope.view.viewSize = new scope.Size(newRect.width, newRect.height);
-    };
-
-    window.addEventListener("resize", handleResize);
-
-    const currentTrails = trailsRef.current; // Capture the ref value
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      scope.activate();
-      currentTrails.forEach((trail) => trail.path.remove());
-      currentTrails.clear();
-      scope.project?.clear();
-    };
-  }, [simulatorId]);
-
-  useEffect(() => {
-    const scope = scopeRef.current;
-    if (!scope || !scope.project) return;
-
-    if (shouldReset) {
-      scope.project.activeLayer.removeChildren();
-      trailsRef.current.forEach((trail) => {
-        trail.path.vectors?.forEach((vector) => vector.remove());
-        trail.segmentPaths?.forEach((path) => path.remove());
-        trail.path.lastCircle?.remove();
-      });
+    scope.activate();
+    if (layerRef.current) {
+      layerRef.current.removeChildren();
       trailsRef.current.clear();
-      scope.view.update();
-      onResetComplete?.();
     }
-  }, [shouldReset, onResetComplete]);
+    scope.view.update();
+    onResetComplete?.();
+  }, [scope, shouldReset, onResetComplete]);
 
   useEffect(() => {
-    const scope = scopeRef.current;
-    if (!scope || !scope.project) return;
+    if (!scope) return;
 
-    scope.activate(); // Add this line at the start of each effect
+    scope.activate();
+
+    if (!layerRef.current) {
+      layerRef.current = new scope.Layer();
+    }
+
+    const layer = layerRef.current;
+    layer.removeChildren();
 
     // Remove trails only for particles that no longer exist
     const currentParticleIds = new Set(particles.map((p) => p.id));
@@ -234,29 +193,14 @@ export const ParticleRenderer: React.FC<{
 
     // Cleanup function to remove circles (but keep trails)
     return () => {
-      scope.project?.activeLayer?.children.forEach((child) => {
-        if (child instanceof Paper.Path.Circle) {
-          child.remove();
-        }
-      });
+      if (layerRef.current) {
+        layerRef.current.remove();
+        layerRef.current = null;
+      }
     };
-  }, [particles, showForceArrows, showVelocityArrows]);
+  }, [scope, particles, showForceArrows, showVelocityArrows, MAX_TRAIL_POINTS]);
 
-  return (
-    <canvas
-      ref={canvasRef}
-      className={`particle-canvas-${simulatorId}`}
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        pointerEvents: "none",
-        zIndex: 10,
-      }}
-    />
-  );
+  return null;
 };
 
 export default ParticleRenderer;

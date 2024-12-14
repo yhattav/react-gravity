@@ -3,6 +3,27 @@ import {
   decompressFromEncodedURIComponent,
 } from "lz-string";
 import { Scenario, ScenarioData } from "../types/scenario";
+import { SerializableGravityPoint } from "./types/physics";
+import { SerializableParticle } from "../types/particle";
+import { SerializableSimulatorPath, PathPoint } from "../utils/types/path";
+
+const SEPARATORS = ["\u0001", "\u0002", "\u0003", "|"] as const;
+
+const modPathPoint = (point: PathPoint): string => {
+  const string = `${point.x}|${point.y}`;
+  if (!point.handleIn && !point.handleOut) return string;
+  const handleInAddition =
+    "|" +
+    (point.handleIn
+      ? `${point.handleIn.x || "0"}|${point.handleIn.y || "0"}`
+      : "");
+  const handleOutAddition =
+    "|" +
+    (point.handleOut
+      ? `${point.handleOut.x || "0"}|${point.handleOut.y || "0"}`
+      : "");
+  return `${point.x}|${point.y}${handleInAddition}${handleOutAddition}`;
+};
 
 // Modulation helpers
 const modSettings = (settings: ScenarioData["settings"]): string => {
@@ -14,17 +35,23 @@ const modSettings = (settings: ScenarioData["settings"]): string => {
     settings.POINTER_MASS,
     settings.SHOW_VELOCITY_ARROWS ? 1 : 0,
     settings.SHOW_FORCE_ARROWS ? 1 : 0,
-    settings.CONSTANT_FORCE,
+    settings.CONSTANT_FORCE?.x || 0,
+    settings.CONSTANT_FORCE?.y || 0,
     settings.SOLID_BOUNDARIES ? 1 : 0,
     settings.PARTICLES_EXERT_GRAVITY ? 1 : 0,
-  ].join("|");
+    settings.PARTICLE_TRAIL_LENGTH,
+    settings.SHOW_GRAVITY_VISION ? 1 : 0,
+    settings.GRAVITY_GRID_DENSITY,
+  ].join(SEPARATORS[2]);
 };
 
-const modGravityPoint = (point: ScenarioData["gravityPoints"][0]): string => {
-  return `${point.x}|${point.y}|${point.label}|${point.mass}`;
+const modGravityPoint = (point: SerializableGravityPoint): string => {
+  return `${point.x + SEPARATORS[3]}${point.y + SEPARATORS[3]}${
+    point.label + SEPARATORS[3]
+  }${point.mass}`;
 };
 
-const modParticle = (particle: ScenarioData["particles"][0]): string => {
+const modParticle = (particle: SerializableParticle): string => {
   return [
     particle.id,
     particle.position.x,
@@ -36,7 +63,23 @@ const modParticle = (particle: ScenarioData["particles"][0]): string => {
     particle.color,
     particle.size,
     particle.showVectors ? 1 : 0,
-  ].join("|");
+  ].join(SEPARATORS[2]);
+};
+
+const modPath = (path: SerializableSimulatorPath): string => {
+  return [
+    path.id,
+    path.points.map(modPathPoint).join(SEPARATORS[1]),
+    path.closed ? 1 : 0,
+    path.position.x,
+    path.position.y,
+    path.label,
+    path.mass,
+    path.strokeColor,
+    path.fillColor,
+    path.strokeWidth,
+    path.opacity,
+  ].join(SEPARATORS[2]);
 };
 
 const demodSettings = (str: string): ScenarioData["settings"] => {
@@ -48,11 +91,14 @@ const demodSettings = (str: string): ScenarioData["settings"] => {
     pointerMass,
     showVelocity,
     showForce,
-    forceX,
-    forceY,
+    constantForceX,
+    constantForceY,
     solidBoundaries,
     particlesExertGravity,
-  ] = str.split("|");
+    particleTrailLength,
+    showGravityVision,
+    gravityGridDensity,
+  ] = str.split(SEPARATORS[2]);
 
   return {
     NEW_PARTICLE_MASS: Number(mass),
@@ -62,14 +108,20 @@ const demodSettings = (str: string): ScenarioData["settings"] => {
     POINTER_MASS: Number(pointerMass),
     SHOW_VELOCITY_ARROWS: showVelocity === "1",
     SHOW_FORCE_ARROWS: showForce === "1",
-    CONSTANT_FORCE: { x: Number(forceX), y: Number(forceY) },
+    CONSTANT_FORCE: {
+      x: Number(constantForceX),
+      y: Number(constantForceY),
+    },
     SOLID_BOUNDARIES: solidBoundaries === "1",
     PARTICLES_EXERT_GRAVITY: particlesExertGravity === "1",
+    PARTICLE_TRAIL_LENGTH: Number(particleTrailLength),
+    SHOW_GRAVITY_VISION: showGravityVision === "1",
+    GRAVITY_GRID_DENSITY: Number(gravityGridDensity),
   };
 };
 
-const demodGravityPoint = (str: string): ScenarioData["gravityPoints"][0] => {
-  const [x, y, label, mass] = str.split("|");
+const demodGravityPoint = (str: string): SerializableGravityPoint => {
+  const [x, y, label, mass] = str.split(SEPARATORS[3]);
   return {
     x: Number(x),
     y: Number(y),
@@ -78,9 +130,9 @@ const demodGravityPoint = (str: string): ScenarioData["gravityPoints"][0] => {
   };
 };
 
-const demodParticle = (str: string): ScenarioData["particles"][0] => {
+const demodParticle = (str: string): SerializableParticle => {
   const [id, px, py, vx, vy, mass, elasticity, color, size, showVectors] =
-    str.split("|");
+    str.split(SEPARATORS[2]);
   return {
     id,
     position: { x: Number(px), y: Number(py) },
@@ -93,22 +145,67 @@ const demodParticle = (str: string): ScenarioData["particles"][0] => {
   };
 };
 
+const demodPath = (str: string): SerializableSimulatorPath => {
+  const [
+    id,
+    pointsStr,
+    closed,
+    posX,
+    posY,
+    label,
+    mass,
+    strokeColor,
+    fillColor,
+    strokeWidth,
+    opacity,
+  ] = str.split(SEPARATORS[2]);
+
+  const points = pointsStr.split(SEPARATORS[1]).map((pointStr) => {
+    const [x, y, handleInX, handleInY, handleOutX, handleOutY] = pointStr.split(
+      SEPARATORS[3]
+    );
+    return {
+      x: Number(x),
+      y: Number(y),
+      handleIn: handleInX
+        ? { x: Number(handleInX), y: Number(handleInY) }
+        : undefined,
+      handleOut: handleOutX
+        ? { x: Number(handleOutX), y: Number(handleOutY) }
+        : undefined,
+    };
+  });
+  return {
+    id,
+    points,
+    closed: closed === "1",
+    position: { x: Number(posX), y: Number(posY) },
+    label,
+    mass: Number(mass),
+    strokeColor,
+    fillColor,
+    strokeWidth: strokeWidth ? Number(strokeWidth) : undefined,
+    opacity: opacity ? Number(opacity) : undefined,
+  };
+};
+
 export const modulateScenario = (scenario: Scenario): string => {
   const parts = [
     scenario.id,
     scenario.name,
     scenario.description,
     modSettings(scenario.data.settings),
-    scenario.data.gravityPoints.map(modGravityPoint).join("\u0001"),
-    scenario.data.particles.map(modParticle).join("\u0001"),
+    scenario.data.gravityPoints?.map(modGravityPoint).join(SEPARATORS[0]),
+    scenario.data.particles?.map(modParticle).join(SEPARATORS[0]),
+    scenario.data.paths?.map(modPath).join(SEPARATORS[0]),
   ];
-  return parts.join("\u0001\u0001");
+  return parts.join(SEPARATORS[0] + SEPARATORS[0]);
 };
 
 export const demodulateScenario = (str: string): Scenario | null => {
   try {
-    const [id, name, description, settings, gravityPoints, particles] =
-      str.split("\u0001\u0001");
+    const [id, name, description, settings, gravityPoints, particles, paths] =
+      str.split(SEPARATORS[0] + SEPARATORS[0]);
 
     return {
       id,
@@ -117,11 +214,12 @@ export const demodulateScenario = (str: string): Scenario | null => {
       data: {
         settings: demodSettings(settings),
         gravityPoints: gravityPoints
-          ? gravityPoints.split("\u0001").map(demodGravityPoint)
-          : [],
+          ? gravityPoints.split(SEPARATORS[0]).map(demodGravityPoint)
+          : undefined,
         particles: particles
-          ? particles.split("\u0001").map(demodParticle)
-          : [],
+          ? particles.split(SEPARATORS[0]).map(demodParticle)
+          : undefined,
+        paths: paths ? paths.split(SEPARATORS[0]).map(demodPath) : undefined,
       },
     };
   } catch (e) {

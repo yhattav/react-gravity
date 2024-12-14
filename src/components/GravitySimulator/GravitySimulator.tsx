@@ -51,6 +51,7 @@ import {
   toSimulatorPath,
 } from "../../utils/types/path";
 import { PathRenderer } from "../PathRenderer/PathRenderer";
+import { PaperCanvas } from "../PaperCanvas/PaperCanvas";
 
 const generatePastelColor = () => {
   const r = Math.floor(Math.random() * 75 + 180);
@@ -125,10 +126,10 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     !!initialScenario
   );
   const [particles, setParticles] = useState<Particle[]>(
-    initialScenario?.data.particles.map(toParticle) || []
+    initialScenario?.data.particles?.map(toParticle) || []
   );
   const [gravityPoints, setGravityPoints] = useState<GravityPoint[]>(
-    initialScenario?.data.gravityPoints.map(toGravityPoint) ||
+    initialScenario?.data.gravityPoints?.map(toGravityPoint) ||
       INITIAL_GRAVITY_POINTS
   );
   const [isDragging, setIsDragging] = useState(false);
@@ -138,6 +139,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     updateSettings,
     saveScenario,
   } = useSettings();
+
   useEffect(() => {
     if (initialScenario?.data.settings) {
       updateSettings(initialScenario.data.settings);
@@ -155,6 +157,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   const [paths, setPaths] = useState<SimulatorPath[]>(
     initialScenario?.data.paths?.map(toSimulatorPath) || []
   );
+  const [paperScope, setPaperScope] = useState<paper.PaperScope | null>(null);
 
   useEffect(() => {
     const updateOffset = () => {
@@ -454,13 +457,14 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           settings: physicsConfig,
           gravityPoints: gravityPoints.map(toSerializableGravityPoint),
           particles: particles.map(toSerializableParticle),
+          paths: paths.map(toSerializableSimulatorPath),
         },
       };
       setShareableLink(createShareableLink(scenario));
       setIsPaused(true);
       setIsSaveModalOpen(true);
     },
-    [physicsConfig, gravityPoints, particles]
+    [physicsConfig, gravityPoints, particles, paths]
   );
 
   const handleSaveScenario = useCallback(
@@ -473,44 +477,60 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           settings: physicsConfig,
           gravityPoints: gravityPoints.map(toSerializableGravityPoint),
           particles: particles.map(toSerializableParticle),
+          paths: paths.map(toSerializableSimulatorPath),
         },
       };
       saveScenario(scenario);
       setIsSaveModalOpen(false);
     },
-    [physicsConfig, gravityPoints, particles, saveScenario]
+    [physicsConfig, gravityPoints, particles, paths, saveScenario]
   );
 
   const handleSelectScenario = useCallback(
     (scenario: Scenario) => {
-      // First trigger the reset
+      // First pause the simulation
+      setIsPaused(true);
+
+      // Trigger reset for all renderers
       setShouldResetRenderer(true);
 
-      // First, ensure all gravity points have unique IDs
-      const newGravityPoints = scenario.data.gravityPoints.map((point) => ({
-        ...point,
-        id: point.id || Math.random().toString(36).substr(2, 9),
-      }));
-
-      // Reset the simulation state
+      // Clear current state
       setParticles([]);
       setGravityPoints([]);
+      setPaths([]);
+      setPaperScope(null);
 
-      // Update settings and state in the next frame
+      // Wait for cleanup to complete before setting new data
       requestAnimationFrame(() => {
+        // Update settings
         updateSettings(scenario.data.settings);
-        setGravityPoints(newGravityPoints.map(toGravityPoint));
-        console.log(scenario.data.particles);
-        setParticles(
-          scenario.data.particles?.map((particle) => ({
-            ...toParticle(particle),
-            force: new Point(0, 0),
-          }))
-        );
-        setPaths(scenario.data.paths?.map(toSimulatorPath));
-        console.log(scenario.data.paths?.map(toSimulatorPath));
-        setIsSimulationStarted(true);
-        setIsScenarioPanelOpen(false);
+
+        // Set new data in the next frame
+        requestAnimationFrame(() => {
+          setGravityPoints(
+            (scenario.data.gravityPoints?.map(toGravityPoint) || []).map(
+              (point) => ({
+                ...point,
+                id: point.id || Math.random().toString(36).substr(2, 9),
+              })
+            )
+          );
+
+          setParticles(
+            scenario.data.particles?.map((particle) => ({
+              ...toParticle(particle),
+              force: new Point(0, 0),
+            })) || []
+          );
+
+          setPaths(scenario.data.paths?.map(toSimulatorPath) || []);
+
+          // Complete reset and resume simulation
+          setShouldResetRenderer(false);
+          setIsSimulationStarted(true);
+          setIsScenarioPanelOpen(false);
+          setIsPaused(false);
+        });
       });
     },
     [updateSettings]
@@ -532,7 +552,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     const warpPoints: WarpPoint[] = [];
 
     // Add gravity points
-    gravityPoints.forEach((point) => {
+    gravityPoints?.forEach((point) => {
       warpPoints.push({
         position: point.position,
         effectiveMass: point.mass,
@@ -557,7 +577,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
     // Add particles if they exert gravity
     if (physicsConfig.PARTICLES_EXERT_GRAVITY) {
-      particles.forEach((particle) => {
+      particles?.forEach((particle) => {
         warpPoints.push({
           position: particle.position,
           effectiveMass: particle.mass * (particle.outgoingForceRatio ?? 1),
@@ -567,6 +587,10 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
     return warpPoints;
   }, [gravityPoints, particles, pointerPosRef, offset, physicsConfig]);
+
+  const handleCanvasReady = useCallback((scope: paper.PaperScope) => {
+    setPaperScope(scope);
+  }, []);
 
   // Create and expose the API
   useEffect(
@@ -622,6 +646,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             settings: physicsConfig,
             gravityPoints: gravityPoints.map(toSerializableGravityPoint),
             particles: particles.map(toSerializableParticle),
+            paths: paths.map(toSerializableSimulatorPath),
           },
         }),
 
@@ -710,6 +735,13 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           touchAction: "none", // Prevent default touch behaviors
         }}
       >
+        <PaperCanvas
+          simulatorId={simulatorId}
+          onCanvasReady={handleCanvasReady}
+          shouldReset={shouldResetRenderer}
+          onResetComplete={() => setShouldResetRenderer(false)}
+        />
+
         {!removeOverlay && (
           <div
             style={{
@@ -815,28 +847,38 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           />
         ))}
 
-        <ParticleRenderer
-          particles={particles}
-          showVelocityArrows={physicsConfig.SHOW_VELOCITY_ARROWS}
-          showForceArrows={physicsConfig.SHOW_FORCE_ARROWS}
-          shouldReset={shouldResetRenderer}
-          onResetComplete={() => setShouldResetRenderer(false)}
-          simulatorId={simulatorId}
-        />
-        <PathRenderer
-          paths={paths}
-          shouldReset={shouldResetRenderer}
-          onResetComplete={() => setShouldResetRenderer(false)}
-          simulatorId={simulatorId}
-        />
+        {paperScope && (
+          <>
+            {isSimulationStarted && (
+              <ParticleRenderer
+                scope={paperScope}
+                particles={particles}
+                showVelocityArrows={physicsConfig.SHOW_VELOCITY_ARROWS}
+                showForceArrows={physicsConfig.SHOW_FORCE_ARROWS}
+                shouldReset={shouldResetRenderer}
+                onResetComplete={() => setShouldResetRenderer(false)}
+              />
+            )}
 
-        {!removeOverlay && (
-          <GravityVision
-            warpPoints={generateWarpPoints()}
-            settings={physicsConfig}
-            containerRef={gravityRef}
-            simulatorId={simulatorId}
-          />
+            <PathRenderer
+              scope={paperScope}
+              paths={paths}
+              shouldReset={shouldResetRenderer}
+              onResetComplete={() => {
+                setShouldResetRenderer(false);
+              }}
+              simulatorId={simulatorId}
+            />
+
+            {!removeOverlay && physicsConfig.SHOW_GRAVITY_VISION && (
+              <GravityVision
+                scope={paperScope}
+                warpPoints={generateWarpPoints()}
+                settings={physicsConfig}
+                containerRef={gravityRef}
+              />
+            )}
+          </>
         )}
 
         {!removeOverlay && (

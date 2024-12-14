@@ -29,9 +29,25 @@ export const ScenarioPanel: React.FC<ScenarioPanelProps> = ({
   useEffect(() => {
     const scenarioParam = searchParams.get("scenario");
     if (scenarioParam) {
-      const sharedScenario = decompressScenario(scenarioParam);
-      if (sharedScenario) {
-        onSelectScenario(sharedScenario);
+      try {
+        const sharedScenario = decompressScenario(scenarioParam);
+        if (sharedScenario) {
+          // Clear the search parameter to prevent reloading on refresh
+          const newSearchParams = new URLSearchParams(searchParams);
+          newSearchParams.delete("scenario");
+          window.history.replaceState(
+            {},
+            "",
+            `${window.location.pathname}${
+              newSearchParams.toString() ? "?" + newSearchParams.toString() : ""
+            }`
+          );
+
+          // Load the scenario
+          onSelectScenario(sharedScenario);
+        }
+      } catch (error) {
+        console.error("Error loading scenario from URL:", error);
       }
     }
   }, [searchParams, onSelectScenario]);

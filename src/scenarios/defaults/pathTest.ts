@@ -1,4 +1,3 @@
-import { Point } from "paper";
 import { Scenario } from "../../types/scenario";
 import { SerializableSimulatorPath } from "../../utils/types/path";
 
