@@ -126,10 +126,10 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     !!initialScenario
   );
   const [particles, setParticles] = useState<Particle[]>(
-    initialScenario?.data.particles.map(toParticle) || []
+    initialScenario?.data.particles?.map(toParticle) || []
   );
   const [gravityPoints, setGravityPoints] = useState<GravityPoint[]>(
-    initialScenario?.data.gravityPoints.map(toGravityPoint) ||
+    initialScenario?.data.gravityPoints?.map(toGravityPoint) ||
       INITIAL_GRAVITY_POINTS
   );
   const [isDragging, setIsDragging] = useState(false);
@@ -492,10 +492,11 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       setShouldResetRenderer(true);
 
       // First, ensure all gravity points have unique IDs
-      const newGravityPoints = scenario.data.gravityPoints.map((point) => ({
-        ...point,
-        id: point.id || Math.random().toString(36).substr(2, 9),
-      }));
+      const newGravityPoints =
+        scenario.data.gravityPoints?.map((point) => ({
+          ...point,
+          id: point.id || Math.random().toString(36).substr(2, 9),
+        })) ?? [];
 
       // Reset the simulation state
       setParticles([]);
@@ -510,9 +511,9 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           scenario.data.particles?.map((particle) => ({
             ...toParticle(particle),
             force: new Point(0, 0),
-          }))
+          })) ?? []
         );
-        setPaths(scenario.data.paths?.map(toSimulatorPath));
+        setPaths(scenario.data.paths?.map(toSimulatorPath) ?? []);
         setIsSimulationStarted(true);
         setIsScenarioPanelOpen(false);
       });
@@ -875,7 +876,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
                 showForceArrows={physicsConfig.SHOW_FORCE_ARROWS}
                 shouldReset={shouldResetRenderer}
                 onResetComplete={() => setShouldResetRenderer(false)}
-                simulatorId={simulatorId}
               />
             )}
 
@@ -893,7 +893,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
                 warpPoints={generateWarpPoints()}
                 settings={physicsConfig}
                 containerRef={gravityRef}
-                simulatorId={simulatorId}
               />
             )}
           </>

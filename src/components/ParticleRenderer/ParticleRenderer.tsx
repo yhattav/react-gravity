@@ -20,7 +20,6 @@ interface ParticleRendererProps {
   showForceArrows?: boolean;
   shouldReset?: boolean;
   onResetComplete?: () => void;
-  simulatorId?: string;
 }
 
 export const ParticleRenderer: React.FC<ParticleRendererProps> = ({
@@ -30,7 +29,6 @@ export const ParticleRenderer: React.FC<ParticleRendererProps> = ({
   showForceArrows,
   showVelocityArrows,
   onResetComplete,
-  simulatorId = "default",
 }) => {
   const trailsRef = useRef<Map<string, ParticleTrail>>(new Map());
   const layerRef = useRef<paper.Layer | null>(null);

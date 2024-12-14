@@ -7,7 +7,6 @@ interface GravityVisionProps {
   warpPoints: WarpPoint[];
   settings: PhysicsSettings;
   containerRef: React.RefObject<HTMLDivElement>;
-  simulatorId: string;
 }
 
 export const GravityVision: React.FC<GravityVisionProps> = ({
@@ -15,7 +14,6 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
   warpPoints,
   settings,
   containerRef,
-  simulatorId,
 }) => {
   const layerRef = useRef<paper.Layer | null>(null);
 
@@ -119,7 +117,7 @@ export const GravityVision: React.FC<GravityVisionProps> = ({
 
           points.push(
             killer
-              ? new scope.Point(killer.x, killer.y)
+              ? new scope.Point((killer as Vector).x, (killer as Vector).y)
               : new scope.Point(x, y).add(
                   new scope.Point(totalDisplacementX, totalDisplacementY)
                 )

@@ -3,6 +3,8 @@ import {
   decompressFromEncodedURIComponent,
 } from "lz-string";
 import { Scenario, ScenarioData } from "../types/scenario";
+import { SerializableGravityPoint } from "./types/physics";
+import { SerializableParticle } from "../types/particle";
 
 // Modulation helpers
 const modSettings = (settings: ScenarioData["settings"]): string => {
@@ -14,17 +16,18 @@ const modSettings = (settings: ScenarioData["settings"]): string => {
     settings.POINTER_MASS,
     settings.SHOW_VELOCITY_ARROWS ? 1 : 0,
     settings.SHOW_FORCE_ARROWS ? 1 : 0,
-    settings.CONSTANT_FORCE,
+    settings.CONSTANT_FORCE?.x || 0,
+    settings.CONSTANT_FORCE?.y || 0,
     settings.SOLID_BOUNDARIES ? 1 : 0,
     settings.PARTICLES_EXERT_GRAVITY ? 1 : 0,
   ].join("|");
 };
 
-const modGravityPoint = (point: ScenarioData["gravityPoints"][0]): string => {
+const modGravityPoint = (point: SerializableGravityPoint): string => {
   return `${point.x}|${point.y}|${point.label}|${point.mass}`;
 };
 
-const modParticle = (particle: ScenarioData["particles"][0]): string => {
+const modParticle = (particle: SerializableParticle): string => {
   return [
     particle.id,
     particle.position.x,
@@ -48,8 +51,8 @@ const demodSettings = (str: string): ScenarioData["settings"] => {
     pointerMass,
     showVelocity,
     showForce,
-    forceX,
-    forceY,
+    constantForceX,
+    constantForceY,
     solidBoundaries,
     particlesExertGravity,
   ] = str.split("|");
@@ -62,13 +65,16 @@ const demodSettings = (str: string): ScenarioData["settings"] => {
     POINTER_MASS: Number(pointerMass),
     SHOW_VELOCITY_ARROWS: showVelocity === "1",
     SHOW_FORCE_ARROWS: showForce === "1",
-    CONSTANT_FORCE: { x: Number(forceX), y: Number(forceY) },
+    CONSTANT_FORCE: {
+      x: Number(constantForceX),
+      y: Number(constantForceY),
+    },
     SOLID_BOUNDARIES: solidBoundaries === "1",
     PARTICLES_EXERT_GRAVITY: particlesExertGravity === "1",
   };
 };
 
-const demodGravityPoint = (str: string): ScenarioData["gravityPoints"][0] => {
+const demodGravityPoint = (str: string): SerializableGravityPoint => {
   const [x, y, label, mass] = str.split("|");
   return {
     x: Number(x),
@@ -78,7 +84,7 @@ const demodGravityPoint = (str: string): ScenarioData["gravityPoints"][0] => {
   };
 };
 
-const demodParticle = (str: string): ScenarioData["particles"][0] => {
+const demodParticle = (str: string): SerializableParticle => {
   const [id, px, py, vx, vy, mass, elasticity, color, size, showVectors] =
     str.split("|");
   return {
@@ -99,8 +105,8 @@ export const modulateScenario = (scenario: Scenario): string => {
     scenario.name,
     scenario.description,
     modSettings(scenario.data.settings),
-    scenario.data.gravityPoints.map(modGravityPoint).join("\u0001"),
-    scenario.data.particles.map(modParticle).join("\u0001"),
+    scenario.data.gravityPoints?.map(modGravityPoint).join("\u0001"),
+    scenario.data.particles?.map(modParticle).join("\u0001"),
   ];
   return parts.join("\u0001\u0001");
 };
@@ -118,10 +124,10 @@ export const demodulateScenario = (str: string): Scenario | null => {
         settings: demodSettings(settings),
         gravityPoints: gravityPoints
           ? gravityPoints.split("\u0001").map(demodGravityPoint)
-          : [],
+          : undefined,
         particles: particles
           ? particles.split("\u0001").map(demodParticle)
-          : [],
+          : undefined,
       },
     };
   } catch (e) {
