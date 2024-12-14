@@ -64,11 +64,10 @@ export const ParticleRenderer: React.FC<ParticleRendererProps> = ({
     }
 
     scope.view.onFrame = () => {
-      if (isPausedRef.current) return;
-
       const currentParticles = particlesRef.current;
       if (!currentParticles || !layerRef.current) return;
 
+      // Clean up removed particles regardless of pause state
       const currentParticleIds = new Set(currentParticles.map((p) => p.id));
       trailsRef.current.forEach((trail, id) => {
         if (!currentParticleIds.has(id)) {
@@ -88,14 +87,14 @@ export const ParticleRenderer: React.FC<ParticleRendererProps> = ({
           size = 10,
           mass = 0.1,
         } = particle;
-        const isNegativeMass = mass < 0;
 
+        // Always create new particles, even when paused
         if (!trailsRef.current.has(id)) {
           const path: ParticleTrail["path"] = new scope.Path({
             strokeColor: color,
             strokeWidth: 0,
             strokeCap: "round",
-            dashArray: isNegativeMass ? [4, 4] : null,
+            dashArray: mass < 0 ? [4, 4] : null,
           });
 
           const segmentPaths: paper.Path[] = [];
@@ -106,7 +105,7 @@ export const ParticleRenderer: React.FC<ParticleRendererProps> = ({
               strokeWidth: 0,
               opacity: 0,
               strokeCap: "round",
-              dashArray: isNegativeMass ? [4, 4] : null,
+              dashArray: mass < 0 ? [4, 4] : null,
               visible: false,
             });
             layerRef.current?.addChild(segmentPath);
@@ -119,7 +118,7 @@ export const ParticleRenderer: React.FC<ParticleRendererProps> = ({
             strokeColor: color,
             strokeWidth: 2,
             fillColor: null,
-            dashArray: isNegativeMass ? [4, 4] : null,
+            dashArray: mass < 0 ? [4, 4] : null,
           });
           layerRef.current?.addChild(path.lastCircle);
           layerRef.current?.addChild(path);
@@ -129,36 +128,40 @@ export const ParticleRenderer: React.FC<ParticleRendererProps> = ({
 
         const trail = trailsRef.current.get(id)!;
 
-        trail.path.add(new Point(position.x, position.y));
-        if (trail.path.segments.length > maxTrailPointsRef.current) {
-          trail.path.removeSegments(
-            0,
-            trail.path.segments.length - maxTrailPointsRef.current
-          );
-        } else if (trail.path.segments.length < maxTrailPointsRef.current) {
-          const lastPosition = trail.path.lastSegment.point;
-          while (trail.path.segments.length < maxTrailPointsRef.current) {
-            trail.path.insert(0, lastPosition);
+        // Only update existing particles if not paused
+        if (!isPausedRef.current) {
+          trail.path.add(new Point(position.x, position.y));
+          if (trail.path.segments.length > maxTrailPointsRef.current) {
+            trail.path.removeSegments(
+              0,
+              trail.path.segments.length - maxTrailPointsRef.current
+            );
+          } else if (trail.path.segments.length < maxTrailPointsRef.current) {
+            const lastPosition = trail.path.lastSegment.point;
+            while (trail.path.segments.length < maxTrailPointsRef.current) {
+              trail.path.insert(0, lastPosition);
+            }
           }
+
+          const segments = trail.path.segments;
+          const totalSegments = segments.length - 1;
+
+          trail.segmentPaths.forEach((segmentPath, i) => {
+            if (i < totalSegments) {
+              segmentPath.visible = true;
+              segmentPath.segments[0].point = segments[i].point;
+              segmentPath.segments[1].point = segments[i + 1].point;
+
+              const progress = i / totalSegments;
+              segmentPath.strokeWidth = size * 1.2 * progress;
+              segmentPath.opacity = 0.3 * progress;
+            } else {
+              segmentPath.visible = false;
+            }
+          });
         }
 
-        const segments = trail.path.segments;
-        const totalSegments = segments.length - 1;
-
-        trail.segmentPaths.forEach((segmentPath, i) => {
-          if (i < totalSegments) {
-            segmentPath.visible = true;
-            segmentPath.segments[0].point = segments[i].point;
-            segmentPath.segments[1].point = segments[i + 1].point;
-
-            const progress = i / totalSegments;
-            segmentPath.strokeWidth = size * 1.2 * progress;
-            segmentPath.opacity = 0.3 * progress;
-          } else {
-            segmentPath.visible = false;
-          }
-        });
-
+        // Always update particle circle position
         if (trail.path.lastCircle) {
           trail.path.lastCircle.position = new Paper.Point(
             position.x,
@@ -166,26 +169,29 @@ export const ParticleRenderer: React.FC<ParticleRendererProps> = ({
           );
         }
 
-        trail.path.vectors?.forEach((vector) => vector.remove());
-        trail.path.vectors = [];
-        if (showVelocityArrowsRef.current) {
-          const velocityArrow = createArrow(
-            new Paper.Point(position.x, position.y),
-            particle.velocity,
-            "#4CAF50",
-            1
-          );
-          trail.path.vectors.push(velocityArrow);
-        }
+        // Update vectors if not paused
+        if (!isPausedRef.current) {
+          trail.path.vectors?.forEach((vector) => vector.remove());
+          trail.path.vectors = [];
+          if (showVelocityArrowsRef.current) {
+            const velocityArrow = createArrow(
+              new Paper.Point(position.x, position.y),
+              particle.velocity,
+              "#4CAF50",
+              1
+            );
+            trail.path.vectors.push(velocityArrow);
+          }
 
-        if (showForceArrowsRef.current) {
-          const forceArrow = createArrow(
-            new Paper.Point(position.x, position.y),
-            isNegativeMass ? particle.force.multiply(-1) : particle.force,
-            "#FF4081",
-            40
-          );
-          trail.path.vectors.push(forceArrow);
+          if (showForceArrowsRef.current) {
+            const forceArrow = createArrow(
+              new Paper.Point(position.x, position.y),
+              mass < 0 ? particle.force.multiply(-1) : particle.force,
+              "#FF4081",
+              40
+            );
+            trail.path.vectors.push(forceArrow);
+          }
         }
       });
 
