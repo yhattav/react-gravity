@@ -880,12 +880,13 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
               simulatorId={simulatorId}
             />
 
-            {!removeOverlay && physicsConfig.SHOW_GRAVITY_VISION && (
+            {!removeOverlay && (
               <GravityVision
                 scope={paperScope}
                 warpPoints={generateWarpPoints()}
                 settings={physicsConfig}
                 containerRef={gravityRef}
+                isPausedRef={isPausedRef}
               />
             )}
           </>
