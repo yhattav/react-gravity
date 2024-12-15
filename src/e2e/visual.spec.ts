@@ -36,7 +36,7 @@ test.describe("Gravity Simulator Visual Tests", () => {
   for (const scenario of scenarios) {
     test(`Screenshot test for ${scenario} scenario`, async ({ page }) => {
       // Navigate to the app
-      await page.goto("http://localhost:5173/");
+      await page.goto("http://localhost:4173/");
 
       // Wait for the app to be fully loaded
       await page.waitForSelector(".app-header");
