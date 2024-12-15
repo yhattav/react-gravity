@@ -24,12 +24,21 @@ npm run build
 
 # Start the preview server in the background
 echo "Starting preview server..."
-VITE_PORT=4173 npm run preview &
+VITE_PORT=4173 npm run preview -- --host &
 SERVER_PID=$!
 
-# Wait for the server to be ready (try both localhost and 127.0.0.1)
+# Add a small delay to let the server initialize
+sleep 5
+
+# Print server status for debugging
+echo "Server process status:"
+ps aux | grep preview
+echo "Port 4173 status:"
+netstat -tulpn | grep 4173 || true
+
+# Wait for the server to be ready
 echo "Waiting for server to be ready..."
-npx wait-on -t 30000 -v http://127.0.0.1:4173 http://localhost:4173
+npx wait-on -v -t 60000 http://localhost:4173
 
 # Update the snapshots
 echo "Updating snapshots..."
