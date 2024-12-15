@@ -13,7 +13,7 @@ test.describe("Gravity Simulator Visual Tests", () => {
     "Binary Pulsar",
   ];
 
-  test("Main app layout visual test", async ({ page }) => {
+  test("Main app layout visual test", async ({ page, browserName }) => {
     // Navigate to the app
     await page.goto("/");
 
@@ -30,13 +30,18 @@ test.describe("Gravity Simulator Visual Tests", () => {
       animations: "disabled",
     });
 
-    await expect(screenshot).toMatchSnapshot("main-app-layout.png");
+    await expect(screenshot).toMatchSnapshot(
+      `main-app-layout-${browserName}.png`
+    );
   });
 
   for (const scenario of scenarios) {
-    test(`Screenshot test for ${scenario} scenario`, async ({ page }) => {
+    test(`Screenshot test for ${scenario} scenario`, async ({
+      page,
+      browserName,
+    }) => {
       // Navigate to the app
-      await page.goto("http://localhost:4173/");
+      await page.goto("/");
 
       // Wait for the app to be fully loaded
       await page.waitForSelector(".app-header");
@@ -63,7 +68,9 @@ test.describe("Gravity Simulator Visual Tests", () => {
 
       // Compare with baseline
       await expect(screenshot).toMatchSnapshot(
-        `scenario-${scenario.toLowerCase().replace(/\s+/g, "-")}.png`
+        `scenario-${scenario
+          .toLowerCase()
+          .replace(/\s+/g, "-")}-${browserName}.png`
       );
     });
   }
