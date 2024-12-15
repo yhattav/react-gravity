@@ -13,6 +13,14 @@ test.describe("Gravity Simulator Visual Tests", () => {
     "Binary Pulsar",
   ];
 
+  // Helper function to get platform suffix
+  const getPlatformSuffix = () => {
+    if (process.platform === "linux") return "-linux";
+    if (process.platform === "darwin") return "-darwin";
+    if (process.platform === "win32") return "-windows";
+    return "";
+  };
+
   test("Main app layout visual test", async ({ page, browserName }) => {
     // Navigate to the app
     await page.goto("/");
@@ -31,7 +39,7 @@ test.describe("Gravity Simulator Visual Tests", () => {
     });
 
     await expect(screenshot).toMatchSnapshot(
-      `main-app-layout-${browserName}.png`
+      `main-app-layout-${browserName}${getPlatformSuffix()}.png`
     );
   });
 
@@ -70,7 +78,7 @@ test.describe("Gravity Simulator Visual Tests", () => {
       await expect(screenshot).toMatchSnapshot(
         `scenario-${scenario
           .toLowerCase()
-          .replace(/\s+/g, "-")}-${browserName}.png`
+          .replace(/\s+/g, "-")}-${browserName}${getPlatformSuffix()}.png`
       );
     });
   }
