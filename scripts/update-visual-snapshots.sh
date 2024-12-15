@@ -24,12 +24,12 @@ npm run build
 
 # Start the preview server in the background
 echo "Starting preview server..."
-npm run preview &
+VITE_PORT=4173 npm run preview &
 SERVER_PID=$!
 
-# Wait for the server to be ready
+# Wait for the server to be ready (try both localhost and 127.0.0.1)
 echo "Waiting for server to be ready..."
-npx wait-on http://localhost:4173/react-gravity/
+npx wait-on -t 30000 -v http://127.0.0.1:4173 http://localhost:4173
 
 # Update the snapshots
 echo "Updating snapshots..."
