@@ -36,31 +36,35 @@ export const ParticleRenderer: React.FC<ParticleRendererProps> = ({
   const showVelocityArrowsRef = useRef(settings.SHOW_VELOCITY_ARROWS);
 
   useEffect(() => {
-    maxTrailPointsRef.current = settings.PARTICLE_TRAIL_LENGTH;
     showForceArrowsRef.current = settings.SHOW_FORCE_ARROWS;
     showVelocityArrowsRef.current = settings.SHOW_VELOCITY_ARROWS;
 
     // When trail length changes, we need to update segment paths
-    trailsRef.current.forEach((trail) => {
-      // Remove existing segment paths
-      trail.segmentPaths.forEach((path) => path.remove());
-      trail.segmentPaths.length = 0;
+    if (maxTrailPointsRef.current !== settings.PARTICLE_TRAIL_LENGTH) {
+      maxTrailPointsRef.current = settings.PARTICLE_TRAIL_LENGTH;
+      trailsRef.current.forEach((trail) => {
+        // Remove existing segment paths
 
-      // Create new segment paths with the updated length
-      for (let i = 0; i < maxTrailPointsRef.current - 1; i++) {
-        const segmentPath = new scope.Path({
-          segments: [new Point(0, 0), new Point(0, 0)],
-          strokeColor: trail.path.strokeColor,
-          strokeWidth: 0,
-          opacity: 0,
-          strokeCap: "round",
-          dashArray: trail.path.dashArray,
-          visible: false,
-        });
-        layerRef.current?.addChild(segmentPath);
-        trail.segmentPaths.push(segmentPath);
-      }
-    });
+        trail.segmentPaths.forEach((path) => path.remove());
+        trail.segmentPaths.length = 0;
+
+        // Create new segment paths with the updated length
+        for (let i = 0; i < maxTrailPointsRef.current - 1; i++) {
+          const segmentPath = new scope.Path({
+            segments: [new Point(0, 0), new Point(0, 0)],
+            strokeColor: trail.path.strokeColor,
+            strokeWidth: 0,
+            opacity: 0,
+            strokeCap: "round",
+            dashArray: trail.path.dashArray,
+            visible: false,
+          });
+          console.log(1);
+          layerRef.current?.addChild(segmentPath);
+          trail.segmentPaths.push(segmentPath);
+        }
+      });
+    }
   }, [settings, scope]);
 
   useEffect(() => {
