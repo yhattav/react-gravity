@@ -31,9 +31,27 @@ jobs:
 
       - name: Start the app and run tests
         run: |
-          npm run dev & # Start the dev server in background
-          npx wait-on http://localhost:5173 # Wait for the server to be ready
+          # Kill any process using port 5173
+          lsof -t -i:5173 | xargs -r kill -9 || true
+
+          # Start the dev server in background
+          npm run preview & # Use preview instead of dev for production build
+          SERVER_PID=$!
+
+          # Wait for the server to be ready
+          npx wait-on http://localhost:5173
+
+          # Run the tests
           npx playwright test
+
+          # Store the test exit code
+          TEST_EXIT_CODE=$?
+
+          # Kill the server
+          kill $SERVER_PID || true
+
+          # Exit with the test exit code
+          exit $TEST_EXIT_CODE
         env:
           CI: true
 
