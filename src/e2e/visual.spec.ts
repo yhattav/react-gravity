@@ -14,7 +14,10 @@ test.describe("Gravity Simulator Visual Tests", () => {
   ];
 
   test("Main app layout visual test", async ({ page }) => {
-    await page.goto("http://localhost:5173/");
+    // Navigate to the app
+    await page.goto("/");
+
+    // Wait for the app to be fully loaded
     await page.waitForSelector(".app-header");
 
     // Pause the simulation immediately
