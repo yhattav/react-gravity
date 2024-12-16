@@ -13,12 +13,12 @@ test.describe("Gravity Simulator Visual Tests", () => {
     "Binary Pulsar",
   ];
 
-  // Helper function to get platform suffix
-  const getPlatformSuffix = () => {
-    if (process.platform === "linux") return "-linux";
-    if (process.platform === "darwin") return "-darwin";
-    if (process.platform === "win32") return "-windows";
-    return "";
+  const getSnapshotName = (name: string, browserName: string) => {
+    // In CI (Linux), Playwright adds -linux suffix
+    const platformSuffix = process.env.CI
+      ? `-${browserName}-linux`
+      : `-${browserName}`;
+    return `${name}${platformSuffix}.png`;
   };
 
   test("Main app layout visual test", async ({ page, browserName }) => {
@@ -39,7 +39,7 @@ test.describe("Gravity Simulator Visual Tests", () => {
     });
 
     await expect(screenshot).toMatchSnapshot(
-      `main-app-layout-${browserName}${getPlatformSuffix()}.png`
+      getSnapshotName("main-app-layout", browserName)
     );
   });
 
@@ -75,11 +75,12 @@ test.describe("Gravity Simulator Visual Tests", () => {
       });
 
       // Compare with baseline
-      await expect(screenshot).toMatchSnapshot(
-        `scenario-${scenario
-          .toLowerCase()
-          .replace(/\s+/g, "-")}-${browserName}${getPlatformSuffix()}.png`
+      const snapshotName = getSnapshotName(
+        `scenario-${scenario.toLowerCase().replace(/\s+/g, "-")}`,
+        browserName
       );
+
+      await expect(screenshot).toMatchSnapshot(snapshotName);
     });
   }
 });
