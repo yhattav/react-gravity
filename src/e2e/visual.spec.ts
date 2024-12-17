@@ -13,15 +13,12 @@ test.describe("Gravity Simulator Visual Tests", () => {
     "Binary Pulsar",
   ];
 
-  const getSnapshotName = (name: string, browserName: string) => {
-    // In CI (Linux), Playwright adds -linux suffix
-    const platformSuffix = process.env.CI
-      ? `-${browserName}-linux`
-      : `-${browserName}`;
-    return `${name}${platformSuffix}.png`;
+  const getSnapshotName = (name: string) => {
+    // Since we're only using Chromium, we don't need browser-specific names
+    return `${name}-chromium.png`;
   };
 
-  test("Main app layout visual test", async ({ page, browserName }) => {
+  test("Main app layout visual test", async ({ page }) => {
     // Navigate to the app
     await page.goto("/");
 
@@ -39,15 +36,12 @@ test.describe("Gravity Simulator Visual Tests", () => {
     });
 
     await expect(screenshot).toMatchSnapshot(
-      getSnapshotName("main-app-layout", browserName)
+      getSnapshotName("main-app-layout")
     );
   });
 
   for (const scenario of scenarios) {
-    test(`Screenshot test for ${scenario} scenario`, async ({
-      page,
-      browserName,
-    }) => {
+    test(`Screenshot test for ${scenario} scenario`, async ({ page }) => {
       // Navigate to the app
       await page.goto("/");
 
@@ -76,8 +70,7 @@ test.describe("Gravity Simulator Visual Tests", () => {
 
       // Compare with baseline
       const snapshotName = getSnapshotName(
-        `scenario-${scenario.toLowerCase().replace(/\s+/g, "-")}`,
-        browserName
+        `scenario-${scenario.toLowerCase().replace(/\s+/g, "-")}`
       );
 
       await expect(screenshot).toMatchSnapshot(snapshotName);
