@@ -2,3 +2,5 @@ node_modules
 dist
 *storybook.log
 storybook-static/
+playwright-report/
+test-results/
