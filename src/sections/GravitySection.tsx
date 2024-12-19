@@ -2,7 +2,7 @@ import React, { useRef, useCallback } from "react";
 import { CustomCursor } from "@yhattav/react-component-cursor";
 import { Card } from "antd";
 import { DebugData } from "../types/Debug";
-import { GravitySimulatorWithSettings } from "../components/GravitySimulatorWithSettings/GravitySimulatorWithSettings";
+// import { GravitySimulatorWithSettings } from "../components/GravitySimulatorWithSettings/GravitySimulatorWithSettings";
 import { Point } from "paper";
 import { Vector } from "../utils/types/physics";
 
@@ -52,12 +52,12 @@ export const GravitySection: React.FC<GravitySectionProps> = ({
         <div style={{ width: "100%", height: "100%" }} />
       </CustomCursor>
 
-      <GravitySimulatorWithSettings
+      {/* <GravitySimulatorWithSettings
         simulatorId="gravity-main-section"
         gravityRef={gravityRef}
         pointerPosRef={pointerPosRef}
         onDebugData={onDebugData}
-      />
+      /> */}
     </Card>
   );
 };

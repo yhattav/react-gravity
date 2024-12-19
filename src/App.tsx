@@ -10,7 +10,7 @@ import { GravitySection } from "./sections/GravitySection";
 import { DebugInfo } from "./components/DebugInfo";
 import { DebugData } from "./types/Debug";
 import "./App.css";
-// import { ReactLogoIcon } from "./components/ReactLogoIcon/ReactLogoIcon";
+import { ReactLogoIcon } from "./components/ReactLogoIcon/ReactLogoIcon";
 import "./styles/mobile.scss";
 import { debounce } from "lodash";
 
@@ -58,7 +58,7 @@ function App() {
       <Header className="app-header">
         <div className="header-content">
           <div style={{ display: "flex", alignItems: "center" }}>
-            {/* <ReactLogoIcon /> */}
+            <ReactLogoIcon />
             <h1 className="app-title">Gravity Simulator</h1>
           </div>
           <div className="header-icons">
