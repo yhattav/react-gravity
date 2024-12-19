@@ -687,8 +687,8 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
   const audioFiles = useMemo(
     () => [
-      "/assets/audio/ambient1.mp3",
       "/assets/audio/ambient2.mp3",
+      "/assets/audio/ambient1.mp3",
       "/assets/audio/ambient3.mp3",
     ],
     []
@@ -784,7 +784,10 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
               alignItems: "center",
             }}
           >
-            <MusicPlayer audioFiles={audioFiles} />
+            <MusicPlayer
+              audioFiles={audioFiles}
+              shouldPlay={isSimulationStarted && !isPaused}
+            />
             <motion.button
               onClick={(e) => {
                 e.stopPropagation();
