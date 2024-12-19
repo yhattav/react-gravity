@@ -19,7 +19,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:visual:update-snapshots": "bash ./scripts/update-visual-snapshots.sh",
-    "test:visual:update-snapshots:docker": "bash ./scripts/docker-test.sh"
+    "test:visual:update-snapshots:docker": "bash ./scripts/docker-test.sh",
+    "test:visual:compare": "bash ./scripts/docker-test-compare.sh"
   },
   "dependencies": {
     "@ant-design/icons": "^5.3.0",
