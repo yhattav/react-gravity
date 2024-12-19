@@ -14,21 +14,37 @@ test.describe("Gravity Simulator Visual Tests", () => {
   ];
 
   const getSnapshotName = (name: string) => {
-    // Since we're only using Chromium, we don't need browser-specific names
     return `${name}-chromium.png`;
   };
 
-  test("Main app layout visual test", async ({ page }) => {
-    // Navigate to the app
+  test.beforeEach(async ({ page }) => {
+    // Navigate to the app and verify critical elements
     await page.goto("/");
 
-    // Wait for the app to be fully loaded
-    await page.waitForSelector(".app-header");
+    // Wait for the app to be fully loaded with timeout
+    await expect(page.locator(".app-header")).toBeVisible({ timeout: 5000 });
 
+    // Verify that the Pause button exists
+    const pauseButton = page.locator(
+      'button.floating-button[title="Pause Simulation"]'
+    );
+    await expect(pauseButton).toBeVisible({ timeout: 5000 });
+
+    // Verify that the Scenarios button exists
+    const scenariosButton = page.locator(
+      'button.floating-button[title="Scenarios"]'
+    );
+    await expect(scenariosButton).toBeVisible({ timeout: 5000 });
+  });
+
+  test("Main app layout visual test", async ({ page }) => {
     // Pause the simulation immediately
     await page
       .locator('button.floating-button[title="Pause Simulation"]')
       .click();
+
+    // Wait for any animations to settle
+    await page.waitForTimeout(500);
 
     const screenshot = await page.screenshot({
       fullPage: true,
@@ -42,24 +58,20 @@ test.describe("Gravity Simulator Visual Tests", () => {
 
   for (const scenario of scenarios) {
     test(`Screenshot test for ${scenario} scenario`, async ({ page }) => {
-      // Navigate to the app
-      await page.goto("/");
-
-      // Wait for the app to be fully loaded
-      await page.waitForSelector(".app-header");
-
       // Pause the simulation first
       await page
         .locator('button.floating-button[title="Pause Simulation"]')
         .click();
 
-      // Click the scenarios button using the correct class
+      // Click the scenarios button
       await page.locator('button.floating-button[title="Scenarios"]').click();
 
-      // Wait for scenario list to appear and click the specific scenario
-      await page.getByText(scenario, { exact: true }).click();
+      // Wait for scenario list and verify the specific scenario exists
+      const scenarioElement = page.getByText(scenario, { exact: true });
+      await expect(scenarioElement).toBeVisible({ timeout: 5000 });
+      await scenarioElement.click();
 
-      // Short wait to ensure scenario is loaded but before any movement
+      // Wait for scenario to load and settle
       await page.waitForTimeout(500);
 
       // Take a screenshot

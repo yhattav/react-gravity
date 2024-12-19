@@ -8,7 +8,7 @@ on:
 
 jobs:
   visual-tests:
-    timeout-minutes: 60
+    timeout-minutes: 30
     runs-on: ubuntu-latest
 
     steps:
@@ -22,12 +22,15 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+        timeout-minutes: 10
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+        run: npx playwright install --with-deps chromium
+        timeout-minutes: 5
 
       - name: Build the app
         run: npm run build
+        timeout-minutes: 5
 
       - name: Check for existing snapshots
         id: check-snapshots
@@ -39,12 +42,13 @@ jobs:
           fi
 
       - name: Start the app and run tests
+        timeout-minutes: 10
         run: |
           # Kill any process using port 4173
           lsof -t -i:4173 | xargs -r kill -9 || true
 
           # Start the preview server in background with host flag
-          VITE_PORT=4173 npm run preview -- --host &
+          npm run preview -- --host &
           SERVER_PID=$!
 
           # Add a small delay to let the server initialize
@@ -56,17 +60,17 @@ jobs:
           echo "Port 4173 status:"
           netstat -tulpn | grep 4173 || true
 
-          # Wait for the server to be ready
-          npx wait-on -v -t 60000 http://localhost:4173
+          # Wait for the server to be ready with timeout
+          npx wait-on -v -t 30000 http://localhost:4173
 
           if [ "${{ steps.check-snapshots.outputs.has_snapshots }}" = "false" ]; then
             # Generate snapshots if they don't exist
             echo "Generating initial snapshots..."
-            npx playwright test --update-snapshots
+            npx playwright test --update-snapshots --timeout 30000
           else
             # Run normal tests if snapshots exist
             echo "Running tests against existing snapshots..."
-            npx playwright test
+            npx playwright test --timeout 30000
           fi
 
           # Store the test exit code
@@ -79,6 +83,7 @@ jobs:
           exit $TEST_EXIT_CODE
         env:
           CI: true
+          PLAYWRIGHT_SKIP_BROWSER_SANDBOX: 1
 
       - name: Upload test results
         if: always()
