@@ -742,7 +742,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           left: 0,
           width: "100%",
           height: "100%",
-          background: "red",
+          background: "linear-gradient(45deg, #1a1a1a, #2a2a2a)",
           zIndex: 1,
           touchAction: "none", // Prevent default touch behaviors
         }}
