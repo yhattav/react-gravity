@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import * as Tone from "tone";
-import { BsMusicNote, BsMusicNoteBeamed } from "react-icons/bs";
+import { MdMusicNote, MdMusicOff } from "react-icons/md";
 import { motion } from "framer-motion";
 
 interface MusicPlayerProps {
@@ -15,7 +15,6 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = React.memo(
     const playerRef = useRef<Tone.Player | null>(null);
     const currentTrackIndex = 0; // Simplified to always play first track for now
     const hasStartedRef = useRef(false);
-    const initialStartDoneRef = useRef(false);
 
     const startPlayback = useCallback(async () => {
       if (!playerRef.current || !isLoaded) return;
@@ -54,11 +53,10 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = React.memo(
       }
     }, [isLoaded]);
 
-    // Handle initial shouldPlay trigger only
+    // Handle shouldPlay prop changes
     useEffect(() => {
-      if (shouldPlay && !initialStartDoneRef.current && isLoaded) {
+      if (shouldPlay && !hasStartedRef.current && isLoaded) {
         startPlayback();
-        initialStartDoneRef.current = true;
       }
     }, [shouldPlay, isLoaded, startPlayback]);
 
@@ -124,26 +122,29 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = React.memo(
           playerRef.current = null;
           setIsLoaded(false);
           hasStartedRef.current = false;
-          initialStartDoneRef.current = false;
         }
       };
     }, [initializePlayer]);
 
-    const togglePlayback = useCallback(async () => {
-      if (!playerRef.current || !isLoaded) {
-        console.log("Music player not ready:", {
-          current: playerRef.current,
-          isLoaded,
-        });
-        return;
-      }
+    const togglePlayback = useCallback(
+      async (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.stopPropagation();
+        if (!playerRef.current || !isLoaded) {
+          console.log("Music player not ready:", {
+            current: playerRef.current,
+            isLoaded,
+          });
+          return;
+        }
 
-      if (isPlaying) {
-        await pausePlayback();
-      } else {
-        await startPlayback();
-      }
-    }, [isPlaying, isLoaded, startPlayback, pausePlayback]);
+        if (isPlaying) {
+          await pausePlayback();
+        } else {
+          await startPlayback();
+        }
+      },
+      [isPlaying, isLoaded, startPlayback, pausePlayback]
+    );
 
     return (
       <motion.button
@@ -155,11 +156,7 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = React.memo(
         disabled={!isLoaded}
         style={{ opacity: isLoaded ? 1 : 0.5 }}
       >
-        {isPlaying ? (
-          <BsMusicNoteBeamed size={20} />
-        ) : (
-          <BsMusicNote size={20} />
-        )}
+        {isPlaying ? <MdMusicOff size={20} /> : <MdMusicNote size={20} />}
       </motion.button>
     );
   }
