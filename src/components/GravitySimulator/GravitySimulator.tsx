@@ -786,7 +786,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           >
             <MusicPlayer
               audioFiles={audioFiles}
-              shouldPlay={isSimulationStarted && !isPaused}
+              shouldPlay={isSimulationStarted}
             />
             <motion.button
               onClick={(e) => {
