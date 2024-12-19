@@ -1,4 +1,10 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  useMemo,
+} from "react";
 import {
   Point2D,
   GravityPoint,
@@ -52,6 +58,7 @@ import {
 } from "../../utils/types/path";
 import { PathRenderer } from "../PathRenderer/PathRenderer";
 import { PaperCanvas } from "../PaperCanvas/PaperCanvas";
+import { MusicPlayer } from "../MusicPlayer/MusicPlayer";
 
 const generatePastelColor = () => {
   const r = Math.floor(Math.random() * 75 + 180);
@@ -678,6 +685,15 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     isPausedRef.current = isPaused;
   }, [isPaused]);
 
+  const audioFiles = useMemo(
+    () => [
+      "/assets/audio/ambient2.mp3",
+      "/assets/audio/ambient1.mp3",
+      "/assets/audio/ambient3.mp3",
+    ],
+    []
+  );
+
   const content = (
     <>
       <style>
@@ -768,6 +784,10 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
               alignItems: "center",
             }}
           >
+            <MusicPlayer
+              audioFiles={audioFiles}
+              shouldPlay={isSimulationStarted}
+            />
             <motion.button
               onClick={(e) => {
                 e.stopPropagation();
