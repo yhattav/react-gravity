@@ -491,6 +491,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   const handleSelectScenario = useCallback(
     (scenario: Scenario) => {
       // First pause the simulation
+      const isCurrentlyPaused = isPaused;
       setIsPaused(true);
 
       // Trigger reset for all renderers
@@ -531,11 +532,11 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           setShouldResetRenderer(false);
           setIsSimulationStarted(true);
           setIsScenarioPanelOpen(false);
-          setIsPaused(false);
+          setIsPaused(isCurrentlyPaused);
         });
       });
     },
-    [updateSettings]
+    [updateSettings, isPaused]
   );
 
   const handleSettingsPanelToggle = useCallback((e: React.MouseEvent) => {

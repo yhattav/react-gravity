@@ -1,0 +1,96 @@
+name: Visual Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  visual-tests:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+        timeout-minutes: 10
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        timeout-minutes: 5
+
+      - name: Build the app
+        run: npm run build
+        timeout-minutes: 5
+
+      - name: Verify snapshots exist
+        id: check-snapshots
+        run: |
+          if [ ! -d "src/e2e/visual.spec.ts-snapshots" ]; then
+            echo "❌ Error: No snapshot directory found. Please run 'npm run test:visual:update-snapshots:docker' locally first and commit the snapshots."
+            exit 1
+          fi
+          echo "✅ Snapshot directory found"
+
+      - name: Start the app and run tests
+        timeout-minutes: 10
+        run: |
+          # Kill any process using port 4173
+          lsof -t -i:4173 | xargs -r kill -9 || true
+
+          # Start the preview server in background with host flag
+          npm run preview -- --host &
+          SERVER_PID=$!
+
+          # Add a small delay to let the server initialize
+          sleep 5
+
+          # Print server status for debugging
+          echo "Server process status:"
+          ps aux | grep preview
+          echo "Port 4173 status:"
+          netstat -tulpn | grep 4173 || true
+
+          # Wait for the server to be ready with timeout
+          npx wait-on -v -t 30000 http://localhost:4173
+
+          # Run tests against existing snapshots (never update)
+          echo "Running visual comparison tests..."
+          npx playwright test --timeout 30000 --reporter=list,html
+
+          # Store the test exit code
+          TEST_EXIT_CODE=$?
+
+          # Kill the server
+          kill $SERVER_PID || true
+
+          # Exit with the test exit code
+          exit $TEST_EXIT_CODE
+        env:
+          CI: true
+          PLAYWRIGHT_SKIP_BROWSER_SANDBOX: 1
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Upload snapshot diffs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapshot-diffs
+          path: test-results/
+          retention-days: 30
