@@ -7,8 +7,8 @@ import {
 } from "../../utils/types/physics";
 import { GravityPointComponent } from "../GravityPoint/GravityPoint";
 import { ParticleRenderer } from "../ParticleRenderer/ParticleRenderer";
-import { StarPalette } from "../StarPalette/StarPalette";
-import { StarTemplate } from "../../types/star";
+// import { StarPalette } from "../StarPalette/StarPalette";
+// import { StarTemplate } from "../../types/star";
 import {
   calculateTotalForce,
   calculateAcceleration,
@@ -134,7 +134,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       INITIAL_GRAVITY_POINTS
   );
   const [isDragging, setIsDragging] = useState(false);
-  const [isDraggingNewStar, setIsDraggingNewStar] = useState(false);
+  const [isDraggingNewStar] = useState(false);
   const {
     settings: physicsConfig,
     updateSettings,
@@ -398,42 +398,42 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     });
   }, [particles, pointerPosRef, onDebugData]);
 
-  const handleStarDragStart = useCallback(() => {
-    if (blockInteractions) return;
-    setIsDraggingNewStar(true);
-  }, [blockInteractions]);
+  // const handleStarDragStart = useCallback(() => {
+  //   if (blockInteractions) return;
+  //   setIsDraggingNewStar(true);
+  // }, [blockInteractions]);
 
-  const handleStarDragEnd = useCallback(
-    (template: StarTemplate, e: MouseEvent | TouchEvent | PointerEvent) => {
-      if (blockInteractions) return;
-      setIsDraggingNewStar(false);
-      if (gravityRef.current) {
-        const rect = gravityRef.current.getBoundingClientRect();
-        const clientX =
-          "clientX" in e ? e.clientX : (e as TouchEvent).touches[0].clientX;
-        const clientY =
-          "clientY" in e ? e.clientY : (e as TouchEvent).touches[0].clientY;
+  // const handleStarDragEnd = useCallback(
+  //   (template: StarTemplate, e: MouseEvent | TouchEvent | PointerEvent) => {
+  //     if (blockInteractions) return;
+  //     setIsDraggingNewStar(false);
+  //     if (gravityRef.current) {
+  //       const rect = gravityRef.current.getBoundingClientRect();
+  //       const clientX =
+  //         "clientX" in e ? e.clientX : (e as TouchEvent).touches[0].clientX;
+  //       const clientY =
+  //         "clientY" in e ? e.clientY : (e as TouchEvent).touches[0].clientY;
 
-        const x = clientX - rect.left;
-        const y = clientY - rect.top;
+  //       const x = clientX - rect.left;
+  //       const y = clientY - rect.top;
 
-        if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
-          setGravityPoints((points) => [
-            ...points,
-            {
-              id: Math.random().toString(36).substr(2, 9),
-              position: new Point(x, y),
-              label: template.label,
-              mass: template.mass,
-            },
-          ]);
-        }
-      }
+  //       if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
+  //         setGravityPoints((points) => [
+  //           ...points,
+  //           {
+  //             id: Math.random().toString(36).substr(2, 9),
+  //             position: new Point(x, y),
+  //             label: template.label,
+  //             mass: template.mass,
+  //           },
+  //         ]);
+  //       }
+  //     }
 
-      setIsDraggingNewStar(false);
-    },
-    [gravityRef, blockInteractions]
-  );
+  //     setIsDraggingNewStar(false);
+  //   },
+  //   [gravityRef, blockInteractions]
+  // );
 
   const handlePointDelete = useCallback((index: number) => {
     setGravityPoints((currentPoints) => {
@@ -837,13 +837,13 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           </div>
         )}
 
-        {!removeOverlay && (
+        {/* {!removeOverlay && (
           <StarPalette
             onStarDragStart={handleStarDragStart}
             onStarDragEnd={handleStarDragEnd}
             containerRef={gravityRef}
           />
-        )}
+        )} */}
 
         {gravityPoints.map((point, index) => (
           <GravityPointComponent
