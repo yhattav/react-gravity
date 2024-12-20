@@ -2,6 +2,10 @@
 
 An interactive gravity simulation built with React, TypeScript, and Vite. This project demonstrates particle physics interactions with gravitational forces in a web browser.
 
+## Live Demo
+
+[React Gravity Simulator](https://yonatanhf.github.io/react-gravity/)
+
 ## Features
 
 - Real-time gravity simulation
