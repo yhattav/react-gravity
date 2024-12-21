@@ -208,33 +208,44 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   useEffect(() => {
     if (disableSound || !audioManager) return;
 
-    // Keep track of current particles
+    // Get current particle IDs
     const currentParticleIds = new Set(
       particles.map((p) => p.id).filter(Boolean)
     );
 
+    // Get existing sound effect IDs
+    const existingSoundEffectIds = new Set(
+      audioManager.getActiveSoundEffectIds()
+    );
+
+    // Remove sound effects for particles that no longer exist
+    existingSoundEffectIds.forEach((effectId) => {
+      if (!currentParticleIds.has(effectId)) {
+        audioManager.removeSoundEffect(effectId);
+      }
+    });
+
     // Add sound effects for new particles
     particles.forEach((particle) => {
       if (!particle.id) return;
-
-      // Add sound effect for the particle if it doesn't already exist
-      audioManager.addParticleSoundEffect(particle.id, {
-        volume: -100, // Start silent
-        frequency: 0, // Start with no frequency
-      });
+      if (!existingSoundEffectIds.has(particle.id)) {
+        audioManager.addParticleSoundEffect(particle.id, {
+          volume: -100, // Start silent
+          frequency: 0, // Start with no frequency
+        });
+      }
     });
 
-    // Cleanup function to remove sound effects for removed particles
+    // Cleanup on unmount or when disableSound changes
     return () => {
-      // Remove sound effects for particles that no longer exist
-      const activeEffectIds = audioManager.getActiveSoundEffectIds();
-      activeEffectIds.forEach((effectId) => {
-        if (!currentParticleIds.has(effectId)) {
-          audioManager.removeSoundEffect(effectId);
-        }
-      });
+      if (disableSound) {
+        // Remove all sound effects when sound is disabled
+        audioManager.getActiveSoundEffectIds().forEach((id) => {
+          audioManager.removeSoundEffect(id);
+        });
+      }
     };
-  }, [particles.length, audioManager, disableSound]); // Only run when particles array length changes
+  }, [particles, audioManager, disableSound]); // Run whenever particles array changes
 
   // Update sound effect parameters based on particle properties
   useEffect(() => {
