@@ -59,6 +59,7 @@ import {
 import { PathRenderer } from "../PathRenderer/PathRenderer";
 import { PaperCanvas } from "../PaperCanvas/PaperCanvas";
 import { MusicPlayer } from "../MusicPlayer/MusicPlayer";
+import { AudioManager } from "../../utils/audio/AudioManager";
 
 const generatePastelColor = () => {
   const r = Math.floor(Math.random() * 75 + 180);
@@ -169,6 +170,37 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     initialScenario?.data.paths?.map(toSimulatorPath) || []
   );
   const [paperScope, setPaperScope] = useState<paper.PaperScope | null>(null);
+  const [audioManager] = useState(() => AudioManager.getInstance());
+  const [isAudioLoaded, setIsAudioLoaded] = useState(false);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+
+  useEffect(() => {
+    const initAudio = async () => {
+      await audioManager.initialize(audioFiles);
+    };
+    initAudio();
+
+    return () => {
+      audioManager.cleanup();
+    };
+  }, [audioManager]);
+
+  useEffect(() => {
+    if (firstInteractionDetected && audioManager.getIsLoaded()) {
+      setIsAudioLoaded(audioManager.getIsLoaded());
+      audioManager.play();
+      setIsAudioPlaying(true);
+    }
+  }, [firstInteractionDetected, audioManager]);
+
+  const handleAudioToggle = useCallback(
+    async (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      await audioManager.togglePlayback();
+      setIsAudioPlaying(audioManager.getIsPlaying());
+    },
+    [audioManager]
+  );
 
   useEffect(() => {
     const updateOffset = () => {
@@ -793,8 +825,9 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             }}
           >
             <MusicPlayer
-              audioFiles={audioFiles}
-              shouldPlay={firstInteractionDetected}
+              isPlaying={isAudioPlaying}
+              isLoaded={isAudioLoaded}
+              onToggle={handleAudioToggle}
             />
             <motion.button
               onClick={(e) => {
