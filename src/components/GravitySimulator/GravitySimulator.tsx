@@ -204,7 +204,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     }
   }, [firstInteractionDetected, audioManager, disableSound]);
 
-  // Track particle oscillators
+  // Track particle sound effects
   useEffect(() => {
     if (disableSound || !audioManager) return;
 
@@ -213,32 +213,30 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       particles.map((p) => p.id).filter(Boolean)
     );
 
-    // Add oscillators for new particles
+    // Add sound effects for new particles
     particles.forEach((particle) => {
       if (!particle.id) return;
 
-      // Add oscillator for the particle if it doesn't already exist
-      audioManager.addOscillator(particle.id, {
-        type: "noise", // Use only noise
+      // Add sound effect for the particle if it doesn't already exist
+      audioManager.addParticleSoundEffect(particle.id, {
         volume: -100, // Start silent
-        noiseAmount: 1.0, // Full noise
         frequency: 0, // Start with no frequency
       });
     });
 
-    // Cleanup function to remove oscillators for removed particles
+    // Cleanup function to remove sound effects for removed particles
     return () => {
-      // Remove oscillators for particles that no longer exist
-      const activeOscillatorIds = audioManager.getOscillatorIds();
-      activeOscillatorIds.forEach((oscillatorId) => {
-        if (!currentParticleIds.has(oscillatorId)) {
-          audioManager.removeOscillator(oscillatorId);
+      // Remove sound effects for particles that no longer exist
+      const activeEffectIds = audioManager.getActiveSoundEffectIds();
+      activeEffectIds.forEach((effectId) => {
+        if (!currentParticleIds.has(effectId)) {
+          audioManager.removeSoundEffect(effectId);
         }
       });
     };
   }, [particles.length, audioManager, disableSound]); // Only run when particles array length changes
 
-  // Update oscillator parameters based on particle properties
+  // Update sound effect parameters based on particle properties
   useEffect(() => {
     if (disableSound || !audioManager) return;
 
@@ -256,7 +254,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
         if (velocityMagnitude < VELOCITY_THRESHOLD) {
           // Complete silence when nearly stationary
-          audioManager.updateOscillator(particle.id, {
+          audioManager.updateSoundEffect(particle.id, {
             frequency: 0,
             volume: -100,
           });
@@ -276,11 +274,11 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         // Calculate volume (-70dB to -40dB)
         // More velocity = louder, but with a soft cap
         const volume = -50 + Math.min(normalizedVelocity, 1) * 20;
-        // Update oscillator parameters
-        audioManager.updateOscillator(particle.id, {
+
+        // Update sound effect parameters
+        audioManager.updateSoundEffect(particle.id, {
           frequency,
           volume,
-          noiseAmount: 1.0, // Keep noise at maximum
         });
       });
     });
