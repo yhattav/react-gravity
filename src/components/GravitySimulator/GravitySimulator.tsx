@@ -245,26 +245,24 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       particles.forEach((particle) => {
         if (!particle.id) return;
 
-        // Calculate frequency based on velocity magnitude
-        const velocityMagnitude = Math.sqrt(
-          particle.velocity.x * particle.velocity.x +
-            particle.velocity.y * particle.velocity.y
+        // Calculate frequency based on force magnitude
+        const forceMagnitude = Math.sqrt(
+          particle.force.x * particle.force.x +
+            particle.force.y * particle.force.y
         );
 
-        // Map velocity to frequency range (220Hz - 880Hz)
-        const frequency = 220 + Math.min(velocityMagnitude * 2, 660);
+        // Map force to frequency range (220Hz - 880Hz)
+        // Using log scale for better auditory perception
+        // Adding a small value to avoid log(0)
+        const normalizedForce = Math.log(forceMagnitude + 0.1) * 100;
+        const frequency = 220 + Math.min(normalizedForce, 660);
 
-        // Calculate volume based on distance from center
-        const distanceFromCenter = Math.sqrt(
-          particle.position.x * particle.position.x +
-            particle.position.y * particle.position.y
-        );
-        const volume = Math.max(-50, -30 - distanceFromCenter / 20);
+        // Calculate volume based on force magnitude
+        // Louder when force is stronger
 
         // Update oscillator parameters
         audioManager.updateOscillator(particle.id, {
           frequency,
-          volume,
         });
       });
     });
