@@ -32,6 +32,7 @@ export const ReactLogoIcon: React.FC = () => {
       <GravitySimulatorWithSettings
         simulatorId="react-logo-icon"
         gravityRef={iconRef}
+        disableSound={true}
         //pointerPos={{ x: 0, y: 0 } as Point2D}
         initialScenario={reactIcon}
         removeOverlay={true}

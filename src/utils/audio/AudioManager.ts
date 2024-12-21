@@ -1,5 +1,16 @@
 import * as Tone from "tone";
 
+interface ParticleSoundEffect {
+  noise: Tone.Noise;
+  filter: Tone.Filter;
+  particleId: string;
+}
+
+interface SoundEffectParams {
+  frequency?: number;
+  volume?: number;
+}
+
 export class AudioManager {
   private static instance: AudioManager;
   private player: Tone.Player | null = null;
@@ -8,8 +19,15 @@ export class AudioManager {
   private hasStarted: boolean = false;
   private currentTrackIndex: number = 0;
   private audioFiles: string[] = [];
+  private soundEffects: Map<string, ParticleSoundEffect> = new Map();
+  private firstInteractionPromise: Promise<void>;
+  private firstInteractionResolve!: () => void;
 
-  private constructor() {}
+  private constructor() {
+    this.firstInteractionPromise = new Promise((resolve) => {
+      this.firstInteractionResolve = resolve;
+    });
+  }
 
   public static getInstance(): AudioManager {
     if (!AudioManager.instance) {
@@ -29,6 +47,82 @@ export class AudioManager {
 
   public getIsPlaying(): boolean {
     return this.isPlaying;
+  }
+
+  public notifyFirstInteraction() {
+    this.firstInteractionResolve();
+  }
+
+  public getActiveSoundEffectIds(): string[] {
+    return Array.from(this.soundEffects.keys());
+  }
+
+  public async addParticleSoundEffect(
+    particleId: string,
+    options: SoundEffectParams = {}
+  ) {
+    // Create a deferred setup of the sound effect
+    const setupSoundEffect = async () => {
+      // Wait for first interaction
+      await this.firstInteractionPromise;
+
+      // Check if Tone.js context is running
+      if (Tone.context.state !== "running") {
+        await Tone.start();
+      }
+
+      // Create filter for frequency control
+      const filter = new Tone.Filter({
+        frequency: options.frequency ?? 4000,
+        type: "bandpass",
+        Q: 1,
+      }).toDestination();
+
+      // Create noise generator
+      const noise = new Tone.Noise({
+        type: "pink",
+        volume: options.volume ?? -100,
+      }).connect(filter);
+
+      // Store components
+      this.soundEffects.set(particleId, {
+        noise,
+        filter,
+        particleId,
+      });
+
+      // Start if audio is playing
+      if (this.isPlaying) {
+        noise.start();
+      }
+    };
+
+    // Don't await the setup - let it run in the background
+    setupSoundEffect();
+  }
+
+  public updateSoundEffect(particleId: string, options: SoundEffectParams) {
+    const soundEffect = this.soundEffects.get(particleId);
+    if (soundEffect) {
+      const { noise, filter } = soundEffect;
+
+      // Update parameters
+      if (options.frequency !== undefined) {
+        filter.frequency.value = options.frequency;
+      }
+      if (options.volume !== undefined) {
+        noise.volume.value = options.volume;
+      }
+    }
+  }
+
+  public removeSoundEffect(particleId: string) {
+    const soundEffect = this.soundEffects.get(particleId);
+    if (soundEffect) {
+      soundEffect.noise.stop().dispose();
+      soundEffect.filter.dispose();
+      this.soundEffects.delete(particleId);
+    }
   }
 
   public async togglePlayback() {
@@ -76,7 +170,7 @@ export class AudioManager {
         url: currentFile,
         loop: true,
         autostart: false,
-        volume: -12,
+        volume: -18,
         onload: () => {
           console.log("Music loaded successfully");
           this.isLoaded = true;
@@ -103,6 +197,11 @@ export class AudioManager {
         this.player.playbackRate = 1;
       }
 
+      // Start all sound effects
+      for (const { noise } of this.soundEffects.values()) {
+        noise.start();
+      }
+
       this.isPlaying = true;
       console.log("Music playback started/resumed");
     } catch (error) {
@@ -115,6 +214,12 @@ export class AudioManager {
 
     try {
       this.player.playbackRate = 0;
+
+      // Stop all sound effects
+      for (const { noise } of this.soundEffects.values()) {
+        noise.stop();
+      }
+
       this.isPlaying = false;
       console.log("Music playback paused");
     } catch (error) {
@@ -131,5 +236,12 @@ export class AudioManager {
       this.isLoaded = false;
       this.hasStarted = false;
     }
+
+    // Clean up all sound effects
+    for (const { noise, filter } of this.soundEffects.values()) {
+      noise.stop().dispose();
+      filter.dispose();
+    }
+    this.soundEffects.clear();
   }
 }
