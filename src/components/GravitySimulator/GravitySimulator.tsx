@@ -219,9 +219,10 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
       // Add oscillator for the particle if it doesn't already exist
       audioManager.addOscillator(particle.id, {
-        frequency: 220, // Base frequency
-        type: "sine",
-        volume: -30,
+        type: "noise", // Use only noise
+        volume: -100, // Start silent
+        noiseAmount: 1.0, // Full noise
+        frequency: 0, // Start with no frequency
       });
     });
 
@@ -245,24 +246,41 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       particles.forEach((particle) => {
         if (!particle.id) return;
 
-        // Calculate frequency based on force magnitude
-        const forceMagnitude = Math.sqrt(
-          particle.force.x * particle.force.x +
-            particle.force.y * particle.force.y
+        // Calculate velocity magnitude
+        const velocityMagnitude = particle.velocity.length;
+
+        // Define velocity thresholds
+        const VELOCITY_THRESHOLD = 0.1; // Minimum velocity for sound
+        const NORMAL_VELOCITY = 200; // Velocity at which noise is at 4000Hz
+        const MAX_VELOCITY = 400; // Velocity at which noise reaches max frequency
+
+        if (velocityMagnitude < VELOCITY_THRESHOLD) {
+          // Complete silence when nearly stationary
+          audioManager.updateOscillator(particle.id, {
+            frequency: 0,
+            volume: -100,
+          });
+          return;
+        }
+
+        // Calculate normalized velocity ratio (0 to 1)
+        const normalizedVelocity = Math.min(
+          velocityMagnitude / NORMAL_VELOCITY,
+          4
         );
 
-        // Map force to frequency range (220Hz - 880Hz)
-        // Using log scale for better auditory perception
-        // Adding a small value to avoid log(0)
-        const normalizedForce = Math.log(forceMagnitude + 0.1) * 100;
-        const frequency = 220 + Math.min(normalizedForce, 660);
+        // Calculate noise frequency (0Hz to 8000Hz)
+        // At normal velocity (ratio = 1), frequency will be 4000Hz
+        const frequency = normalizedVelocity * 4000;
 
-        // Calculate volume based on force magnitude
-        // Louder when force is stronger
-
+        // Calculate volume (-70dB to -40dB)
+        // More velocity = louder, but with a soft cap
+        const volume = -50 + Math.min(normalizedVelocity, 1) * 20;
         // Update oscillator parameters
         audioManager.updateOscillator(particle.id, {
           frequency,
+          volume,
+          noiseAmount: 1.0, // Keep noise at maximum
         });
       });
     });

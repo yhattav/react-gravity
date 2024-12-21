@@ -1,16 +1,20 @@
 import * as Tone from "tone";
 
 interface OscillatorData {
-  oscillator: Tone.Oscillator;
+  oscillator?: Tone.Oscillator;
+  noise: Tone.Noise;
+  filter: Tone.Filter;
   particleId: string;
 }
 
-type OscillatorType = "sine" | "square" | "triangle" | "sawtooth";
+type OscillatorType = "sine" | "square" | "triangle" | "sawtooth" | "noise";
 
 interface OscillatorParams {
   frequency?: number;
   type?: OscillatorType;
   volume?: number;
+  detune?: number;
+  noiseAmount?: number;
 }
 
 export class AudioManager {
@@ -64,7 +68,6 @@ export class AudioManager {
     options: OscillatorParams = {}
   ) {
     // Create a deferred setup of the oscillator
-    console.log("Adding oscillator", particleId);
     const setupOscillator = async () => {
       // Wait for first interaction
       await this.firstInteractionPromise;
@@ -74,22 +77,53 @@ export class AudioManager {
         await Tone.start();
       }
 
-      // Create oscillator with default settings
-      const oscillator = new Tone.Oscillator({
-        frequency: options.frequency ?? 440,
-        type: options.type ?? "sine",
-        volume: options.volume ?? -20,
+      // Create filter for frequency control
+      const filter = new Tone.Filter({
+        frequency: options.frequency ?? 4000,
+        type: "bandpass",
+        Q: 1,
       }).toDestination();
 
-      // Store the oscillator
+      // Create noise generator
+      const noise = new Tone.Noise({
+        type: "pink",
+        volume: options.volume ?? -20,
+      }).connect(filter);
+
+      // Only create oscillator if not in noise-only mode
+      let oscillator: Tone.Oscillator | undefined;
+      if (options.type !== "noise") {
+        const type =
+          options.type === "sine"
+            ? "sine"
+            : options.type === "square"
+            ? "square"
+            : options.type === "triangle"
+            ? "triangle"
+            : "sawtooth";
+
+        oscillator = new Tone.Oscillator();
+        oscillator.set({
+          frequency: options.frequency ?? 440,
+          type,
+          volume: options.volume ?? -20,
+          detune: options.detune ?? 0,
+        });
+        oscillator.toDestination();
+      }
+
+      // Store components
       this.oscillators.set(particleId, {
         oscillator,
+        noise,
+        filter,
         particleId,
       });
 
-      // Start the oscillator if audio is playing
+      // Start if audio is playing
       if (this.isPlaying) {
-        oscillator.start();
+        if (oscillator) oscillator.start();
+        noise.start();
       }
     };
 
@@ -100,19 +134,42 @@ export class AudioManager {
   public updateOscillator(particleId: string, options: OscillatorParams) {
     const oscillatorData = this.oscillators.get(particleId);
     if (oscillatorData) {
-      const { oscillator } = oscillatorData;
-      if (options.frequency !== undefined)
-        oscillator.frequency.value = options.frequency;
-      if (options.type !== undefined) oscillator.type = options.type;
-      if (options.volume !== undefined)
-        oscillator.volume.value = options.volume;
+      const { oscillator, noise, filter } = oscillatorData;
+
+      // Update parameters
+      if (options.frequency !== undefined) {
+        if (oscillator) oscillator.frequency.value = options.frequency;
+        filter.frequency.value = options.frequency;
+      }
+      if (options.volume !== undefined) {
+        if (oscillator) oscillator.volume.value = options.volume;
+        noise.volume.value = options.volume;
+      }
+      if (options.type !== undefined && oscillator) {
+        const type =
+          options.type === "sine"
+            ? "sine"
+            : options.type === "square"
+            ? "square"
+            : options.type === "triangle"
+            ? "triangle"
+            : "sawtooth";
+        oscillator.type = type;
+      }
+      if (options.detune !== undefined && oscillator) {
+        oscillator.detune.value = options.detune;
+      }
     }
   }
 
   public removeOscillator(particleId: string) {
     const oscillatorData = this.oscillators.get(particleId);
     if (oscillatorData) {
-      oscillatorData.oscillator.stop().dispose();
+      if (oscillatorData.oscillator) {
+        oscillatorData.oscillator.stop().dispose();
+      }
+      oscillatorData.noise.stop().dispose();
+      oscillatorData.filter.dispose();
       this.oscillators.delete(particleId);
     }
   }
@@ -162,7 +219,7 @@ export class AudioManager {
         url: currentFile,
         loop: true,
         autostart: false,
-        volume: -12,
+        volume: -18,
         onload: () => {
           console.log("Music loaded successfully");
           this.isLoaded = true;
@@ -189,9 +246,10 @@ export class AudioManager {
         this.player.playbackRate = 1;
       }
 
-      // Start all oscillators
-      for (const { oscillator } of this.oscillators.values()) {
-        oscillator.start();
+      // Start all oscillators and noise generators
+      for (const { oscillator, noise } of this.oscillators.values()) {
+        if (oscillator) oscillator.start();
+        noise.start();
       }
 
       this.isPlaying = true;
@@ -207,9 +265,10 @@ export class AudioManager {
     try {
       this.player.playbackRate = 0;
 
-      // Stop all oscillators
-      for (const { oscillator } of this.oscillators.values()) {
-        oscillator.stop();
+      // Stop all oscillators and noise generators
+      for (const { oscillator, noise } of this.oscillators.values()) {
+        if (oscillator) oscillator.stop();
+        noise.stop();
       }
 
       this.isPlaying = false;
@@ -229,9 +288,11 @@ export class AudioManager {
       this.hasStarted = false;
     }
 
-    // Clean up all oscillators
-    for (const { oscillator } of this.oscillators.values()) {
-      oscillator.stop().dispose();
+    // Clean up all oscillators and noise generators
+    for (const { oscillator, noise, filter } of this.oscillators.values()) {
+      if (oscillator) oscillator.stop().dispose();
+      noise.stop().dispose();
+      filter.dispose();
     }
     this.oscillators.clear();
   }
