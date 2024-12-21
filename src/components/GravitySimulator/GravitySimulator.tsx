@@ -132,6 +132,8 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   const [isSimulationStarted, setIsSimulationStarted] = useState(
     !!initialScenario
   );
+  const [firstInteractionDetected, setFirstInteractionDetected] =
+    useState(false);
   const [particles, setParticles] = useState<Particle[]>(
     initialScenario?.data.particles?.map(toParticle) || []
   );
@@ -354,6 +356,9 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       if (!isSimulationStarted) {
         setIsSimulationStarted(true);
       }
+      if (!firstInteractionDetected) {
+        setFirstInteractionDetected(true);
+      }
       setParticles((current) => [
         ...current,
         createParticle({ x: coordinates.x, y: coordinates.y }),
@@ -365,6 +370,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       isDraggingNewStar,
       createParticle,
       blockInteractions,
+      firstInteractionDetected,
     ]
   );
 
@@ -408,6 +414,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   const handleStarDragStart = useCallback(() => {
     if (blockInteractions) return;
     setIsDraggingNewStar(true);
+    setFirstInteractionDetected(true);
   }, [blockInteractions]);
 
   const handleStarDragEnd = useCallback(
@@ -443,6 +450,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   );
 
   const handlePointDelete = useCallback((index: number) => {
+    setFirstInteractionDetected(true);
     setGravityPoints((currentPoints) => {
       // Create a new array without the deleted point
       const newPoints = currentPoints.filter((_, i) => i !== index);
@@ -786,7 +794,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           >
             <MusicPlayer
               audioFiles={audioFiles}
-              shouldPlay={isSimulationStarted}
+              shouldPlay={firstInteractionDetected}
             />
             <motion.button
               onClick={(e) => {
@@ -955,7 +963,10 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             <ScenarioPanel
               isOpen={isScenarioPanelOpen}
               onClose={() => setIsScenarioPanelOpen(false)}
-              onSelectScenario={handleSelectScenario}
+              onSelectScenario={(scenario) => {
+                setFirstInteractionDetected(true);
+                handleSelectScenario(scenario);
+              }}
             />
 
             <SaveScenarioModal
