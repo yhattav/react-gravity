@@ -59,7 +59,6 @@ export const ParticleRenderer: React.FC<ParticleRendererProps> = ({
             dashArray: trail.path.dashArray,
             visible: false,
           });
-          console.log(1);
           layerRef.current?.addChild(segmentPath);
           trail.segmentPaths.push(segmentPath);
         }
@@ -88,7 +87,7 @@ export const ParticleRenderer: React.FC<ParticleRendererProps> = ({
       layerRef.current.activate();
     }
 
-    scope.view.onFrame = () => {
+    const renderFrame = () => {
       const currentParticles = particlesRef.current;
       if (!currentParticles || !layerRef.current) return;
 
@@ -223,8 +222,11 @@ export const ParticleRenderer: React.FC<ParticleRendererProps> = ({
       scope.view.update();
     };
 
+    // Set up the frame handler using the event system
+    scope.view.on("frame", renderFrame);
+
     return () => {
-      scope.view.onFrame = null;
+      scope.view.off("frame", renderFrame);
       if (layerRef.current) {
         layerRef.current.remove();
         layerRef.current = null;
