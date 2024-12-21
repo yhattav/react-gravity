@@ -76,6 +76,7 @@ export interface GravitySimulatorProps {
   removeOverlay?: boolean;
   initialScenario?: Scenario;
   blockInteractions?: boolean;
+  disableSound?: boolean;
   onApiReady?: (api: GravitySimulatorApi) => void;
   simulatorId?: string;
 }
@@ -127,6 +128,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   removeOverlay = false,
   initialScenario,
   blockInteractions = false,
+  disableSound = false,
   onApiReady,
   simulatorId = "default",
 }) => {
@@ -170,11 +172,15 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     initialScenario?.data.paths?.map(toSimulatorPath) || []
   );
   const [paperScope, setPaperScope] = useState<paper.PaperScope | null>(null);
-  const [audioManager] = useState(() => AudioManager.getInstance());
+  const [audioManager] = useState(() =>
+    disableSound ? null : AudioManager.getInstance()
+  );
   const [isAudioLoaded, setIsAudioLoaded] = useState(false);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
 
   useEffect(() => {
+    if (disableSound || !audioManager) return;
+
     const initAudio = async () => {
       await audioManager.initialize(audioFiles);
     };
@@ -183,9 +189,11 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     return () => {
       audioManager.cleanup();
     };
-  }, [audioManager]);
+  }, [audioManager, disableSound]);
 
   useEffect(() => {
+    if (disableSound || !audioManager) return;
+
     if (firstInteractionDetected) {
       audioManager.notifyFirstInteraction();
       if (audioManager.getIsLoaded()) {
@@ -194,10 +202,12 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         setIsAudioPlaying(true);
       }
     }
-  }, [firstInteractionDetected, audioManager]);
+  }, [firstInteractionDetected, audioManager, disableSound]);
 
   // Track particle oscillators
   useEffect(() => {
+    if (disableSound || !audioManager) return;
+
     // Keep track of current particles
     const currentParticleIds = new Set(
       particles.map((p) => p.id).filter(Boolean)
@@ -229,10 +239,12 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         }
       });
     };
-  }, [particles.length]); // Only run when particles array length changes
+  }, [particles.length, audioManager, disableSound]); // Only run when particles array length changes
 
   // Update oscillator parameters based on particle properties
   useEffect(() => {
+    if (disableSound || !audioManager) return;
+
     requestAnimationFrame(() => {
       particles.forEach((particle) => {
         if (!particle.id) return;
@@ -260,15 +272,16 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         });
       });
     });
-  }, [particles]);
+  }, [particles, audioManager, disableSound]);
 
   const handleAudioToggle = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (disableSound || !audioManager) return;
       e.stopPropagation();
       await audioManager.togglePlayback();
       setIsAudioPlaying(audioManager.getIsPlaying());
     },
-    [audioManager]
+    [audioManager, disableSound]
   );
 
   useEffect(() => {
@@ -893,11 +906,13 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
               alignItems: "center",
             }}
           >
-            <MusicPlayer
-              isPlaying={isAudioPlaying}
-              isLoaded={isAudioLoaded}
-              onToggle={handleAudioToggle}
-            />
+            {!disableSound && (
+              <MusicPlayer
+                isPlaying={isAudioPlaying}
+                isLoaded={isAudioLoaded}
+                onToggle={handleAudioToggle}
+              />
+            )}
             <motion.button
               onClick={(e) => {
                 e.stopPropagation();
