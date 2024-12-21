@@ -295,27 +295,61 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     [gravityPoints, paths, physicsConfig, gravityRef, offset, pointerPosRef]
   );
 
+  const handleCanvasReady = useCallback((scope: paper.PaperScope) => {
+    setPaperScope(scope);
+  }, []);
+
+  // Add a new effect for physics updates
   useEffect(() => {
-    if (!isSimulationStarted || isPaused) return;
+    if (!paperScope || !isSimulationStarted) return;
 
-    let animationFrameId: number;
-    //const lastTime = performance.now();
-    // let accumulator = 0;
+    let frameCount = 0;
+    const physicsLayer = new paperScope.Layer();
 
-    const updateParticles = () => {
-      setParticles((currentParticles) =>
-        currentParticles.map((particle) => {
-          const mechanics = updateParticleMechanics(particle, currentParticles);
-          return { ...particle, ...mechanics };
-        })
-      );
+    // Set up physics update handler
+    const physicsUpdate = () => {
+      if (isPausedRef.current) return;
 
-      animationFrameId = requestAnimationFrame(updateParticles);
+      // Update physics
+      particlesRef.current = particlesRef.current.map((particle) => {
+        const mechanics = updateParticleMechanics(
+          particle,
+          particlesRef.current
+        );
+        return { ...particle, ...mechanics };
+      });
+
+      // Update React state less frequently
+      frameCount++;
+      if (frameCount % 10 === 0) {
+        setParticles(particlesRef.current);
+      }
     };
 
-    animationFrameId = requestAnimationFrame(updateParticles);
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [isSimulationStarted, isPaused, updateParticleMechanics]);
+    // Add our physics update to paper's onFrame
+    paperScope.view.on("frame", physicsUpdate);
+
+    return () => {
+      paperScope.view.off("frame", physicsUpdate);
+      physicsLayer.remove();
+    };
+  }, [paperScope, isSimulationStarted, updateParticleMechanics]);
+
+  // Keep particles ref in sync with state
+  useEffect(() => {
+    particlesRef.current = particles;
+  }, [particles]);
+
+  // Update isPausedRef when isPaused changes
+  useEffect(() => {
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
+
+  // Remove the old effect that's no longer needed
+  // useEffect(() => {
+  //   if (!isSimulationStarted || isPaused) return;
+  //   particlesRef.current = particles;
+  // }, [isSimulationStarted, isPaused, particles]);
 
   const createParticle = useCallback(
     (
@@ -598,10 +632,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     return warpPoints;
   }, [gravityPoints, particles, pointerPosRef, offset, physicsConfig]);
 
-  const handleCanvasReady = useCallback((scope: paper.PaperScope) => {
-    setPaperScope(scope);
-  }, []);
-
   // Create and expose the API
   useEffect(
     () => {
@@ -675,15 +705,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       // Add all deps
     ]
   );
-
-  useEffect(() => {
-    particlesRef.current = particles;
-  }, [particles]);
-
-  // Update ref when isPaused changes
-  useEffect(() => {
-    isPausedRef.current = isPaused;
-  }, [isPaused]);
 
   const audioFiles = useMemo(
     () => [
