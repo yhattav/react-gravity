@@ -55,6 +55,10 @@ export class AudioManager {
     this.firstInteractionResolve();
   }
 
+  public getOscillatorIds(): string[] {
+    return Array.from(this.oscillators.keys());
+  }
+
   public async addOscillator(
     particleId: string,
     options: OscillatorParams = {}

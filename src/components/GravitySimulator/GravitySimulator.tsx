@@ -217,7 +217,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     particles.forEach((particle) => {
       if (!particle.id) return;
 
-      // Add oscillator for the particle
+      // Add oscillator for the particle if it doesn't already exist
       audioManager.addOscillator(particle.id, {
         frequency: 220, // Base frequency
         type: "sine",
@@ -227,15 +227,11 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
     // Cleanup function to remove oscillators for removed particles
     return () => {
-      // Get the new set of particle IDs after the update
-      const newParticleIds = new Set(
-        particles.map((p) => p.id).filter(Boolean)
-      );
-
       // Remove oscillators for particles that no longer exist
-      currentParticleIds.forEach((id) => {
-        if (!newParticleIds.has(id)) {
-          audioManager.removeOscillator(id);
+      const activeOscillatorIds = audioManager.getOscillatorIds();
+      activeOscillatorIds.forEach((oscillatorId) => {
+        if (!currentParticleIds.has(oscillatorId)) {
+          audioManager.removeOscillator(oscillatorId);
         }
       });
     };
