@@ -250,7 +250,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         // Define velocity thresholds
         const VELOCITY_THRESHOLD = 0.1; // Minimum velocity for sound
         const NORMAL_VELOCITY = 200; // Velocity at which noise is at 4000Hz
-        const MAX_VELOCITY = 400; // Velocity at which noise reaches max frequency
 
         if (velocityMagnitude < VELOCITY_THRESHOLD) {
           // Complete silence when nearly stationary
@@ -264,7 +263,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         // Calculate normalized velocity ratio (0 to 1)
         const normalizedVelocity = Math.min(
           velocityMagnitude / NORMAL_VELOCITY,
-          4
+          5
         );
 
         // Calculate noise frequency (0Hz to 8000Hz)
