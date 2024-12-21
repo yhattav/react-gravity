@@ -1,5 +1,18 @@
 import * as Tone from "tone";
 
+interface OscillatorData {
+  oscillator: Tone.Oscillator;
+  particleId: string;
+}
+
+type OscillatorType = "sine" | "square" | "triangle" | "sawtooth";
+
+interface OscillatorParams {
+  frequency?: number;
+  type?: OscillatorType;
+  volume?: number;
+}
+
 export class AudioManager {
   private static instance: AudioManager;
   private player: Tone.Player | null = null;
@@ -8,8 +21,15 @@ export class AudioManager {
   private hasStarted: boolean = false;
   private currentTrackIndex: number = 0;
   private audioFiles: string[] = [];
+  private oscillators: Map<string, OscillatorData> = new Map();
+  private firstInteractionPromise: Promise<void>;
+  private firstInteractionResolve!: () => void;
 
-  private constructor() {}
+  private constructor() {
+    this.firstInteractionPromise = new Promise((resolve) => {
+      this.firstInteractionResolve = resolve;
+    });
+  }
 
   public static getInstance(): AudioManager {
     if (!AudioManager.instance) {
@@ -29,6 +49,68 @@ export class AudioManager {
 
   public getIsPlaying(): boolean {
     return this.isPlaying;
+  }
+
+  public notifyFirstInteraction() {
+    this.firstInteractionResolve();
+  }
+
+  public async addOscillator(
+    particleId: string,
+    options: OscillatorParams = {}
+  ) {
+    // Create a deferred setup of the oscillator
+    console.log("Adding oscillator", particleId);
+    const setupOscillator = async () => {
+      // Wait for first interaction
+      await this.firstInteractionPromise;
+
+      // Check if Tone.js context is running
+      if (Tone.context.state !== "running") {
+        await Tone.start();
+      }
+
+      // Create oscillator with default settings
+      const oscillator = new Tone.Oscillator({
+        frequency: options.frequency ?? 440,
+        type: options.type ?? "sine",
+        volume: options.volume ?? -20,
+      }).toDestination();
+
+      // Store the oscillator
+      this.oscillators.set(particleId, {
+        oscillator,
+        particleId,
+      });
+
+      // Start the oscillator if audio is playing
+      if (this.isPlaying) {
+        oscillator.start();
+      }
+    };
+
+    // Don't await the setup - let it run in the background
+    setupOscillator();
+  }
+
+  public updateOscillator(particleId: string, options: OscillatorParams) {
+    const oscillatorData = this.oscillators.get(particleId);
+    if (oscillatorData) {
+      const { oscillator } = oscillatorData;
+      if (options.frequency !== undefined)
+        oscillator.frequency.value = options.frequency;
+      if (options.type !== undefined) oscillator.type = options.type;
+      if (options.volume !== undefined)
+        oscillator.volume.value = options.volume;
+    }
+  }
+
+  public removeOscillator(particleId: string) {
+    const oscillatorData = this.oscillators.get(particleId);
+    if (oscillatorData) {
+      oscillatorData.oscillator.stop().dispose();
+      this.oscillators.delete(particleId);
+    }
   }
 
   public async togglePlayback() {
@@ -103,6 +185,11 @@ export class AudioManager {
         this.player.playbackRate = 1;
       }
 
+      // Start all oscillators
+      for (const { oscillator } of this.oscillators.values()) {
+        oscillator.start();
+      }
+
       this.isPlaying = true;
       console.log("Music playback started/resumed");
     } catch (error) {
@@ -115,6 +202,12 @@ export class AudioManager {
 
     try {
       this.player.playbackRate = 0;
+
+      // Stop all oscillators
+      for (const { oscillator } of this.oscillators.values()) {
+        oscillator.stop();
+      }
+
       this.isPlaying = false;
       console.log("Music playback paused");
     } catch (error) {
@@ -131,5 +224,11 @@ export class AudioManager {
       this.isLoaded = false;
       this.hasStarted = false;
     }
+
+    // Clean up all oscillators
+    for (const { oscillator } of this.oscillators.values()) {
+      oscillator.stop().dispose();
+    }
+    this.oscillators.clear();
   }
 }

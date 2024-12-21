@@ -186,12 +186,81 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   }, [audioManager]);
 
   useEffect(() => {
-    if (firstInteractionDetected && audioManager.getIsLoaded()) {
-      setIsAudioLoaded(audioManager.getIsLoaded());
-      audioManager.play();
-      setIsAudioPlaying(true);
+    if (firstInteractionDetected) {
+      audioManager.notifyFirstInteraction();
+      if (audioManager.getIsLoaded()) {
+        setIsAudioLoaded(audioManager.getIsLoaded());
+        audioManager.play();
+        setIsAudioPlaying(true);
+      }
     }
   }, [firstInteractionDetected, audioManager]);
+
+  // Track particle oscillators
+  useEffect(() => {
+    // Keep track of current particles
+    const currentParticleIds = new Set(
+      particles.map((p) => p.id).filter(Boolean)
+    );
+
+    // Add oscillators for new particles
+    particles.forEach((particle) => {
+      if (!particle.id) return;
+
+      // Add oscillator for the particle
+      audioManager.addOscillator(particle.id, {
+        frequency: 220, // Base frequency
+        type: "sine",
+        volume: -30,
+      });
+    });
+
+    // Cleanup function to remove oscillators for removed particles
+    return () => {
+      // Get the new set of particle IDs after the update
+      const newParticleIds = new Set(
+        particles.map((p) => p.id).filter(Boolean)
+      );
+
+      // Remove oscillators for particles that no longer exist
+      currentParticleIds.forEach((id) => {
+        if (!newParticleIds.has(id)) {
+          audioManager.removeOscillator(id);
+        }
+      });
+    };
+  }, [particles.length]); // Only run when particles array length changes
+
+  // Update oscillator parameters based on particle properties
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      particles.forEach((particle) => {
+        if (!particle.id) return;
+
+        // Calculate frequency based on velocity magnitude
+        const velocityMagnitude = Math.sqrt(
+          particle.velocity.x * particle.velocity.x +
+            particle.velocity.y * particle.velocity.y
+        );
+
+        // Map velocity to frequency range (220Hz - 880Hz)
+        const frequency = 220 + Math.min(velocityMagnitude * 2, 660);
+
+        // Calculate volume based on distance from center
+        const distanceFromCenter = Math.sqrt(
+          particle.position.x * particle.position.x +
+            particle.position.y * particle.position.y
+        );
+        const volume = Math.max(-50, -30 - distanceFromCenter / 20);
+
+        // Update oscillator parameters
+        audioManager.updateOscillator(particle.id, {
+          frequency,
+          volume,
+        });
+      });
+    });
+  }, [particles]);
 
   const handleAudioToggle = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>) => {
