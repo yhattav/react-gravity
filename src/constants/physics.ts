@@ -42,7 +42,12 @@ export interface PhysicsSettings {
   PARTICLE_TRAIL_LENGTH: number;
   SHOW_GRAVITY_VISION: boolean;
   GRAVITY_GRID_DENSITY: number;
+  ENABLE_SOUND: boolean;
+  MASTER_VOLUME: number;
+  COLLISION_SOUND_VOLUME: number;
+  PARTICLE_SOUND_VOLUME: number;
 }
+
 export const DEFAULT_PHYSICS_CONFIG: PhysicsSettings = {
   NEW_PARTICLE_MASS: 0.1,
   NEW_PARTICLE_ELASTICITY: 0.8,
@@ -57,6 +62,10 @@ export const DEFAULT_PHYSICS_CONFIG: PhysicsSettings = {
   PARTICLE_TRAIL_LENGTH: 30,
   SHOW_GRAVITY_VISION: false,
   GRAVITY_GRID_DENSITY: 20,
+  ENABLE_SOUND: true,
+  MASTER_VOLUME: 0.5,
+  COLLISION_SOUND_VOLUME: 0.7,
+  PARTICLE_SOUND_VOLUME: 0.5,
 } as const;
 
 export const SETTINGS_METADATA: Record<
@@ -137,6 +146,31 @@ export const SETTINGS_METADATA: Record<
     min: 10,
     max: 40,
     step: 1,
+  },
+  ENABLE_SOUND: {
+    type: "boolean",
+    isDev: false,
+  },
+  MASTER_VOLUME: {
+    type: "slider",
+    isDev: false,
+    min: 0,
+    max: 1,
+    step: 0.01,
+  },
+  COLLISION_SOUND_VOLUME: {
+    type: "slider",
+    isDev: false,
+    min: 0,
+    max: 1,
+    step: 0.01,
+  },
+  PARTICLE_SOUND_VOLUME: {
+    type: "slider",
+    isDev: false,
+    min: 0,
+    max: 1,
+    step: 0.01,
   },
 } as const;
 
