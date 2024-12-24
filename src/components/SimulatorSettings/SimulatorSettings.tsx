@@ -380,9 +380,16 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
                 <motion.div
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
+                  initial={false}
+                  animate={{
+                    scale: activeTab === tab.id ? 1.1 : 1,
+                    backgroundColor:
+                      activeTab === tab.id
+                        ? "rgba(0, 0, 0, 0.8)"
+                        : "rgba(0, 0, 0, 0.6)",
+                  }}
                   style={{
                     padding: "10px",
-                    background: "rgba(0, 0, 0, 0.6)",
                     borderRadius: "8px 0 0 8px",
                     cursor: "pointer",
                     display: "flex",
@@ -392,12 +399,10 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
                       activeTab === tab.id
                         ? "#fff"
                         : "rgba(255, 255, 255, 0.6)",
-                    transform: `translateY(${
-                      activeTab === tab.id ? 0 : -(index * 2)
-                    }px)`,
                     zIndex: activeTab === tab.id ? 3 : 2 - index,
                     position: "relative",
                     fontSize: "24px",
+                    transformOrigin: "center right",
                   }}
                   whileHover={{
                     backgroundColor: "rgba(0, 0, 0, 0.8)",
@@ -413,7 +418,7 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
                         top: 0,
                         bottom: 0,
                         width: "2px",
-                        background: "rgba(0, 0, 0, 0.6)",
+                        background: "rgba(0, 0, 0, 0.8)",
                       }}
                     />
                   )}
