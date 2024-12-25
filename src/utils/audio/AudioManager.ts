@@ -52,7 +52,7 @@ export class AudioManager {
     return AudioManager.instance;
   }
 
-  private calcVolume(baseVolume: number, volumeValue: number): number {
+  private calcVolume(volumeValue: number): number {
     // If either master or type volume is 0, return minimum volume
     if (this.volumeSettings.masterVolume === 0 || volumeValue === 0) {
       return -100;
@@ -76,7 +76,6 @@ export class AudioManager {
     // Update ambient music volume if player exists
     if (this.player) {
       this.player.volume.value = this.calcVolume(
-        -18,
         this.volumeSettings.ambientVolume
       );
     }
@@ -84,9 +83,7 @@ export class AudioManager {
     // Update all particle sound effects
     this.soundEffects.forEach((effect) => {
       if (effect.noise) {
-        const baseVolume = effect.noise.volume.value;
         effect.noise.volume.value = this.calcVolume(
-          baseVolume,
           this.volumeSettings.particleVolume
         );
       }
@@ -131,10 +128,9 @@ export class AudioManager {
         Q: 1,
       }).toDestination();
 
-      const baseVolume = options.volume ?? -100;
       const noise = new Tone.Noise({
         type: "pink",
-        volume: this.calcVolume(baseVolume, this.volumeSettings.particleVolume),
+        volume: this.calcVolume(this.volumeSettings.particleVolume),
       }).connect(filter);
 
       this.soundEffects.set(particleId, {
@@ -161,7 +157,6 @@ export class AudioManager {
       }
       if (options.volume !== undefined) {
         noise.volume.value = this.calcVolume(
-          options.volume,
           this.volumeSettings.particleVolume
         );
       }
@@ -222,7 +217,7 @@ export class AudioManager {
         url: currentFile,
         loop: true,
         autostart: false,
-        volume: this.calcVolume(-18, this.volumeSettings.ambientVolume),
+        volume: this.calcVolume(this.volumeSettings.ambientVolume),
         onload: () => {
           console.log("Music loaded successfully");
           this.isLoaded = true;

@@ -5,7 +5,6 @@ import React, {
   useRef,
   useMemo,
 } from "react";
-import { throttle } from "lodash";
 import {
   Point2D,
   GravityPoint,
@@ -29,7 +28,7 @@ import {
 } from "../../constants/physics";
 import { SimulatorSettings } from "../SimulatorSettings/SimulatorSettings";
 import { useSettings } from "../../contexts/SettingsContext";
-import { debounce } from "lodash";
+import { throttle, debounce } from "lodash";
 import "../../styles/global.scss";
 import { MdFullscreen, MdFullscreenExit, MdInvertColors } from "react-icons/md";
 import { BiReset } from "react-icons/bi";
