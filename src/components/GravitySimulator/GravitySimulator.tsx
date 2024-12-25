@@ -796,78 +796,73 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   }, []);
 
   // Create and expose the API
-  useEffect(
-    () => {
-      if (!onApiReady) return;
+  useEffect(() => {
+    if (!onApiReady) return;
 
-      const api: GravitySimulatorApi = {
-        play: () => setIsPaused(false),
-        pause: () => setIsPaused(true),
-        reset: () => {
-          setParticles([]);
-          setIsSimulationStarted(false);
-        },
+    const api: GravitySimulatorApi = {
+      play: () => setIsPaused(false),
+      pause: () => setIsPaused(true),
+      reset: () => {
+        setParticles([]);
+        setIsSimulationStarted(false);
+      },
 
-        enterFullscreen: () => {
-          gravityRef.current?.requestFullscreen();
-          setIsFullscreen(true);
-        },
-        exitFullscreen: () => {
-          document.exitFullscreen();
-          setIsFullscreen(false);
-        },
-        toggleFullscreen,
-        invertColors: (invert: boolean) => setIsColorInverted(invert),
+      enterFullscreen: () => {
+        gravityRef.current?.requestFullscreen();
+        setIsFullscreen(true);
+      },
+      exitFullscreen: () => {
+        document.exitFullscreen();
+        setIsFullscreen(false);
+      },
+      toggleFullscreen,
+      invertColors: (invert: boolean) => setIsColorInverted(invert),
 
-        addParticle: (position, options) => {
-          setIsSimulationStarted(true);
-          setParticles((current) => [
-            ...current,
-            createParticle(position, options),
-          ]);
-        },
-        removeAllParticles: () => setParticles([]),
+      addParticle: (position, options) => {
+        setIsSimulationStarted(true);
+        setParticles((current) => [
+          ...current,
+          createParticle(position, options),
+        ]);
+      },
+      removeAllParticles: () => setParticles([]),
 
-        addGravityPoint: (point) => {
-          setGravityPoints((current) => [
-            ...current,
-            {
-              ...point,
-              id: Math.random().toString(36).substr(2, 9),
-            },
-          ]);
-        },
-        removeGravityPoint: handlePointDelete,
-        removeAllGravityPoints: () => setGravityPoints([]),
-
-        loadScenario: handleSelectScenario,
-        exportCurrentScenario: () => ({
-          id: Math.random().toString(36).substr(2, 9),
-          name: "Exported Scenario",
-          description: "Current simulation state",
-          data: {
-            settings: physicsConfig,
-            gravityPoints: gravityPoints.map(toSerializableGravityPoint),
-            particles: particles.map(toSerializableParticle),
-            paths: paths.map(toSerializableSimulatorPath),
+      addGravityPoint: (point) => {
+        setGravityPoints((current) => [
+          ...current,
+          {
+            ...point,
+            id: Math.random().toString(36).substr(2, 9),
           },
-        }),
+        ]);
+      },
+      removeGravityPoint: handlePointDelete,
+      removeAllGravityPoints: () => setGravityPoints([]),
 
-        updateSettings: updateSettings,
-        getSettings: () => physicsConfig,
+      loadScenario: handleSelectScenario,
+      exportCurrentScenario: () => ({
+        id: Math.random().toString(36).substr(2, 9),
+        name: "Exported Scenario",
+        description: "Current simulation state",
+        data: {
+          settings: physicsConfig,
+          gravityPoints: gravityPoints.map(toSerializableGravityPoint),
+          particles: particles.map(toSerializableParticle),
+          paths: paths.map(toSerializableSimulatorPath),
+        },
+      }),
 
-        isPlaying: () => !isPaused,
-        isFullscreen: () => isFullscreen,
-        getParticleCount: () => particles.length,
-        getGravityPointsCount: () => gravityPoints.length,
-      };
+      updateSettings: updateSettings,
+      getSettings: () => physicsConfig,
 
-      onApiReady(api);
-    },
-    [
-      // Add all deps
-    ]
-  );
+      isPlaying: () => !isPaused,
+      isFullscreen: () => isFullscreen,
+      getParticleCount: () => particles.length,
+      getGravityPointsCount: () => gravityPoints.length,
+    };
+
+    onApiReady(api);
+  });
 
   useEffect(() => {
     particlesRef.current = particles;
@@ -877,6 +872,14 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   useEffect(() => {
     isPausedRef.current = isPaused;
   }, [isPaused]);
+
+  const onSelectScenario = useCallback(
+    (scenario: Scenario) => {
+      setFirstInteractionDetected(true);
+      handleSelectScenario(scenario);
+    },
+    [handleSelectScenario] // Only depends on handleSelectScenario
+  );
 
   const content = (
     <>
@@ -1142,10 +1145,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             <ScenarioPanel
               isOpen={isScenarioPanelOpen}
               onClose={() => setIsScenarioPanelOpen(false)}
-              onSelectScenario={(scenario) => {
-                setFirstInteractionDetected(true);
-                handleSelectScenario(scenario);
-              }}
+              onSelectScenario={onSelectScenario}
             />
 
             <SaveScenarioModal
