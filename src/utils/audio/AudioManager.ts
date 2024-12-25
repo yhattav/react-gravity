@@ -53,17 +53,21 @@ export class AudioManager {
   }
 
   private calcVolume(baseVolume: number, volumeValue: number): number {
-    // Convert 0-1 range to -1 to 1 range centered at 0.5
-    const masterAdjustment = (this.volumeSettings.masterVolume - 0.5) * 2;
-    const typeAdjustment = (volumeValue - 0.5) * 2;
-    // Combine the adjustments
-    const totalAdjustment = (masterAdjustment + typeAdjustment) / 2;
-    // Apply the adjustment to the base volume (in dB)
-    // Scale factor of 24 gives a good range for ambient sounds
-    // Scale factor of 60 gives a good range for particle effects
+    // If either master or type volume is 0, return minimum volume
+    if (this.volumeSettings.masterVolume === 0 || volumeValue === 0) {
+      return -100;
+    }
 
-    //console.log(baseVolume + totalAdjustment);
-    return baseVolume + totalAdjustment * 24;
+    // Convert the 0-1 range to a logarithmic scale for more natural volume control
+    const logMaster = Math.log10(this.volumeSettings.masterVolume);
+    const logType = Math.log10(volumeValue);
+
+    // Combine the logarithmic scales and map to our desired dB range
+    const combinedLog = (logMaster + logType) / 2; // Average of the log scales
+    const normalizedValue = (combinedLog + 1) / 1; // Shift and normalize to 0-1 range
+
+    // Map the normalized value to our dB range (-100 to -10)
+    return -100 + normalizedValue * 90;
   }
 
   public updateVolumeSettings(newSettings: VolumeSettings) {
