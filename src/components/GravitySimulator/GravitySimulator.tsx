@@ -5,6 +5,7 @@ import React, {
   useRef,
   useMemo,
 } from "react";
+import { throttle } from "lodash";
 import {
   Point2D,
   GravityPoint,
@@ -28,7 +29,7 @@ import {
 } from "../../constants/physics";
 import { SimulatorSettings } from "../SimulatorSettings/SimulatorSettings";
 import { useSettings } from "../../contexts/SettingsContext";
-import { throttle, debounce } from "lodash";
+import { debounce } from "lodash";
 import "../../styles/global.scss";
 import { MdFullscreen, MdFullscreenExit, MdInvertColors } from "react-icons/md";
 import { BiReset } from "react-icons/bi";
@@ -60,6 +61,7 @@ import { PathRenderer } from "../PathRenderer/PathRenderer";
 import { PaperCanvas } from "../PaperCanvas/PaperCanvas";
 import { MusicPlayer } from "../MusicPlayer/MusicPlayer";
 import { AudioManager } from "../../utils/audio/AudioManager";
+import { VolumeSettings } from "../../utils/audio/AudioManager";
 
 const generatePastelColor = () => {
   const r = Math.floor(Math.random() * 75 + 180);
@@ -172,12 +174,31 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     initialScenario?.data.paths?.map(toSimulatorPath) || []
   );
   const [paperScope, setPaperScope] = useState<paper.PaperScope | null>(null);
+
+  // Audio files definition
+  const audioFiles = useMemo(
+    () => [
+      "/assets/audio/ambient2.mp3",
+      "/assets/audio/ambient1.mp3",
+      "/assets/audio/ambient3.mp3",
+    ],
+    []
+  );
+
+  // Initialize audio manager with current settings
   const [audioManager] = useState(() =>
-    disableSound ? null : AudioManager.getInstance()
+    disableSound
+      ? null
+      : AudioManager.getInstance({
+          masterVolume: physicsConfig.MASTER_VOLUME,
+          ambientVolume: physicsConfig.AMBIENT_VOLUME,
+          particleVolume: physicsConfig.PARTICLE_VOLUME,
+        })
   );
   const [isAudioLoaded, setIsAudioLoaded] = useState(false);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
 
+  // Initialize audio files
   useEffect(() => {
     if (disableSound || !audioManager) return;
 
@@ -189,8 +210,9 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     return () => {
       audioManager.cleanup();
     };
-  }, [audioManager, disableSound]);
+  }, [audioManager, disableSound, audioFiles]);
 
+  // Handle first interaction
   useEffect(() => {
     if (disableSound || !audioManager) return;
 
@@ -203,6 +225,36 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       }
     }
   }, [firstInteractionDetected, audioManager, disableSound]);
+
+  // Update audio manager when volume settings change
+  useEffect(() => {
+    if (disableSound || !audioManager) return;
+
+    const updateVolumes = throttle(
+      (settings: VolumeSettings) => {
+        console.log(settings);
+        audioManager.updateVolumeSettings(settings);
+      },
+      100,
+      { leading: true, trailing: true }
+    );
+
+    updateVolumes({
+      masterVolume: physicsConfig.MASTER_VOLUME,
+      ambientVolume: physicsConfig.AMBIENT_VOLUME,
+      particleVolume: physicsConfig.PARTICLE_VOLUME,
+    });
+
+    return () => {
+      updateVolumes.cancel();
+    };
+  }, [
+    audioManager,
+    disableSound,
+    physicsConfig.MASTER_VOLUME,
+    physicsConfig.AMBIENT_VOLUME,
+    physicsConfig.PARTICLE_VOLUME,
+  ]);
 
   // Track particle sound effects
   useEffect(() => {
@@ -826,15 +878,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   useEffect(() => {
     isPausedRef.current = isPaused;
   }, [isPaused]);
-
-  const audioFiles = useMemo(
-    () => [
-      "/assets/audio/ambient2.mp3",
-      "/assets/audio/ambient1.mp3",
-      "/assets/audio/ambient3.mp3",
-    ],
-    []
-  );
 
   const content = (
     <>

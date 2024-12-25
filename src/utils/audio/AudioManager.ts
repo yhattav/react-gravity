@@ -11,6 +11,12 @@ interface SoundEffectParams {
   volume?: number;
 }
 
+export interface VolumeSettings {
+  masterVolume: number;
+  ambientVolume: number;
+  particleVolume: number;
+}
+
 export class AudioManager {
   private static instance: AudioManager;
   private player: Tone.Player | null = null;
@@ -22,18 +28,65 @@ export class AudioManager {
   private soundEffects: Map<string, ParticleSoundEffect> = new Map();
   private firstInteractionPromise: Promise<void>;
   private firstInteractionResolve!: () => void;
+  private volumeSettings: VolumeSettings;
 
-  private constructor() {
+  private constructor(initialVolumeSettings: VolumeSettings) {
     this.firstInteractionPromise = new Promise((resolve) => {
       this.firstInteractionResolve = resolve;
     });
+    this.volumeSettings = initialVolumeSettings;
   }
 
-  public static getInstance(): AudioManager {
+  public static getInstance(
+    initialVolumeSettings?: VolumeSettings
+  ): AudioManager {
     if (!AudioManager.instance) {
-      AudioManager.instance = new AudioManager();
+      AudioManager.instance = new AudioManager(
+        initialVolumeSettings || {
+          masterVolume: 0.5,
+          ambientVolume: 0.5,
+          particleVolume: 0.5,
+        }
+      );
     }
     return AudioManager.instance;
+  }
+
+  private calcVolume(baseVolume: number, volumeValue: number): number {
+    // Convert 0-1 range to -1 to 1 range centered at 0.5
+    const masterAdjustment = (this.volumeSettings.masterVolume - 0.5) * 2;
+    const typeAdjustment = (volumeValue - 0.5) * 2;
+    // Combine the adjustments
+    const totalAdjustment = (masterAdjustment + typeAdjustment) / 2;
+    // Apply the adjustment to the base volume (in dB)
+    // Scale factor of 24 gives a good range for ambient sounds
+    // Scale factor of 60 gives a good range for particle effects
+
+    //console.log(baseVolume + totalAdjustment);
+    return baseVolume + totalAdjustment * 24;
+  }
+
+  public updateVolumeSettings(newSettings: VolumeSettings) {
+    this.volumeSettings = newSettings;
+
+    // Update ambient music volume if player exists
+    if (this.player) {
+      this.player.volume.value = this.calcVolume(
+        -18,
+        this.volumeSettings.ambientVolume
+      );
+    }
+
+    // Update all particle sound effects
+    this.soundEffects.forEach((effect) => {
+      if (effect.noise) {
+        const baseVolume = effect.noise.volume.value;
+        effect.noise.volume.value = this.calcVolume(
+          baseVolume,
+          this.volumeSettings.particleVolume
+        );
+      }
+    });
   }
 
   public async initialize(audioFiles: string[]) {
@@ -61,43 +114,36 @@ export class AudioManager {
     particleId: string,
     options: SoundEffectParams = {}
   ) {
-    // Create a deferred setup of the sound effect
     const setupSoundEffect = async () => {
-      // Wait for first interaction
       await this.firstInteractionPromise;
 
-      // Check if Tone.js context is running
       if (Tone.context.state !== "running") {
         await Tone.start();
       }
 
-      // Create filter for frequency control
       const filter = new Tone.Filter({
         frequency: options.frequency ?? 4000,
         type: "bandpass",
         Q: 1,
       }).toDestination();
 
-      // Create noise generator
+      const baseVolume = options.volume ?? -100;
       const noise = new Tone.Noise({
         type: "pink",
-        volume: options.volume ?? -100,
+        volume: this.calcVolume(baseVolume, this.volumeSettings.particleVolume),
       }).connect(filter);
 
-      // Store components
       this.soundEffects.set(particleId, {
         noise,
         filter,
         particleId,
       });
 
-      // Start if audio is playing
       if (this.isPlaying) {
         noise.start();
       }
     };
 
-    // Don't await the setup - let it run in the background
     setupSoundEffect();
   }
 
@@ -106,12 +152,14 @@ export class AudioManager {
     if (soundEffect) {
       const { noise, filter } = soundEffect;
 
-      // Update parameters
       if (options.frequency !== undefined) {
         filter.frequency.value = options.frequency;
       }
       if (options.volume !== undefined) {
-        noise.volume.value = options.volume;
+        noise.volume.value = this.calcVolume(
+          options.volume,
+          this.volumeSettings.particleVolume
+        );
       }
     }
   }
@@ -170,7 +218,7 @@ export class AudioManager {
         url: currentFile,
         loop: true,
         autostart: false,
-        volume: -18,
+        volume: this.calcVolume(-18, this.volumeSettings.ambientVolume),
         onload: () => {
           console.log("Music loaded successfully");
           this.isLoaded = true;

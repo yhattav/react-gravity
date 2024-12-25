@@ -60,12 +60,7 @@ const TABS: TabConfig[] = [
     id: "sound",
     label: "Sound",
     icon: <IoMusicalNotes />,
-    settings: [
-      "ENABLE_SOUND",
-      "MASTER_VOLUME",
-      "COLLISION_SOUND_VOLUME",
-      "PARTICLE_SOUND_VOLUME",
-    ],
+    settings: ["MASTER_VOLUME", "AMBIENT_VOLUME", "PARTICLE_VOLUME"],
   },
 ];
 
