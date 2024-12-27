@@ -152,57 +152,82 @@ const useGridCreation = (
   useEffect(() => {
     if (!scope || !containerRef.current) return;
 
-    if (
-      lastDensityRef.current === settings.GRAVITY_GRID_DENSITY &&
-      lastShowVisionRef.current === settings.SHOW_GRAVITY_VISION &&
-      layerRef.current
-    ) {
-      return;
-    }
-
-    lastDensityRef.current = settings.GRAVITY_GRID_DENSITY;
-    lastShowVisionRef.current = settings.SHOW_GRAVITY_VISION;
-    lastWarpPointsKeyRef.current = "";
-    scope.activate();
-    if (!layerRef.current) {
-      layerRef.current = new scope.Layer();
-    }
-    layerRef.current.activate();
-
-    const layer = layerRef.current;
-    layer.removeChildren();
-
-    if (!settings.SHOW_GRAVITY_VISION) {
-      gridLinesRef.current = { horizontal: [], vertical: [] };
-      return;
-    }
-
-    const { width, height } = containerRef.current.getBoundingClientRect();
-    const cellSize = Math.min(width, height) / settings.GRAVITY_GRID_DENSITY;
-    const rows = Math.ceil(height / cellSize);
-    const cols = Math.ceil(width / cellSize);
-
-    const createLines = (isHorizontal: boolean) => {
-      const lines: GridLine[] = [];
-      const outerLoop = isHorizontal ? rows : cols;
-
-      for (let i = 0; i <= outerLoop; i++) {
-        const gridLine = createGridLine(scope, isHorizontal, i, cellSize, {
-          cols,
-          rows,
-        });
-        layer.addChild(gridLine.path);
-        lines.push(gridLine);
+    const createGrid = () => {
+      if (
+        lastDensityRef.current === settings.GRAVITY_GRID_DENSITY &&
+        lastShowVisionRef.current === settings.SHOW_GRAVITY_VISION &&
+        layerRef.current
+      ) {
+        return;
       }
-      return lines;
+
+      lastDensityRef.current = settings.GRAVITY_GRID_DENSITY;
+      lastShowVisionRef.current = settings.SHOW_GRAVITY_VISION;
+      lastWarpPointsKeyRef.current = "";
+      scope.activate();
+      if (!layerRef.current) {
+        layerRef.current = new scope.Layer();
+      }
+      layerRef.current.activate();
+
+      const layer = layerRef.current;
+      layer.removeChildren();
+
+      if (!settings.SHOW_GRAVITY_VISION) {
+        gridLinesRef.current = { horizontal: [], vertical: [] };
+        return;
+      }
+
+      const container = containerRef.current;
+      if (!container) return;
+
+      const { width, height } = container.getBoundingClientRect();
+      const cellSize = Math.min(width, height) / settings.GRAVITY_GRID_DENSITY;
+      const rows = Math.ceil(height / cellSize);
+      const cols = Math.ceil(width / cellSize);
+
+      const createLines = (isHorizontal: boolean) => {
+        const lines: GridLine[] = [];
+        const outerLoop = isHorizontal ? rows : cols;
+
+        for (let i = 0; i <= outerLoop; i++) {
+          const gridLine = createGridLine(scope, isHorizontal, i, cellSize, {
+            cols,
+            rows,
+          });
+          layer.addChild(gridLine.path);
+          lines.push(gridLine);
+        }
+        return lines;
+      };
+
+      gridLinesRef.current = {
+        horizontal: createLines(true),
+        vertical: createLines(false),
+      };
+
+      scope.view.update();
     };
 
-    gridLinesRef.current = {
-      horizontal: createLines(true),
-      vertical: createLines(false),
-    };
+    // Create grid initially
+    createGrid();
 
-    scope.view.update();
+    // Create ResizeObserver to recreate grid when container size changes
+    const resizeObserver = new ResizeObserver(() => {
+      if (settings.SHOW_GRAVITY_VISION) {
+        // Reset lastDensityRef to force grid recreation
+        lastDensityRef.current = -1;
+        createGrid();
+      }
+    });
+
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
   }, [
     scope,
     settings.GRAVITY_GRID_DENSITY,
