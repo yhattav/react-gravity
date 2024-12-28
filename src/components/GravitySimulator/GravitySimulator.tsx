@@ -404,6 +404,11 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   const handleReportNewPosition = useCallback(
     (point: Point2D, index: number) => {
       if (!offset) return;
+      if (
+        gravityPoints[index].position.x === point.x &&
+        gravityPoints[index].position.y === point.y
+      )
+        return;
       setGravityPoints((points) =>
         points.map((point2, i) =>
           i === index
