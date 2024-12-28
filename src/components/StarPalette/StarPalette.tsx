@@ -31,7 +31,11 @@ export const StarPalette: React.FC<StarPaletteProps> = ({
   const handlePaletteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (shouldLookHovered && !isDragging) {
-      setIsHovered(false);
+      if (!isHovered) {
+        setIsHovered(false);
+      } else {
+        setIsHovered(true);
+      }
     } else {
       setIsHovered(true);
     }
