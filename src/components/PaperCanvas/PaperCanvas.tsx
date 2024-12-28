@@ -50,6 +50,36 @@ export const PaperCanvas: React.FC<PaperCanvasProps> = ({
     };
   }, [onCanvasReady]);
 
+  // Handle resize
+  useEffect(() => {
+    if (!canvasRef.current || !scopeRef.current) return;
+
+    const updateCanvasSize = () => {
+      const canvas = canvasRef.current;
+      const scope = scopeRef.current;
+      if (!canvas || !scope) return;
+
+      const parent = canvas.parentElement;
+      if (!parent) return;
+
+      const { width, height } = parent.getBoundingClientRect();
+      canvas.width = width;
+      canvas.height = height;
+      scope.view.viewSize = new paper.Size(width, height);
+    };
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateCanvasSize();
+    });
+
+    resizeObserver.observe(canvasRef.current.parentElement!);
+    updateCanvasSize(); // Initial size update
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
   return (
     <canvas
       ref={canvasRef}

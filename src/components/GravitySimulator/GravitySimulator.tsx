@@ -231,7 +231,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
     const updateVolumes = throttle(
       (settings: VolumeSettings) => {
-        console.log(settings);
         audioManager.updateVolumeSettings(settings);
       },
       100,
@@ -403,20 +402,20 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   );
 
   const handleReportNewPosition = useCallback(
-    throttle((point: Point2D, index: number) => {
+    (point: Point2D, index: number) => {
       if (!offset) return;
       setGravityPoints((points) =>
         points.map((point2, i) =>
           i === index
             ? {
                 ...point2,
-                position: new Point(point.x - offset.x, point.y - offset.y),
+                position: new Point(point.x, point.y),
               }
             : point2
         )
       );
-    }, 16),
-    [gravityRef, offset]
+    },
+    [offset]
   );
 
   const handleDragEnd = useCallback(() => {
