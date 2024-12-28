@@ -43,10 +43,9 @@ export const GravityPointComponent: React.FC<GravityPointComponentProps> = ({
       (newPosition: Point2D) => {
         const container = containerRef.current;
         if (container) {
-          const containerRect = container.getBoundingClientRect();
           const finalPosition = {
-            x: Math.round(newPosition.x + containerRect.left),
-            y: Math.round(newPosition.y + containerRect.top),
+            x: Math.round(newPosition.x),
+            y: Math.round(newPosition.y),
           };
           reportNewPosition(finalPosition, index);
         }
