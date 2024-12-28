@@ -403,7 +403,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   );
 
   const handleReportNewPosition = useCallback(
-    throttle((point: Point2D, index: number) => {
+    (point: Point2D, index: number) => {
       if (!offset) return;
       setGravityPoints((points) =>
         points.map((point2, i) =>
@@ -415,8 +415,8 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             : point2
         )
       );
-    }, 16),
-    [gravityRef, offset]
+    },
+    [offset]
   );
 
   const handleDragEnd = useCallback(() => {

@@ -1,8 +1,9 @@
-import React, { useRef } from "react";
+import React, { useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { GravityPoint } from "../../utils/types/physics";
 import { Point2D } from "../../utils/types/physics";
 import { StarRenderer } from "../../components/StarRenderer/StarRenderer";
+import { throttle } from "lodash";
 
 interface GravityPointComponentProps {
   point: GravityPoint;
@@ -36,17 +37,25 @@ export const GravityPointComponent: React.FC<GravityPointComponentProps> = ({
     }, 200); // Wait 200ms before considering it a drag
   };
 
-  const reportPosition = (newPosition: Point2D) => {
-    const container = containerRef.current;
-    if (container) {
-      const containerRect = container.getBoundingClientRect();
-      const finalPosition = {
-        x: Math.round(newPosition.x + containerRect.left),
-        y: Math.round(newPosition.y + containerRect.top),
-      };
-      reportNewPosition(finalPosition, index);
-    }
-  };
+  // Create a throttled report position function for this specific gravity point
+  const throttledReportPosition = useCallback(
+    throttle(
+      (newPosition: Point2D) => {
+        const container = containerRef.current;
+        if (container) {
+          const containerRect = container.getBoundingClientRect();
+          const finalPosition = {
+            x: Math.round(newPosition.x + containerRect.left),
+            y: Math.round(newPosition.y + containerRect.top),
+          };
+          reportNewPosition(finalPosition, index);
+        }
+      },
+      50,
+      { leading: true, trailing: true }
+    ),
+    [containerRef, reportNewPosition, index]
+  );
 
   const handlePointerUp = () => {
     clearTimeout(timeoutRef.current);
@@ -60,7 +69,7 @@ export const GravityPointComponent: React.FC<GravityPointComponentProps> = ({
     <motion.div
       ref={elementRef}
       onUpdate={(latest) => {
-        reportPosition({ x: Number(latest.x), y: Number(latest.y) });
+        throttledReportPosition({ x: Number(latest.x), y: Number(latest.y) });
       }}
       drag={!disabled}
       dragMomentum={false}
@@ -85,7 +94,7 @@ export const GravityPointComponent: React.FC<GravityPointComponentProps> = ({
         disabled
           ? undefined
           : {
-              scale: 1.1,
+              scale: 1.6,
             }
       }
     >
