@@ -6,6 +6,8 @@ An interactive gravity simulation built with React, TypeScript, and Vite. This p
 
 [React Gravity Simulator](https://yhattav.github.io/react-gravity/)
 
+[React Gravity Simulator Icon](https://yhattav.github.io/react-gravity/icon)
+
 ## Features
 
 - Real-time gravity simulation
