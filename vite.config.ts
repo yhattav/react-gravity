@@ -9,5 +9,11 @@ export default defineConfig({
     outDir: "dist",
     assetsDir: "assets",
     sourcemap: true,
+    rollupOptions: {
+      input: {
+        main: "./index.html",
+        "404": "./public/404.html",
+      },
+    },
   },
 });
