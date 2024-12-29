@@ -13,7 +13,7 @@ import "./App.css";
 import { ReactLogoIcon } from "./components/ReactLogoIcon/ReactLogoIcon";
 import "./styles/mobile.scss";
 import { debounce } from "lodash";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { IconView } from "./components/IconView/IconView";
 
 const { Content, Header } = Layout;
@@ -111,13 +111,7 @@ function App() {
       </Header>
       <Layout>
         <Content className="app-content">
-          <Routes>
-            <Route path="/icon" element={<IconView />} />
-            <Route
-              path="/"
-              element={<GravitySection onDebugData={handleDebugData} />}
-            />
-          </Routes>
+          <GravitySection onDebugData={handleDebugData} />
         </Content>
         {!isMobileView && (
           <Layout.Sider
