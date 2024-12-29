@@ -29,7 +29,7 @@ export const ReactLogoIcon: React.FC<ReactLogoIconProps> = ({ duration }) => {
         width: "51px",
         height: "51px",
         position: "relative",
-        marginRight: "10px",
+        //marginRight: "10px",
       }}
       ref={iconRef}
       onMouseEnter={() => simulatorApi?.play()}
