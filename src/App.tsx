@@ -13,7 +13,7 @@ import "./App.css";
 import { ReactLogoIcon } from "./components/ReactLogoIcon/ReactLogoIcon";
 import "./styles/mobile.scss";
 import { debounce } from "lodash";
-import { useLocation } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { IconView } from "./components/IconView/IconView";
 
 const { Content, Header } = Layout;
@@ -21,8 +21,6 @@ const { Content, Header } = Layout;
 function App() {
   const [debugData, setDebugData] = useState<DebugData | null>(null);
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
-  const location = useLocation();
-  const isIconRoute = location.pathname === "/icon";
 
   const handleDebugData = useCallback((data: DebugData) => {
     setDebugData(data);
@@ -57,73 +55,77 @@ function App() {
     };
   }, []);
 
-  if (isIconRoute) {
-    return <IconView />;
-  }
-
   return (
-    <Layout className="app-layout">
-      <Header className="app-header">
-        <div className="header-content">
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <ReactLogoIcon duration={3000} />
-            <h1 className="app-title">Gravity Simulator</h1>
-          </div>
-          <div className="header-icons">
-            <a
-              href="https://github.com/yhattav/react-gravity"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="header-icon"
-              title="View Source Code"
-            >
-              <GithubOutlined />
-            </a>
-            <a
-              href="https://github.com/yhattav/react-gravity/issues"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="header-icon"
-              title="Report Issues"
-            >
-              <BugOutlined />
-            </a>
-            <a
-              href="https://github.com/yhattav/react-gravity/wiki"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="header-icon"
-              title="Documentation"
-            >
-              <QuestionCircleOutlined />
-            </a>
-            <a
-              href="https://github.com/yhattav/react-gravity/blob/main/README.md#configuration"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="header-icon"
-              title="Configuration Guide"
-            >
-              <SettingOutlined />
-            </a>
-          </div>
-        </div>
-      </Header>
-      <Layout>
-        <Content className="app-content">
-          <GravitySection onDebugData={handleDebugData} />
-        </Content>
-        {!isMobileView && (
-          <Layout.Sider
-            className="app-sider"
-            width="20%"
-            style={{ overflow: "scroll" }}
-          >
-            {debugData && <DebugInfo data={debugData} />}
-          </Layout.Sider>
-        )}
-      </Layout>
-    </Layout>
+    <Routes>
+      <Route path="/icon" element={<IconView />} />
+      <Route
+        path="/"
+        element={
+          <Layout className="app-layout">
+            <Header className="app-header">
+              <div className="header-content">
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <ReactLogoIcon duration={3000} />
+                  <h1 className="app-title">Gravity Simulator</h1>
+                </div>
+                <div className="header-icons">
+                  <a
+                    href="https://github.com/yhattav/react-gravity"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="header-icon"
+                    title="View Source Code"
+                  >
+                    <GithubOutlined />
+                  </a>
+                  <a
+                    href="https://github.com/yhattav/react-gravity/issues"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="header-icon"
+                    title="Report Issues"
+                  >
+                    <BugOutlined />
+                  </a>
+                  <a
+                    href="https://github.com/yhattav/react-gravity/wiki"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="header-icon"
+                    title="Documentation"
+                  >
+                    <QuestionCircleOutlined />
+                  </a>
+                  <a
+                    href="https://github.com/yhattav/react-gravity/blob/main/README.md#configuration"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="header-icon"
+                    title="Configuration Guide"
+                  >
+                    <SettingOutlined />
+                  </a>
+                </div>
+              </div>
+            </Header>
+            <Layout>
+              <Content className="app-content">
+                <GravitySection onDebugData={handleDebugData} />
+              </Content>
+              {!isMobileView && (
+                <Layout.Sider
+                  className="app-sider"
+                  width="20%"
+                  style={{ overflow: "scroll" }}
+                >
+                  {debugData && <DebugInfo data={debugData} />}
+                </Layout.Sider>
+              )}
+            </Layout>
+          </Layout>
+        }
+      />
+    </Routes>
   );
 }
 
