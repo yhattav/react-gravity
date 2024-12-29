@@ -1,10 +1,14 @@
 import React, { useRef, useState } from "react";
-//import { GravitySimulator } from "../GravitySimulator/GravitySimulator";
 import { reactIcon } from "../../scenarios/defaults/reactIcon";
 import { GravitySimulatorApi } from "../GravitySimulator/GravitySimulator";
 import { GravitySimulatorWithSettings } from "../GravitySimulatorWithSettings/GravitySimulatorWithSettings";
+import { Point2D } from "../../utils/types/physics";
 
-export const ReactLogoIcon: React.FC = () => {
+interface ReactLogoIconProps {
+  duration?: number; // Duration in milliseconds before pausing, if not provided it will run indefinitely
+}
+
+export const ReactLogoIcon: React.FC<ReactLogoIconProps> = ({ duration }) => {
   const iconRef = useRef<HTMLDivElement>(null);
   const [simulatorApi, setSimulatorApi] = useState<GravitySimulatorApi | null>(
     null
@@ -12,9 +16,11 @@ export const ReactLogoIcon: React.FC = () => {
 
   const handleApiReady = (api: GravitySimulatorApi) => {
     setSimulatorApi(api);
-    setTimeout(() => {
-      api?.pause();
-    }, 3000);
+    if (duration) {
+      setTimeout(() => {
+        api?.pause();
+      }, duration);
+    }
   };
 
   return (
@@ -27,18 +33,18 @@ export const ReactLogoIcon: React.FC = () => {
       }}
       ref={iconRef}
       onMouseEnter={() => simulatorApi?.play()}
-      onMouseLeave={() => simulatorApi?.pause()}
+      onMouseLeave={() => (duration ? simulatorApi?.pause() : null)}
     >
       <GravitySimulatorWithSettings
         simulatorId="react-logo-icon"
         gravityRef={iconRef}
         disableSound={true}
-        //pointerPos={{ x: 0, y: 0 } as Point2D}
         initialScenario={reactIcon}
         removeOverlay={true}
         blockInteractions={true}
         className="react-logo-icon"
         onApiReady={handleApiReady}
+        pointerPosRef={{ current: { x: 0, y: 0 } as Point2D }}
       />
     </div>
   );
