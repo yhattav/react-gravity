@@ -50,7 +50,7 @@ export const ScenarioPanel: React.FC<ScenarioPanelProps> = ({
         console.error("Error loading scenario from URL:", error);
       }
     }
-  });
+  }, []);
 
   return (
     <AnimatePresence>
