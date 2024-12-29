@@ -14,9 +14,9 @@ export const defaultScenarios: Scenario[] = [
   react,
   orbit,
   negativeMass,
-  threeStars,
-  orbitalDance,
-  galaxyCollision,
+  // threeStars,
+  // orbitalDance,
+  // galaxyCollision,
   flowerDance,
   pulsar,
 ];

@@ -20,7 +20,7 @@ export const orbit: Scenario = {
     },
     gravityPoints: [
       {
-        x: 700,
+        x: 500,
         y: 400,
         label: "Central Star",
         mass: 1300000,
@@ -29,7 +29,7 @@ export const orbit: Scenario = {
     particles: [
       {
         id: "planet",
-        position: { x: 700, y: 100 },
+        position: { x: 500, y: 100 },
         velocity: { x: 20, y: 0 }, // Calculated for circular orbit
         mass: 1,
         elasticity: 0.8,
@@ -39,7 +39,7 @@ export const orbit: Scenario = {
       },
       {
         id: "moon",
-        position: { x: 700, y: 201 },
+        position: { x: 500, y: 201 },
         velocity: { x: 220, y: 0 }, // Additional velocity to orbit the planet
         mass: 0.01,
         elasticity: 0.8,
