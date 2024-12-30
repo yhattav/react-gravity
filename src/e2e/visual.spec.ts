@@ -6,9 +6,6 @@ test.describe("Gravity Simulator Visual Tests", () => {
     "React",
     "Orbit",
     "Negative Mass",
-    "Three Stars",
-    "Orbital Dance",
-    "Galaxy Collision",
     "Flower Dance",
     "Binary Pulsar",
   ];

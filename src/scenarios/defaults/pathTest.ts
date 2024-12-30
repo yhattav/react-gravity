@@ -52,12 +52,12 @@ export const pathTest: Scenario = {
     particles: [
       {
         id: "test-particle",
-        position: { x: 50, y: 50 },
+        position: { x: 50, y: 100 },
         velocity: { x: 3, y: 0 },
-        mass: 0.1,
+        mass: 0.2,
         elasticity: 0.8,
         color: "#ffffff",
-        size: 5,
+        size: 7,
       },
     ],
     paths: [createCurvedDiagonalPath()],

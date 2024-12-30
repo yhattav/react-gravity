@@ -48,22 +48,22 @@ export interface PhysicsSettings {
 }
 
 export const DEFAULT_PHYSICS_CONFIG: PhysicsSettings = {
-  NEW_PARTICLE_MASS: 0.1,
+  NEW_PARTICLE_MASS: 0.3,
   NEW_PARTICLE_ELASTICITY: 0.8,
   FRICTION: 1,
   DELTA_TIME: 1 / 60,
   POINTER_MASS: 500000,
-  SHOW_VELOCITY_ARROWS: true,
-  SHOW_FORCE_ARROWS: true,
+  SHOW_VELOCITY_ARROWS: false,
+  SHOW_FORCE_ARROWS: false,
   CONSTANT_FORCE: { x: 0, y: 0 },
   SOLID_BOUNDARIES: true,
   PARTICLES_EXERT_GRAVITY: false,
   PARTICLE_TRAIL_LENGTH: 30,
-  SHOW_GRAVITY_VISION: false,
+  SHOW_GRAVITY_VISION: true,
   GRAVITY_GRID_DENSITY: 20,
-  MASTER_VOLUME: 0.5,
-  AMBIENT_VOLUME: 0.5,
-  PARTICLE_VOLUME: 0.5,
+  MASTER_VOLUME: 0.8,
+  AMBIENT_VOLUME: 0.6,
+  PARTICLE_VOLUME: 0.3,
 } as const;
 
 export const SETTINGS_METADATA: Record<
@@ -220,7 +220,7 @@ export const STAR_TEMPLATES: StarTemplate[] = [
 ];
 
 export const INITIAL_GRAVITY_POINTS: GravityPoint[] = [
-  { position: new Point(700, 700), label: "Heavy", mass: 50000 },
-  { position: new Point(500, 150), label: "Medium", mass: 30000 },
-  { position: new Point(350, 250), label: "Light", mass: 10000 },
+  { position: new Point(500, 400), label: "Heavy", mass: 1000000 },
+  { position: new Point(500, 150), label: "Medium", mass: 300000 },
+  { position: new Point(350, 250), label: "Light", mass: 100000 },
 ];
