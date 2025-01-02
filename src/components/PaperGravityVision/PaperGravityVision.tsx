@@ -31,6 +31,7 @@ const CONTOUR_CONSTANTS = {
   MASS_THRESHOLD: 0.01,
   THROTTLE_MS: 32, // ~30fps
   QUALITY_SWITCH_THRESHOLD_MS: 200,
+  OPACITY: 0.1,
 } as const;
 
 // Helper functions
@@ -138,7 +139,7 @@ export const PaperGravityVision: React.FC<PaperGravityVisionProps> = ({
 
     // Generate and draw contours
     const contourPaths = contours(field.flat());
-    const g = svg.append("g");
+    const g = svg.append("g").style("opacity", CONTOUR_CONSTANTS.OPACITY);
 
     // Draw filled contours
     g.selectAll("path")
@@ -218,6 +219,7 @@ export const PaperGravityVision: React.FC<PaperGravityVisionProps> = ({
         top: 0,
         left: 0,
         pointerEvents: "none",
+        zIndex: -1, // Place below other components
       }}
     />
   );
