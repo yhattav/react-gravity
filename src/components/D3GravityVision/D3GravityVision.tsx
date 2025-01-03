@@ -4,7 +4,7 @@ import { PhysicsSettings } from "../../constants/physics";
 import * as d3 from "d3";
 
 // Types
-interface PaperGravityVisionProps {
+interface D3GravityVisionProps {
   warpPoints: WarpPoint[];
   settings: PhysicsSettings;
   containerRef: React.RefObject<HTMLDivElement>;
@@ -115,7 +115,7 @@ const getWarpPointsKey = (points: WarpPoint[], averageMass: number): string => {
 };
 
 // Main Component
-export const PaperGravityVision: React.FC<PaperGravityVisionProps> = ({
+export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
   warpPoints,
   settings,
   containerRef,
