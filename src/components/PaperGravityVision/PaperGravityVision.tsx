@@ -139,7 +139,7 @@ export const PaperGravityVision: React.FC<PaperGravityVisionProps> = ({
 
     // Generate and draw contours
     const contourPaths = contours(field.flat());
-    const g = svg.append("g").style("opacity", CONTOUR_CONSTANTS.OPACITY);
+    const g = svg.append("g");
 
     // Calculate stroke width based on scale
     const scaleX = width / quality.GRID_SIZE;
@@ -147,13 +147,14 @@ export const PaperGravityVision: React.FC<PaperGravityVisionProps> = ({
     const averageScale = (scaleX + scaleY) / 2;
     const adjustedStrokeWidth = 2 / averageScale;
 
-    // Draw filled contours
+    // Draw filled contours with separate opacity for fill and stroke
     g.selectAll("path")
       .data(contourPaths)
       .enter()
       .append("path")
       .attr("d", d3.geoPath())
       .attr("fill", (d: d3.ContourMultiPolygon) => colorScale(d.value))
+      .attr("fill-opacity", CONTOUR_CONSTANTS.OPACITY)
       .attr("stroke", "#fff")
       .attr("stroke-opacity", 1)
       .attr("stroke-width", adjustedStrokeWidth)
@@ -223,7 +224,7 @@ export const PaperGravityVision: React.FC<PaperGravityVisionProps> = ({
         left: 0,
         pointerEvents: "none",
         zIndex: -1, // Place below other components
-        filter: "blur(3px)",
+        filter: "blur(0px)",
       }}
     />
   );
