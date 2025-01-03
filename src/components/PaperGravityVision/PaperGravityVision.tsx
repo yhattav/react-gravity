@@ -31,7 +31,7 @@ const CONTOUR_CONSTANTS = {
   MASS_THRESHOLD: 0.01,
   THROTTLE_MS: 32, // ~30fps
   QUALITY_SWITCH_THRESHOLD_MS: 200,
-  OPACITY: 0.1,
+  OPACITY: 0.05,
 } as const;
 
 // Helper functions
@@ -99,6 +99,20 @@ const generateThresholds = (
   );
 };
 
+const getWarpPointsKey = (points: WarpPoint[], averageMass: number): string => {
+  return points
+    .filter(
+      (point) =>
+        point.effectiveMass > CONTOUR_CONSTANTS.MASS_THRESHOLD * averageMass
+    )
+    .map(
+      (point) =>
+        `${point.position.x},${point.position.y},${point.effectiveMass}`
+    )
+    .sort()
+    .join("|");
+};
+
 // Main Component
 export const PaperGravityVision: React.FC<PaperGravityVisionProps> = ({
   warpPoints,
@@ -110,6 +124,7 @@ export const PaperGravityVision: React.FC<PaperGravityVisionProps> = ({
   const lastUpdateTimeRef = useRef<number>(0);
   const lastQualityCheckRef = useRef<number>(0);
   const qualityRef = useRef<QualitySettings>(CONTOUR_CONSTANTS.LOW_QUALITY);
+  const lastWarpPointsKeyRef = useRef<string>("");
 
   const updateVisualization = (
     svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
@@ -118,8 +133,6 @@ export const PaperGravityVision: React.FC<PaperGravityVisionProps> = ({
     height: number,
     quality: QualitySettings
   ) => {
-    svg.selectAll("*").remove();
-
     // Find min/max values for better threshold distribution
     const values = field.flat();
     const minVal = Math.min(...values);
@@ -129,6 +142,7 @@ export const PaperGravityVision: React.FC<PaperGravityVisionProps> = ({
     const contours = d3
       .contours()
       .size([quality.GRID_SIZE, quality.GRID_SIZE])
+      .smooth(true)
       .thresholds(generateThresholds(minVal, maxVal, quality.CONTOUR_LEVELS));
 
     // Create color scale using interpolation
@@ -137,9 +151,8 @@ export const PaperGravityVision: React.FC<PaperGravityVisionProps> = ({
       .domain([maxVal, minVal])
       .interpolator(d3.interpolateInferno);
 
-    // Generate and draw contours
+    // Generate contours
     const contourPaths = contours(field.flat());
-    const g = svg.append("g");
 
     // Calculate stroke width based on scale
     const scaleX = width / quality.GRID_SIZE;
@@ -147,18 +160,42 @@ export const PaperGravityVision: React.FC<PaperGravityVisionProps> = ({
     const averageScale = (scaleX + scaleY) / 2;
     const adjustedStrokeWidth = 2 / averageScale;
 
-    // Draw filled contours with separate opacity for fill and stroke
-    g.selectAll("path")
-      .data(contourPaths)
+    // Get or create the group element
+    let g = svg.select<SVGGElement>("g");
+    if (g.empty()) {
+      g = svg.append("g");
+    }
+
+    // Update paths using the enter/update/exit pattern
+    const paths = g
+      .selectAll<SVGPathElement, d3.ContourMultiPolygon>("path")
+      .data(contourPaths);
+
+    // Remove old paths
+    paths.exit().remove();
+
+    // Update existing paths
+    paths
+      .attr("d", d3.geoPath())
+      .attr("fill", (d) => colorScale(d.value))
+      .attr("transform", `scale(${scaleX}, ${scaleY})`);
+
+    // Add new paths
+    paths
       .enter()
       .append("path")
       .attr("d", d3.geoPath())
-      .attr("fill", (d: d3.ContourMultiPolygon) => colorScale(d.value))
+      .attr("fill", (d) => colorScale(d.value))
       .attr("fill-opacity", CONTOUR_CONSTANTS.OPACITY)
       .attr("stroke", "#fff")
-      .attr("stroke-opacity", 1)
+      .attr("stroke-opacity", 0.5)
       .attr("stroke-width", adjustedStrokeWidth)
+      .attr("stroke-linejoin", "round")
+      .attr("stroke-linecap", "round")
       .attr("transform", `scale(${scaleX}, ${scaleY})`);
+
+    // Update all paths with new stroke width (might change with scale)
+    g.selectAll("path").attr("stroke-width", adjustedStrokeWidth);
   };
 
   useEffect(() => {
@@ -176,6 +213,17 @@ export const PaperGravityVision: React.FC<PaperGravityVisionProps> = ({
     if (timeSinceLastUpdate < CONTOUR_CONSTANTS.THROTTLE_MS) {
       return;
     }
+
+    // Check if warp points actually changed
+    averageEffectiveMassRef.current = calculateAverageMass(warpPoints);
+    const currentKey = getWarpPointsKey(
+      warpPoints,
+      averageEffectiveMassRef.current
+    );
+    if (currentKey === lastWarpPointsKeyRef.current) {
+      return;
+    }
+    lastWarpPointsKeyRef.current = currentKey;
 
     // Check if we should switch quality (less frequently than updates)
     if (
@@ -201,7 +249,6 @@ export const PaperGravityVision: React.FC<PaperGravityVisionProps> = ({
       .attr("height", height);
 
     // Calculate gravity field
-    averageEffectiveMassRef.current = calculateAverageMass(warpPoints);
     const field = calculateGravityField(
       width,
       height,
@@ -213,6 +260,7 @@ export const PaperGravityVision: React.FC<PaperGravityVisionProps> = ({
     updateVisualization(svg, field, width, height, qualityRef.current);
   }, [warpPoints, settings.SHOW_GRAVITY_VISION, containerRef]);
 
+  // Remove console.log effects
   if (!settings.SHOW_GRAVITY_VISION) return null;
 
   return (
@@ -223,8 +271,7 @@ export const PaperGravityVision: React.FC<PaperGravityVisionProps> = ({
         top: 0,
         left: 0,
         pointerEvents: "none",
-        zIndex: -1, // Place below other components
-        filter: "blur(0px)",
+        zIndex: -1,
       }}
     />
   );
