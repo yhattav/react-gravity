@@ -24,7 +24,7 @@ const CONTOUR_CONSTANTS = {
   } as QualitySettings,
   LOW_QUALITY: {
     GRID_SIZE: 50,
-    CONTOUR_LEVELS: 10,
+    CONTOUR_LEVELS: 15,
   } as QualitySettings,
   STRENGTH: 500,
   FALLOFF: 100,
@@ -199,7 +199,7 @@ export const PaperGravityVision: React.FC<PaperGravityVisionProps> = ({
       .attr("fill", (d) => colorScale(d.value))
       .attr("fill-opacity", CONTOUR_CONSTANTS.OPACITY)
       .attr("stroke", "#fff")
-      .attr("stroke-opacity", 1)
+      .attr("stroke-opacity", 0.1)
       .attr("stroke-width", adjustedStrokeWidth)
       .attr("stroke-linejoin", "round")
       .attr("stroke-linecap", "round")
