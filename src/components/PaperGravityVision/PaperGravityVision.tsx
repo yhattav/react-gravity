@@ -134,12 +134,18 @@ export const PaperGravityVision: React.FC<PaperGravityVisionProps> = ({
     // Create color scale using interpolation
     const colorScale = d3
       .scaleSequential()
-      .domain([minVal, maxVal])
+      .domain([maxVal, minVal])
       .interpolator(d3.interpolateInferno);
 
     // Generate and draw contours
     const contourPaths = contours(field.flat());
     const g = svg.append("g").style("opacity", CONTOUR_CONSTANTS.OPACITY);
+
+    // Calculate stroke width based on scale
+    const scaleX = width / quality.GRID_SIZE;
+    const scaleY = height / quality.GRID_SIZE;
+    const averageScale = (scaleX + scaleY) / 2;
+    const adjustedStrokeWidth = 2 / averageScale;
 
     // Draw filled contours
     g.selectAll("path")
@@ -149,12 +155,9 @@ export const PaperGravityVision: React.FC<PaperGravityVisionProps> = ({
       .attr("d", d3.geoPath())
       .attr("fill", (d: d3.ContourMultiPolygon) => colorScale(d.value))
       .attr("stroke", "#fff")
-      .attr("stroke-opacity", 0.2)
-      .attr("stroke-width", 0.5)
-      .attr(
-        "transform",
-        `scale(${width / quality.GRID_SIZE}, ${height / quality.GRID_SIZE})`
-      );
+      .attr("stroke-opacity", 1)
+      .attr("stroke-width", adjustedStrokeWidth)
+      .attr("transform", `scale(${scaleX}, ${scaleY})`);
   };
 
   useEffect(() => {
@@ -220,6 +223,7 @@ export const PaperGravityVision: React.FC<PaperGravityVisionProps> = ({
         left: 0,
         pointerEvents: "none",
         zIndex: -1, // Place below other components
+        filter: "blur(3px)",
       }}
     />
   );
