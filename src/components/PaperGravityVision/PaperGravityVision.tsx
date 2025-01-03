@@ -31,7 +31,8 @@ const CONTOUR_CONSTANTS = {
   MASS_THRESHOLD: 0.01,
   THROTTLE_MS: 32, // ~30fps
   QUALITY_SWITCH_THRESHOLD_MS: 200,
-  OPACITY: 0.05,
+  OPACITY: 1,
+  TRANSITION_MS: 100, // Duration of the transition animation
 } as const;
 
 // Helper functions
@@ -122,7 +123,6 @@ export const PaperGravityVision: React.FC<PaperGravityVisionProps> = ({
   const svgRef = useRef<SVGSVGElement>(null);
   const averageEffectiveMassRef = useRef<number>(1);
   const lastUpdateTimeRef = useRef<number>(0);
-  const lastQualityCheckRef = useRef<number>(0);
   const qualityRef = useRef<QualitySettings>(CONTOUR_CONSTANTS.LOW_QUALITY);
   const lastWarpPointsKeyRef = useRef<string>("");
 
@@ -166,36 +166,48 @@ export const PaperGravityVision: React.FC<PaperGravityVisionProps> = ({
       g = svg.append("g");
     }
 
+    // Create a transition
+    const t = d3
+      .transition()
+      .duration(CONTOUR_CONSTANTS.TRANSITION_MS)
+      .ease(d3.easeLinear);
+
     // Update paths using the enter/update/exit pattern
     const paths = g
       .selectAll<SVGPathElement, d3.ContourMultiPolygon>("path")
       .data(contourPaths);
 
-    // Remove old paths
-    paths.exit().remove();
+    // Remove old paths with fade out
+    paths.exit().transition(t).style("opacity", 0).remove();
 
     // Update existing paths
-    paths
+    // Instead of transitioning the path shape, we'll fade out old state and fade in new state
+    const updatePaths = paths.style("opacity", 1);
+
+    // Immediately set the new path and fill
+    updatePaths
       .attr("d", d3.geoPath())
       .attr("fill", (d) => colorScale(d.value))
-      .attr("transform", `scale(${scaleX}, ${scaleY})`);
+      .attr("transform", `scale(${scaleX}, ${scaleY})`)
+      .attr("stroke-width", adjustedStrokeWidth);
 
     // Add new paths
-    paths
+    const enterPaths = paths
       .enter()
       .append("path")
       .attr("d", d3.geoPath())
       .attr("fill", (d) => colorScale(d.value))
       .attr("fill-opacity", CONTOUR_CONSTANTS.OPACITY)
       .attr("stroke", "#fff")
-      .attr("stroke-opacity", 0.5)
+      .attr("stroke-opacity", 1)
       .attr("stroke-width", adjustedStrokeWidth)
       .attr("stroke-linejoin", "round")
       .attr("stroke-linecap", "round")
-      .attr("transform", `scale(${scaleX}, ${scaleY})`);
+      .attr("transform", `scale(${scaleX}, ${scaleY})`)
+      .style("opacity", 0); // Start invisible
 
-    // Update all paths with new stroke width (might change with scale)
-    g.selectAll("path").attr("stroke-width", adjustedStrokeWidth);
+    // Fade in new paths
+    enterPaths.transition(t).style("opacity", 200);
   };
 
   useEffect(() => {
@@ -224,18 +236,6 @@ export const PaperGravityVision: React.FC<PaperGravityVisionProps> = ({
       return;
     }
     lastWarpPointsKeyRef.current = currentKey;
-
-    // Check if we should switch quality (less frequently than updates)
-    if (
-      now - lastQualityCheckRef.current >
-      CONTOUR_CONSTANTS.QUALITY_SWITCH_THRESHOLD_MS
-    ) {
-      qualityRef.current =
-        timeSinceLastUpdate > CONTOUR_CONSTANTS.QUALITY_SWITCH_THRESHOLD_MS
-          ? CONTOUR_CONSTANTS.HIGH_QUALITY
-          : CONTOUR_CONSTANTS.LOW_QUALITY;
-      lastQualityCheckRef.current = now;
-    }
 
     lastUpdateTimeRef.current = now;
 
@@ -270,6 +270,7 @@ export const PaperGravityVision: React.FC<PaperGravityVisionProps> = ({
         position: "absolute",
         top: 0,
         left: 0,
+        opacity: 0.1,
         pointerEvents: "none",
         zIndex: -1,
       }}
