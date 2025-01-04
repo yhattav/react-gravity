@@ -64,17 +64,13 @@ export interface PhysicsSettings {
   GRAVITY_VISION_STROKE_COLOR: string;
   GRAVITY_VISION_COLOR_SCHEME: string;
   GRAVITY_VISION_INVERT_COLORS: boolean;
-  GRAVITY_VISION_HIGH_QUALITY_GRID_SIZE: number;
-  GRAVITY_VISION_LOW_QUALITY_GRID_SIZE: number;
-  GRAVITY_VISION_HIGH_QUALITY_CONTOURS: number;
-  GRAVITY_VISION_LOW_QUALITY_CONTOURS: number;
+  GRAVITY_VISION_GRID_SIZE: number;
+  GRAVITY_VISION_CONTOUR_LEVELS: number;
   GRAVITY_VISION_THROTTLE_MS: number;
   GRAVITY_VISION_TRANSITION_MS: number;
   GRAVITY_VISION_STRENGTH: number;
   GRAVITY_VISION_FALLOFF: number;
   GRAVITY_VISION_MASS_THRESHOLD: number;
-  GRAVITY_VISION_QUALITY_SWITCH_MS: number;
-  GRAVITY_VISION_AUTO_QUALITY: boolean;
 }
 
 export const DEFAULT_PHYSICS_CONFIG: PhysicsSettings = {
@@ -100,17 +96,13 @@ export const DEFAULT_PHYSICS_CONFIG: PhysicsSettings = {
   GRAVITY_VISION_STROKE_COLOR: "#ffffff",
   GRAVITY_VISION_COLOR_SCHEME: "interpolateInferno",
   GRAVITY_VISION_INVERT_COLORS: false,
-  GRAVITY_VISION_HIGH_QUALITY_GRID_SIZE: 100,
-  GRAVITY_VISION_LOW_QUALITY_GRID_SIZE: 50,
-  GRAVITY_VISION_HIGH_QUALITY_CONTOURS: 20,
-  GRAVITY_VISION_LOW_QUALITY_CONTOURS: 15,
+  GRAVITY_VISION_GRID_SIZE: 100,
+  GRAVITY_VISION_CONTOUR_LEVELS: 20,
   GRAVITY_VISION_THROTTLE_MS: 32,
   GRAVITY_VISION_TRANSITION_MS: 100,
   GRAVITY_VISION_STRENGTH: 500,
   GRAVITY_VISION_FALLOFF: 100,
   GRAVITY_VISION_MASS_THRESHOLD: 0.01,
-  GRAVITY_VISION_QUALITY_SWITCH_MS: 200,
-  GRAVITY_VISION_AUTO_QUALITY: true,
 } as const;
 
 export const SETTINGS_METADATA: Record<
@@ -254,32 +246,18 @@ export const SETTINGS_METADATA: Record<
     type: "boolean",
     isDev: false,
   },
-  GRAVITY_VISION_HIGH_QUALITY_GRID_SIZE: {
+  GRAVITY_VISION_GRID_SIZE: {
     type: "slider",
     isDev: false,
     min: 50,
     max: 200,
     step: 10,
   },
-  GRAVITY_VISION_LOW_QUALITY_GRID_SIZE: {
-    type: "slider",
-    isDev: false,
-    min: 20,
-    max: 100,
-    step: 10,
-  },
-  GRAVITY_VISION_HIGH_QUALITY_CONTOURS: {
+  GRAVITY_VISION_CONTOUR_LEVELS: {
     type: "slider",
     isDev: false,
     min: 5,
     max: 50,
-    step: 5,
-  },
-  GRAVITY_VISION_LOW_QUALITY_CONTOURS: {
-    type: "slider",
-    isDev: false,
-    min: 5,
-    max: 30,
     step: 5,
   },
   GRAVITY_VISION_THROTTLE_MS: {
@@ -316,17 +294,6 @@ export const SETTINGS_METADATA: Record<
     min: 0,
     max: 0.1,
     step: 0.01,
-  },
-  GRAVITY_VISION_QUALITY_SWITCH_MS: {
-    type: "slider",
-    isDev: false,
-    min: 100,
-    max: 500,
-    step: 50,
-  },
-  GRAVITY_VISION_AUTO_QUALITY: {
-    type: "boolean",
-    isDev: false,
   },
 } as const;
 

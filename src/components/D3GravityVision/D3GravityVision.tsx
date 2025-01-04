@@ -110,11 +110,10 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const averageEffectiveMassRef = useRef<number>(1);
-  const lastUpdateTimeRef = useRef<number>(0);
   const lastWarpPointsKeyRef = useRef<string>("");
   const qualityRef = useRef<QualitySettings>({
-    GRID_SIZE: settings.GRAVITY_VISION_LOW_QUALITY_GRID_SIZE,
-    CONTOUR_LEVELS: settings.GRAVITY_VISION_LOW_QUALITY_CONTOURS,
+    GRID_SIZE: settings.GRAVITY_VISION_GRID_SIZE,
+    CONTOUR_LEVELS: settings.GRAVITY_VISION_CONTOUR_LEVELS,
   });
 
   const updateVisualization = useCallback(
@@ -263,7 +262,7 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
   // Handle settings changes
   useEffect(() => {
     throttledSettingsUpdate(settings);
-  }, [settings, throttledSettingsUpdate]);
+  }, [settings]);
 
   // Handle warp point changes
   useEffect(() => {
@@ -273,9 +272,6 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
       !settings.SHOW_GRAVITY_VISION
     )
       return;
-
-    const now = Date.now();
-    const timeSinceLastUpdate = now - lastUpdateTimeRef.current;
 
     // Check if warp points actually changed
     averageEffectiveMassRef.current = calculateAverageMass(warpPoints);
@@ -289,21 +285,11 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
     }
     lastWarpPointsKeyRef.current = currentKey;
 
-    // Update quality if auto-quality is enabled
-    if (settings.GRAVITY_VISION_AUTO_QUALITY) {
-      const useHighQuality =
-        timeSinceLastUpdate > settings.GRAVITY_VISION_QUALITY_SWITCH_MS;
-      qualityRef.current = {
-        GRID_SIZE: useHighQuality
-          ? settings.GRAVITY_VISION_HIGH_QUALITY_GRID_SIZE
-          : settings.GRAVITY_VISION_LOW_QUALITY_GRID_SIZE,
-        CONTOUR_LEVELS: useHighQuality
-          ? settings.GRAVITY_VISION_HIGH_QUALITY_CONTOURS
-          : settings.GRAVITY_VISION_LOW_QUALITY_CONTOURS,
-      };
-    }
-
-    lastUpdateTimeRef.current = now;
+    // Update quality settings
+    qualityRef.current = {
+      GRID_SIZE: settings.GRAVITY_VISION_GRID_SIZE,
+      CONTOUR_LEVELS: settings.GRAVITY_VISION_CONTOUR_LEVELS,
+    };
 
     const container = containerRef.current;
     const { width, height } = container.getBoundingClientRect();
