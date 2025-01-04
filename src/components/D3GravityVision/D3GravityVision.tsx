@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import { WarpPoint } from "../../utils/types/physics";
 import { PhysicsSettings } from "../../constants/physics";
 import * as d3 from "d3";
+import { throttle } from "lodash";
 
 // Types
 interface D3GravityVisionProps {
@@ -60,16 +61,6 @@ const calculateGravityField = (
   return field;
 };
 
-const calculateAverageMass = (points: WarpPoint[]): number => {
-  const activePoints = points.filter((point) => point.effectiveMass > 0);
-  return activePoints.length > 0
-    ? activePoints.reduce(
-        (sum, point) => sum + Math.abs(point.effectiveMass),
-        0
-      ) / activePoints.length
-    : 1;
-};
-
 const generateThresholds = (
   minVal: number,
   maxVal: number,
@@ -80,6 +71,16 @@ const generateThresholds = (
     { length: levels },
     (_, i) => Math.max(minVal, 1) * Math.pow(base, i)
   );
+};
+
+const calculateAverageMass = (points: WarpPoint[]): number => {
+  const activePoints = points.filter((point) => point.effectiveMass > 0);
+  return activePoints.length > 0
+    ? activePoints.reduce(
+        (sum, point) => sum + Math.abs(point.effectiveMass),
+        0
+      ) / activePoints.length
+    : 1;
 };
 
 const getWarpPointsKey = (
@@ -110,104 +111,161 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
   const svgRef = useRef<SVGSVGElement>(null);
   const averageEffectiveMassRef = useRef<number>(1);
   const lastUpdateTimeRef = useRef<number>(0);
+  const lastWarpPointsKeyRef = useRef<string>("");
   const qualityRef = useRef<QualitySettings>({
     GRID_SIZE: settings.GRAVITY_VISION_LOW_QUALITY_GRID_SIZE,
     CONTOUR_LEVELS: settings.GRAVITY_VISION_LOW_QUALITY_CONTOURS,
   });
-  const lastWarpPointsKeyRef = useRef<string>("");
 
-  const updateVisualization = (
-    svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
-    field: number[][],
-    width: number,
-    height: number,
-    quality: QualitySettings
-  ) => {
-    // Find min/max values for better threshold distribution
-    const values = field.flat();
-    const minVal = Math.min(...values);
-    const maxVal = Math.max(...values);
+  const updateVisualization = useCallback(
+    (
+      svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
+      field: number[][],
+      width: number,
+      height: number,
+      quality: QualitySettings
+    ) => {
+      console.count("updateVisualization");
+      console.log(settings.GRAVITY_VISION_STROKE_OPACITY);
+      // Find min/max values for better threshold distribution
+      const values = field.flat();
+      const minVal = Math.min(...values);
+      const maxVal = Math.max(...values);
 
-    // Create contour generator with dynamic thresholds
-    const contours = d3
-      .contours()
-      .size([quality.GRID_SIZE, quality.GRID_SIZE])
-      .smooth(true)
-      .thresholds(generateThresholds(minVal, maxVal, quality.CONTOUR_LEVELS));
+      // Create contour generator with dynamic thresholds
+      const contours = d3
+        .contours()
+        .size([quality.GRID_SIZE, quality.GRID_SIZE])
+        .smooth(true)
+        .thresholds(generateThresholds(minVal, maxVal, quality.CONTOUR_LEVELS));
 
-    // Create color scale using interpolation
-    const colorScale = d3
-      .scaleSequential()
-      .domain(
-        settings.GRAVITY_VISION_INVERT_COLORS
-          ? [minVal, maxVal]
-          : [maxVal, minVal]
-      )
-      .interpolator(
-        d3[settings.GRAVITY_VISION_COLOR_SCHEME as keyof typeof d3] as (
-          t: number
-        ) => string
+      // Create color scale using interpolation
+      const colorScale = d3
+        .scaleSequential()
+        .domain(
+          settings.GRAVITY_VISION_INVERT_COLORS
+            ? [minVal, maxVal]
+            : [maxVal, minVal]
+        )
+        .interpolator(
+          d3[settings.GRAVITY_VISION_COLOR_SCHEME as keyof typeof d3] as (
+            t: number
+          ) => string
+        );
+
+      // Generate contours
+      const contourPaths = contours(field.flat());
+
+      // Calculate stroke width based on scale
+      const scaleX = width / quality.GRID_SIZE;
+      const scaleY = height / quality.GRID_SIZE;
+      const averageScale = (scaleX + scaleY) / 2;
+      const adjustedStrokeWidth =
+        settings.GRAVITY_VISION_STROKE_WIDTH / averageScale;
+
+      // Get or create the group element
+      let g = svg.select<SVGGElement>("g");
+      if (g.empty()) {
+        g = svg.append("g");
+      }
+
+      // Create a transition
+      const t = d3
+        .transition()
+        .duration(settings.GRAVITY_VISION_TRANSITION_MS)
+        .ease(d3.easeLinear);
+
+      // Update paths using the enter/update/exit pattern
+      const paths = g
+        .selectAll<SVGPathElement, d3.ContourMultiPolygon>("path")
+        .data(contourPaths);
+
+      // Remove old paths with fade out
+      paths.exit().transition(t).style("opacity", 0).remove();
+
+      // Update existing paths
+      const updatePaths = paths.style(
+        "opacity",
+        settings.GRAVITY_VISION_OPACITY
       );
 
-    // Generate contours
-    const contourPaths = contours(field.flat());
+      // Immediately set the new path and fill
+      updatePaths
+        .attr("d", d3.geoPath())
+        .attr("fill", (d) => colorScale(d.value))
+        .attr("transform", `scale(${scaleX}, ${scaleY})`)
+        .attr("stroke-width", adjustedStrokeWidth)
+        .attr("stroke", settings.GRAVITY_VISION_STROKE_COLOR)
+        .attr("stroke-opacity", settings.GRAVITY_VISION_STROKE_OPACITY)
+        .attr("fill-opacity", settings.GRAVITY_VISION_OPACITY);
 
-    // Calculate stroke width based on scale
-    const scaleX = width / quality.GRID_SIZE;
-    const scaleY = height / quality.GRID_SIZE;
-    const averageScale = (scaleX + scaleY) / 2;
-    const adjustedStrokeWidth =
-      settings.GRAVITY_VISION_STROKE_WIDTH / averageScale;
+      // Add new paths
+      const enterPaths = paths
+        .enter()
+        .append("path")
+        .attr("d", d3.geoPath())
+        .attr("fill", (d) => colorScale(d.value))
+        .attr("fill-opacity", settings.GRAVITY_VISION_OPACITY)
+        .attr("stroke", settings.GRAVITY_VISION_STROKE_COLOR)
+        .attr("stroke-opacity", settings.GRAVITY_VISION_STROKE_OPACITY)
+        .attr("stroke-width", adjustedStrokeWidth)
+        .attr("stroke-linejoin", "round")
+        .attr("stroke-linecap", "round")
+        .attr("transform", `scale(${scaleX}, ${scaleY})`)
+        .style("opacity", 0);
 
-    // Get or create the group element
-    let g = svg.select<SVGGElement>("g");
-    if (g.empty()) {
-      g = svg.append("g");
-    }
+      // Fade in new paths
+      enterPaths
+        .transition(t)
+        .style("opacity", settings.GRAVITY_VISION_OPACITY);
+    },
+    [settings]
+  );
 
-    // Create a transition
-    const t = d3
-      .transition()
-      .duration(settings.GRAVITY_VISION_TRANSITION_MS)
-      .ease(d3.easeLinear);
+  // Create a throttled settings update function with trailing edge
+  const throttledSettingsUpdate = useCallback(
+    throttle(
+      (settings: PhysicsSettings) => {
+        if (
+          !containerRef.current ||
+          !svgRef.current ||
+          !settings.SHOW_GRAVITY_VISION
+        )
+          return;
 
-    // Update paths using the enter/update/exit pattern
-    const paths = g
-      .selectAll<SVGPathElement, d3.ContourMultiPolygon>("path")
-      .data(contourPaths);
+        const container = containerRef.current;
+        const { width, height } = container.getBoundingClientRect();
 
-    // Remove old paths with fade out
-    paths.exit().transition(t).style("opacity", 0).remove();
+        // Setup SVG
+        const svg = d3
+          .select(svgRef.current)
+          .attr("width", width)
+          .attr("height", height);
 
-    // Update existing paths
-    const updatePaths = paths.style("opacity", settings.GRAVITY_VISION_OPACITY);
+        // Calculate gravity field
+        const field = calculateGravityField(
+          width,
+          height,
+          warpPoints,
+          averageEffectiveMassRef.current,
+          qualityRef.current.GRID_SIZE,
+          settings
+        );
 
-    // Immediately set the new path and fill
-    updatePaths
-      .attr("d", d3.geoPath())
-      .attr("fill", (d) => colorScale(d.value))
-      .attr("transform", `scale(${scaleX}, ${scaleY})`)
-      .attr("stroke-width", adjustedStrokeWidth);
+        updateVisualization(svg, field, width, height, qualityRef.current);
+      },
+      100,
+      { trailing: true }
+    ),
+    [containerRef, updateVisualization, warpPoints]
+  );
 
-    // Add new paths
-    const enterPaths = paths
-      .enter()
-      .append("path")
-      .attr("d", d3.geoPath())
-      .attr("fill", (d) => colorScale(d.value))
-      .attr("fill-opacity", settings.GRAVITY_VISION_OPACITY)
-      .attr("stroke", settings.GRAVITY_VISION_STROKE_COLOR)
-      .attr("stroke-opacity", settings.GRAVITY_VISION_STROKE_OPACITY)
-      .attr("stroke-width", adjustedStrokeWidth)
-      .attr("stroke-linejoin", "round")
-      .attr("stroke-linecap", "round")
-      .attr("transform", `scale(${scaleX}, ${scaleY})`)
-      .style("opacity", 0);
+  // Handle settings changes
+  useEffect(() => {
+    throttledSettingsUpdate(settings);
+  }, [settings, throttledSettingsUpdate]);
 
-    // Fade in new paths
-    enterPaths.transition(t).style("opacity", settings.GRAVITY_VISION_OPACITY);
-  };
-
+  // Handle warp point changes
   useEffect(() => {
     if (
       !containerRef.current ||
@@ -218,11 +276,6 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
 
     const now = Date.now();
     const timeSinceLastUpdate = now - lastUpdateTimeRef.current;
-
-    // Throttle updates
-    if (timeSinceLastUpdate < settings.GRAVITY_VISION_THROTTLE_MS) {
-      return;
-    }
 
     // Check if warp points actually changed
     averageEffectiveMassRef.current = calculateAverageMass(warpPoints);
@@ -271,8 +324,16 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
       settings
     );
 
+    // Update visualization immediately for warp point changes
     updateVisualization(svg, field, width, height, qualityRef.current);
-  }, [warpPoints, settings, containerRef]);
+  }, [warpPoints, settings, containerRef, updateVisualization]);
+
+  // Cleanup throttled function on unmount
+  useEffect(() => {
+    return () => {
+      throttledSettingsUpdate.cancel();
+    };
+  }, [throttledSettingsUpdate]);
 
   if (!settings.SHOW_GRAVITY_VISION) return null;
 
