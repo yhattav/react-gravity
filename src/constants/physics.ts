@@ -23,10 +23,23 @@ export interface VectorSettingMetadata {
   label?: string;
 }
 
+export interface ColorSettingMetadata {
+  type: "color";
+  isDev: boolean;
+}
+
+export interface SelectSettingMetadata {
+  type: "select";
+  isDev: boolean;
+  options: string[];
+}
+
 type SettingMetadata =
   | SliderSettingMetadata
   | BooleanSettingMetadata
-  | VectorSettingMetadata;
+  | VectorSettingMetadata
+  | ColorSettingMetadata
+  | SelectSettingMetadata;
 
 export interface PhysicsSettings {
   NEW_PARTICLE_MASS: number;
@@ -45,6 +58,23 @@ export interface PhysicsSettings {
   MASTER_VOLUME: number;
   AMBIENT_VOLUME: number;
   PARTICLE_VOLUME: number;
+  GRAVITY_VISION_OPACITY: number;
+  GRAVITY_VISION_STROKE_OPACITY: number;
+  GRAVITY_VISION_STROKE_WIDTH: number;
+  GRAVITY_VISION_STROKE_COLOR: string;
+  GRAVITY_VISION_COLOR_SCHEME: string;
+  GRAVITY_VISION_INVERT_COLORS: boolean;
+  GRAVITY_VISION_HIGH_QUALITY_GRID_SIZE: number;
+  GRAVITY_VISION_LOW_QUALITY_GRID_SIZE: number;
+  GRAVITY_VISION_HIGH_QUALITY_CONTOURS: number;
+  GRAVITY_VISION_LOW_QUALITY_CONTOURS: number;
+  GRAVITY_VISION_THROTTLE_MS: number;
+  GRAVITY_VISION_TRANSITION_MS: number;
+  GRAVITY_VISION_STRENGTH: number;
+  GRAVITY_VISION_FALLOFF: number;
+  GRAVITY_VISION_MASS_THRESHOLD: number;
+  GRAVITY_VISION_QUALITY_SWITCH_MS: number;
+  GRAVITY_VISION_AUTO_QUALITY: boolean;
 }
 
 export const DEFAULT_PHYSICS_CONFIG: PhysicsSettings = {
@@ -64,6 +94,23 @@ export const DEFAULT_PHYSICS_CONFIG: PhysicsSettings = {
   MASTER_VOLUME: 0.8,
   AMBIENT_VOLUME: 0.6,
   PARTICLE_VOLUME: 0.3,
+  GRAVITY_VISION_OPACITY: 1,
+  GRAVITY_VISION_STROKE_OPACITY: 0.1,
+  GRAVITY_VISION_STROKE_WIDTH: 2,
+  GRAVITY_VISION_STROKE_COLOR: "#ffffff",
+  GRAVITY_VISION_COLOR_SCHEME: "interpolateInferno",
+  GRAVITY_VISION_INVERT_COLORS: false,
+  GRAVITY_VISION_HIGH_QUALITY_GRID_SIZE: 100,
+  GRAVITY_VISION_LOW_QUALITY_GRID_SIZE: 50,
+  GRAVITY_VISION_HIGH_QUALITY_CONTOURS: 20,
+  GRAVITY_VISION_LOW_QUALITY_CONTOURS: 15,
+  GRAVITY_VISION_THROTTLE_MS: 32,
+  GRAVITY_VISION_TRANSITION_MS: 100,
+  GRAVITY_VISION_STRENGTH: 500,
+  GRAVITY_VISION_FALLOFF: 100,
+  GRAVITY_VISION_MASS_THRESHOLD: 0.01,
+  GRAVITY_VISION_QUALITY_SWITCH_MS: 200,
+  GRAVITY_VISION_AUTO_QUALITY: true,
 } as const;
 
 export const SETTINGS_METADATA: Record<
@@ -165,6 +212,121 @@ export const SETTINGS_METADATA: Record<
     min: 0,
     max: 1,
     step: 0.01,
+  },
+  GRAVITY_VISION_OPACITY: {
+    type: "slider",
+    isDev: false,
+    min: 0,
+    max: 1,
+    step: 0.1,
+  },
+  GRAVITY_VISION_STROKE_OPACITY: {
+    type: "slider",
+    isDev: false,
+    min: 0,
+    max: 1,
+    step: 0.1,
+  },
+  GRAVITY_VISION_STROKE_WIDTH: {
+    type: "slider",
+    isDev: false,
+    min: 0,
+    max: 5,
+    step: 0.5,
+  },
+  GRAVITY_VISION_STROKE_COLOR: {
+    type: "color",
+    isDev: false,
+  },
+  GRAVITY_VISION_COLOR_SCHEME: {
+    type: "select",
+    isDev: false,
+    options: [
+      "interpolateInferno",
+      "interpolateViridis",
+      "interpolateMagma",
+      "interpolatePlasma",
+      "interpolateWarm",
+      "interpolateCool",
+    ],
+  },
+  GRAVITY_VISION_INVERT_COLORS: {
+    type: "boolean",
+    isDev: false,
+  },
+  GRAVITY_VISION_HIGH_QUALITY_GRID_SIZE: {
+    type: "slider",
+    isDev: false,
+    min: 50,
+    max: 200,
+    step: 10,
+  },
+  GRAVITY_VISION_LOW_QUALITY_GRID_SIZE: {
+    type: "slider",
+    isDev: false,
+    min: 20,
+    max: 100,
+    step: 10,
+  },
+  GRAVITY_VISION_HIGH_QUALITY_CONTOURS: {
+    type: "slider",
+    isDev: false,
+    min: 5,
+    max: 50,
+    step: 5,
+  },
+  GRAVITY_VISION_LOW_QUALITY_CONTOURS: {
+    type: "slider",
+    isDev: false,
+    min: 5,
+    max: 30,
+    step: 5,
+  },
+  GRAVITY_VISION_THROTTLE_MS: {
+    type: "slider",
+    isDev: false,
+    min: 16,
+    max: 100,
+    step: 16,
+  },
+  GRAVITY_VISION_TRANSITION_MS: {
+    type: "slider",
+    isDev: false,
+    min: 0,
+    max: 500,
+    step: 50,
+  },
+  GRAVITY_VISION_STRENGTH: {
+    type: "slider",
+    isDev: false,
+    min: 100,
+    max: 1000,
+    step: 50,
+  },
+  GRAVITY_VISION_FALLOFF: {
+    type: "slider",
+    isDev: false,
+    min: 50,
+    max: 200,
+    step: 10,
+  },
+  GRAVITY_VISION_MASS_THRESHOLD: {
+    type: "slider",
+    isDev: false,
+    min: 0,
+    max: 0.1,
+    step: 0.01,
+  },
+  GRAVITY_VISION_QUALITY_SWITCH_MS: {
+    type: "slider",
+    isDev: false,
+    min: 100,
+    max: 500,
+    step: 50,
+  },
+  GRAVITY_VISION_AUTO_QUALITY: {
+    type: "boolean",
+    isDev: false,
   },
 } as const;
 

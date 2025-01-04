@@ -16,32 +16,14 @@ interface QualitySettings {
   readonly CONTOUR_LEVELS: number;
 }
 
-// Constants
-const CONTOUR_CONSTANTS = {
-  HIGH_QUALITY: {
-    GRID_SIZE: 100,
-    CONTOUR_LEVELS: 20,
-  } as QualitySettings,
-  LOW_QUALITY: {
-    GRID_SIZE: 50,
-    CONTOUR_LEVELS: 15,
-  } as QualitySettings,
-  STRENGTH: 500,
-  FALLOFF: 100,
-  MASS_THRESHOLD: 0.01,
-  THROTTLE_MS: 32, // ~30fps
-  QUALITY_SWITCH_THRESHOLD_MS: 200,
-  OPACITY: 1,
-  TRANSITION_MS: 100, // Duration of the transition animation
-} as const;
-
 // Helper functions
 const calculateGravityField = (
   width: number,
   height: number,
   warpPoints: WarpPoint[],
   averageMass: number,
-  gridSize: number
+  gridSize: number,
+  settings: PhysicsSettings
 ): number[][] => {
   const field: number[][] = Array(gridSize)
     .fill(0)
@@ -64,9 +46,9 @@ const calculateGravityField = (
 
         const massScale = warpPoint.effectiveMass / averageMass;
         const potential =
-          CONTOUR_CONSTANTS.STRENGTH *
+          settings.GRAVITY_VISION_STRENGTH *
           massScale *
-          (1 / (1 + dist / CONTOUR_CONSTANTS.FALLOFF));
+          (1 / (1 + dist / settings.GRAVITY_VISION_FALLOFF));
 
         totalPotential += potential;
       });
@@ -100,11 +82,16 @@ const generateThresholds = (
   );
 };
 
-const getWarpPointsKey = (points: WarpPoint[], averageMass: number): string => {
+const getWarpPointsKey = (
+  points: WarpPoint[],
+  averageMass: number,
+  settings: PhysicsSettings
+): string => {
   return points
     .filter(
       (point) =>
-        point.effectiveMass > CONTOUR_CONSTANTS.MASS_THRESHOLD * averageMass
+        point.effectiveMass >
+        settings.GRAVITY_VISION_MASS_THRESHOLD * averageMass
     )
     .map(
       (point) =>
@@ -123,7 +110,10 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
   const svgRef = useRef<SVGSVGElement>(null);
   const averageEffectiveMassRef = useRef<number>(1);
   const lastUpdateTimeRef = useRef<number>(0);
-  const qualityRef = useRef<QualitySettings>(CONTOUR_CONSTANTS.LOW_QUALITY);
+  const qualityRef = useRef<QualitySettings>({
+    GRID_SIZE: settings.GRAVITY_VISION_LOW_QUALITY_GRID_SIZE,
+    CONTOUR_LEVELS: settings.GRAVITY_VISION_LOW_QUALITY_CONTOURS,
+  });
   const lastWarpPointsKeyRef = useRef<string>("");
 
   const updateVisualization = (
@@ -148,8 +138,16 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
     // Create color scale using interpolation
     const colorScale = d3
       .scaleSequential()
-      .domain([maxVal, minVal])
-      .interpolator(d3.interpolateInferno);
+      .domain(
+        settings.GRAVITY_VISION_INVERT_COLORS
+          ? [minVal, maxVal]
+          : [maxVal, minVal]
+      )
+      .interpolator(
+        d3[settings.GRAVITY_VISION_COLOR_SCHEME as keyof typeof d3] as (
+          t: number
+        ) => string
+      );
 
     // Generate contours
     const contourPaths = contours(field.flat());
@@ -158,7 +156,8 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
     const scaleX = width / quality.GRID_SIZE;
     const scaleY = height / quality.GRID_SIZE;
     const averageScale = (scaleX + scaleY) / 2;
-    const adjustedStrokeWidth = 2 / averageScale;
+    const adjustedStrokeWidth =
+      settings.GRAVITY_VISION_STROKE_WIDTH / averageScale;
 
     // Get or create the group element
     let g = svg.select<SVGGElement>("g");
@@ -169,7 +168,7 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
     // Create a transition
     const t = d3
       .transition()
-      .duration(CONTOUR_CONSTANTS.TRANSITION_MS)
+      .duration(settings.GRAVITY_VISION_TRANSITION_MS)
       .ease(d3.easeLinear);
 
     // Update paths using the enter/update/exit pattern
@@ -181,8 +180,7 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
     paths.exit().transition(t).style("opacity", 0).remove();
 
     // Update existing paths
-    // Instead of transitioning the path shape, we'll fade out old state and fade in new state
-    const updatePaths = paths.style("opacity", 1);
+    const updatePaths = paths.style("opacity", settings.GRAVITY_VISION_OPACITY);
 
     // Immediately set the new path and fill
     updatePaths
@@ -197,17 +195,17 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
       .append("path")
       .attr("d", d3.geoPath())
       .attr("fill", (d) => colorScale(d.value))
-      .attr("fill-opacity", CONTOUR_CONSTANTS.OPACITY)
-      .attr("stroke", "#fff")
-      .attr("stroke-opacity", 0.1)
+      .attr("fill-opacity", settings.GRAVITY_VISION_OPACITY)
+      .attr("stroke", settings.GRAVITY_VISION_STROKE_COLOR)
+      .attr("stroke-opacity", settings.GRAVITY_VISION_STROKE_OPACITY)
       .attr("stroke-width", adjustedStrokeWidth)
       .attr("stroke-linejoin", "round")
       .attr("stroke-linecap", "round")
       .attr("transform", `scale(${scaleX}, ${scaleY})`)
-      .style("opacity", 0); // Start invisible
+      .style("opacity", 0);
 
     // Fade in new paths
-    enterPaths.transition(t).style("opacity", 200);
+    enterPaths.transition(t).style("opacity", settings.GRAVITY_VISION_OPACITY);
   };
 
   useEffect(() => {
@@ -222,7 +220,7 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
     const timeSinceLastUpdate = now - lastUpdateTimeRef.current;
 
     // Throttle updates
-    if (timeSinceLastUpdate < CONTOUR_CONSTANTS.THROTTLE_MS) {
+    if (timeSinceLastUpdate < settings.GRAVITY_VISION_THROTTLE_MS) {
       return;
     }
 
@@ -230,12 +228,27 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
     averageEffectiveMassRef.current = calculateAverageMass(warpPoints);
     const currentKey = getWarpPointsKey(
       warpPoints,
-      averageEffectiveMassRef.current
+      averageEffectiveMassRef.current,
+      settings
     );
     if (currentKey === lastWarpPointsKeyRef.current) {
       return;
     }
     lastWarpPointsKeyRef.current = currentKey;
+
+    // Update quality if auto-quality is enabled
+    if (settings.GRAVITY_VISION_AUTO_QUALITY) {
+      const useHighQuality =
+        timeSinceLastUpdate > settings.GRAVITY_VISION_QUALITY_SWITCH_MS;
+      qualityRef.current = {
+        GRID_SIZE: useHighQuality
+          ? settings.GRAVITY_VISION_HIGH_QUALITY_GRID_SIZE
+          : settings.GRAVITY_VISION_LOW_QUALITY_GRID_SIZE,
+        CONTOUR_LEVELS: useHighQuality
+          ? settings.GRAVITY_VISION_HIGH_QUALITY_CONTOURS
+          : settings.GRAVITY_VISION_LOW_QUALITY_CONTOURS,
+      };
+    }
 
     lastUpdateTimeRef.current = now;
 
@@ -254,13 +267,13 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
       height,
       warpPoints,
       averageEffectiveMassRef.current,
-      qualityRef.current.GRID_SIZE
+      qualityRef.current.GRID_SIZE,
+      settings
     );
 
     updateVisualization(svg, field, width, height, qualityRef.current);
-  }, [warpPoints, settings.SHOW_GRAVITY_VISION, containerRef]);
+  }, [warpPoints, settings, containerRef]);
 
-  // Remove console.log effects
   if (!settings.SHOW_GRAVITY_VISION) return null;
 
   return (
@@ -270,7 +283,6 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
         position: "absolute",
         top: 0,
         left: 0,
-        opacity: 0.1,
         pointerEvents: "none",
         zIndex: -1,
       }}
