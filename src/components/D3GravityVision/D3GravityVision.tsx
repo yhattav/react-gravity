@@ -127,18 +127,21 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
       }
 
       let filter = defs.select<SVGFilterElement>("filter");
-      if (filter.empty()) {
+      if (filter.empty() && settings.GRAVITY_VISION_BLUR > 0) {
         // Create new filter if it doesn't exist
         filter = defs.append("filter").attr("id", "blur-filter");
 
         filter
           .append("feGaussianBlur")
           .attr("stdDeviation", settings.GRAVITY_VISION_BLUR);
-      } else {
+      } else if (settings.GRAVITY_VISION_BLUR > 0) {
         // Update the blur amount
         filter
           .select("feGaussianBlur")
           .attr("stdDeviation", settings.GRAVITY_VISION_BLUR);
+      } else {
+        // Remove the filter if blur is 0
+        filter.remove();
       }
     },
     [settings.GRAVITY_VISION_BLUR]
