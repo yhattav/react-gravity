@@ -183,40 +183,32 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
       // Remove old paths with fade out
       paths.exit().transition(t).style("opacity", 0).remove();
 
-      // Update existing paths
-      const updatePaths = paths.style(
-        "opacity",
-        settings.GRAVITY_VISION_OPACITY
-      );
-
-      // Immediately set the new path and fill
-      updatePaths
+      // Update existing paths with transition
+      paths
         .attr("d", d3.geoPath())
         .attr("fill", (d) => colorScale(d.value))
         .attr("transform", `scale(${scaleX}, ${scaleY})`)
         .attr("stroke-width", adjustedStrokeWidth)
         .attr("stroke", settings.GRAVITY_VISION_STROKE_COLOR)
         .attr("stroke-opacity", settings.GRAVITY_VISION_STROKE_OPACITY)
-        .attr("fill-opacity", settings.GRAVITY_VISION_OPACITY);
+        .attr("fill-opacity", settings.GRAVITY_VISION_OPACITY)
+        .style("opacity", settings.GRAVITY_VISION_OPACITY);
 
       // Add new paths
-      const enterPaths = paths
+      paths
         .enter()
         .append("path")
         .attr("d", d3.geoPath())
+        .attr("transform", `scale(${scaleX}, ${scaleY})`)
+        .attr("stroke-linejoin", "round")
+        .attr("stroke-linecap", "round")
+        .style("opacity", 0)
+        .transition(t)
         .attr("fill", (d) => colorScale(d.value))
         .attr("fill-opacity", settings.GRAVITY_VISION_OPACITY)
         .attr("stroke", settings.GRAVITY_VISION_STROKE_COLOR)
         .attr("stroke-opacity", settings.GRAVITY_VISION_STROKE_OPACITY)
         .attr("stroke-width", adjustedStrokeWidth)
-        .attr("stroke-linejoin", "round")
-        .attr("stroke-linecap", "round")
-        .attr("transform", `scale(${scaleX}, ${scaleY})`)
-        .style("opacity", 0);
-
-      // Fade in new paths
-      enterPaths
-        .transition(t)
         .style("opacity", settings.GRAVITY_VISION_OPACITY);
     },
     [settings]
