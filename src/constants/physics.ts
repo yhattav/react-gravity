@@ -98,7 +98,7 @@ export const DEFAULT_PHYSICS_CONFIG: PhysicsSettings = {
   GRAVITY_VISION_INVERT_COLORS: false,
   GRAVITY_VISION_GRID_SIZE: 100,
   GRAVITY_VISION_CONTOUR_LEVELS: 20,
-  GRAVITY_VISION_THROTTLE_MS: 32,
+  GRAVITY_VISION_THROTTLE_MS: 100,
   GRAVITY_VISION_TRANSITION_MS: 100,
   GRAVITY_VISION_STRENGTH: 500,
   GRAVITY_VISION_FALLOFF: 100,
@@ -263,9 +263,9 @@ export const SETTINGS_METADATA: Record<
   GRAVITY_VISION_THROTTLE_MS: {
     type: "slider",
     isDev: false,
-    min: 16,
-    max: 100,
-    step: 16,
+    min: 0,
+    max: 1000,
+    step: 30,
   },
   GRAVITY_VISION_TRANSITION_MS: {
     type: "slider",

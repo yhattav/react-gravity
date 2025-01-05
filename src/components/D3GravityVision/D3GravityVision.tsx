@@ -122,10 +122,11 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
       field: number[][],
       width: number,
       height: number,
-      quality: QualitySettings
+      quality: QualitySettings,
+      source: "warpPoints" | "settings"
     ) => {
       console.count("updateVisualization");
-      console.log(settings.GRAVITY_VISION_STROKE_OPACITY);
+      console.log(source);
       // Find min/max values for better threshold distribution
       const values = field.flat();
       const minVal = Math.min(...values);
@@ -251,12 +252,55 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
           settings
         );
 
-        updateVisualization(svg, field, width, height, qualityRef.current);
+        updateVisualization(
+          svg,
+          field,
+          width,
+          height,
+          qualityRef.current,
+          "settings"
+        );
       },
       100,
       { trailing: true }
     ),
     [containerRef, updateVisualization]
+  );
+
+  // Create a throttled warp point update function
+  const throttledWarpPointUpdate = useCallback(
+    throttle(
+      (
+        warpPoints: WarpPoint[],
+        settings: PhysicsSettings,
+        svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
+        width: number,
+        height: number
+      ) => {
+        // Calculate gravity field
+        const field = calculateGravityField(
+          width,
+          height,
+          warpPoints,
+          averageEffectiveMassRef.current,
+          qualityRef.current.GRID_SIZE,
+          settings
+        );
+
+        // Update visualization
+        updateVisualization(
+          svg,
+          field,
+          width,
+          height,
+          qualityRef.current,
+          "warpPoints"
+        );
+      },
+      settings.GRAVITY_VISION_THROTTLE_MS,
+      { trailing: true }
+    ),
+    [updateVisualization]
   );
 
   // Handle settings changes
@@ -300,27 +344,17 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
       .attr("width", width)
       .attr("height", height);
 
-    // Calculate gravity field
-    const field = calculateGravityField(
-      width,
-      height,
-      warpPoints,
-      averageEffectiveMassRef.current,
-      qualityRef.current.GRID_SIZE,
-      settings
-    );
+    // Use throttled update for warp point changes
+    throttledWarpPointUpdate(warpPoints, settings, svg, width, height);
+  }, [warpPoints, containerRef, throttledWarpPointUpdate]);
 
-    // Update visualization immediately for warp point changes
-    updateVisualization(svg, field, width, height, qualityRef.current);
-  }, [warpPoints, settings, containerRef, updateVisualization]);
-
-  // Cleanup throttled function on unmount
+  // Cleanup throttled functions on unmount
   useEffect(() => {
-    console.log("useEffect changes to throtteledupdate");
     return () => {
       throttledSettingsUpdate.cancel();
+      throttledWarpPointUpdate.cancel();
     };
-  }, [throttledSettingsUpdate]);
+  }, [throttledSettingsUpdate, throttledWarpPointUpdate]);
 
   if (!settings.SHOW_GRAVITY_VISION) return null;
 
