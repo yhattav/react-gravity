@@ -55,9 +55,7 @@ export interface PhysicsSettings {
   PARTICLE_TRAIL_LENGTH: number;
   SHOW_GRAVITY_VISION: boolean;
   GRAVITY_GRID_DENSITY: number;
-  MASTER_VOLUME: number;
-  AMBIENT_VOLUME: number;
-  PARTICLE_VOLUME: number;
+  SHOW_D3_GRAVITY_VISION: boolean;
   GRAVITY_VISION_OPACITY: number;
   GRAVITY_VISION_STROKE_OPACITY: number;
   GRAVITY_VISION_STROKE_WIDTH: number;
@@ -72,6 +70,9 @@ export interface PhysicsSettings {
   GRAVITY_VISION_FALLOFF: number;
   GRAVITY_VISION_MASS_THRESHOLD: number;
   GRAVITY_VISION_BLUR: number;
+  MASTER_VOLUME: number;
+  AMBIENT_VOLUME: number;
+  PARTICLE_VOLUME: number;
 }
 
 export const DEFAULT_PHYSICS_CONFIG: PhysicsSettings = {
@@ -88,9 +89,7 @@ export const DEFAULT_PHYSICS_CONFIG: PhysicsSettings = {
   PARTICLE_TRAIL_LENGTH: 30,
   SHOW_GRAVITY_VISION: true,
   GRAVITY_GRID_DENSITY: 20,
-  MASTER_VOLUME: 0.8,
-  AMBIENT_VOLUME: 0.6,
-  PARTICLE_VOLUME: 0.3,
+  SHOW_D3_GRAVITY_VISION: false,
   GRAVITY_VISION_OPACITY: 0.7,
   GRAVITY_VISION_STROKE_OPACITY: 0.5,
   GRAVITY_VISION_STROKE_WIDTH: 0.5,
@@ -105,6 +104,9 @@ export const DEFAULT_PHYSICS_CONFIG: PhysicsSettings = {
   GRAVITY_VISION_FALLOFF: 100,
   GRAVITY_VISION_MASS_THRESHOLD: 0.05,
   GRAVITY_VISION_BLUR: 10,
+  MASTER_VOLUME: 0.8,
+  AMBIENT_VOLUME: 0.6,
+  PARTICLE_VOLUME: 0.3,
 } as const;
 
 export const SETTINGS_METADATA: Record<
@@ -185,6 +187,10 @@ export const SETTINGS_METADATA: Record<
     min: 10,
     max: 40,
     step: 1,
+  },
+  SHOW_D3_GRAVITY_VISION: {
+    type: "boolean",
+    isDev: false,
   },
   MASTER_VOLUME: {
     type: "slider",

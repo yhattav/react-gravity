@@ -51,6 +51,7 @@ import {
 } from "../../utils/types/physics";
 import { toParticle, toSerializableParticle } from "../../types/particle";
 import { D3GravityVision } from "../D3GravityVision/D3GravityVision";
+import { GravityVision } from "../GravityVision/GravityVision";
 import {
   SimulatorPath,
   toSerializableSimulatorPath,
@@ -1100,7 +1101,17 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
               simulatorId={simulatorId}
             />
 
-            {!removeOverlay && (
+            {!removeOverlay && physicsConfig.SHOW_GRAVITY_VISION && (
+              <GravityVision
+                scope={paperScope}
+                warpPoints={generateWarpPoints()}
+                settings={physicsConfig}
+                containerRef={gravityRef}
+                isPausedRef={isPausedRef}
+              />
+            )}
+
+            {!removeOverlay && physicsConfig.SHOW_D3_GRAVITY_VISION && (
               <D3GravityVision
                 warpPoints={generateWarpPoints()}
                 settings={physicsConfig}
