@@ -256,13 +256,13 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
       100,
       { trailing: true }
     ),
-    [containerRef, updateVisualization, warpPoints]
+    [containerRef, updateVisualization]
   );
 
   // Handle settings changes
   useEffect(() => {
     throttledSettingsUpdate(settings);
-  }, [settings]);
+  }, [settings, throttledSettingsUpdate]);
 
   // Handle warp point changes
   useEffect(() => {
@@ -316,6 +316,7 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
 
   // Cleanup throttled function on unmount
   useEffect(() => {
+    console.log("useEffect changes to throtteledupdate");
     return () => {
       throttledSettingsUpdate.cancel();
     };
