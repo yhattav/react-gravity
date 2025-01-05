@@ -54,6 +54,21 @@ const TABS: TabConfig[] = [
       "PARTICLE_TRAIL_LENGTH",
       "SHOW_GRAVITY_VISION",
       "GRAVITY_GRID_DENSITY",
+      "SHOW_D3_GRAVITY_VISION",
+      "GRAVITY_VISION_OPACITY",
+      "GRAVITY_VISION_STROKE_OPACITY",
+      "GRAVITY_VISION_STROKE_WIDTH",
+      "GRAVITY_VISION_STROKE_COLOR",
+      "GRAVITY_VISION_COLOR_SCHEME",
+      "GRAVITY_VISION_INVERT_COLORS",
+      "GRAVITY_VISION_GRID_SIZE",
+      "GRAVITY_VISION_CONTOUR_LEVELS",
+      "GRAVITY_VISION_THROTTLE_MS",
+      "GRAVITY_VISION_TRANSITION_MS",
+      "GRAVITY_VISION_STRENGTH",
+      "GRAVITY_VISION_FALLOFF",
+      "GRAVITY_VISION_MASS_THRESHOLD",
+      "GRAVITY_VISION_BLUR",
     ],
   },
   {
@@ -80,7 +95,7 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
 
   const handleSettingChange = (
     key: keyof typeof settings,
-    value: number | Point2D
+    value: number | Point2D | string | boolean
   ) => {
     const newSettings = { [key]: value };
     updateSettings(newSettings);
@@ -107,6 +122,109 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
   const renderSettingControl = (key: keyof typeof DEFAULT_PHYSICS_CONFIG) => {
     const value = settings[key];
     const metadata = SETTINGS_METADATA[key];
+
+    if (metadata.type === "select") {
+      return (
+        <div style={{ marginBottom: "16px" }}>
+          <label
+            style={{
+              fontSize: "0.9rem",
+              display: "block",
+              marginBottom: "6px",
+            }}
+          >
+            {key.replace(/_/g, " ")}
+          </label>
+          <select
+            value={value as string}
+            onChange={(e) =>
+              handleSettingChange(
+                key as keyof typeof DEFAULT_PHYSICS_CONFIG,
+                e.target.value
+              )
+            }
+            style={{
+              width: "100%",
+              padding: "8px",
+              backgroundColor: "rgba(0, 0, 0, 0.3)",
+              color: "#fff",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "0.9rem",
+            }}
+          >
+            {metadata.options.map((option) => (
+              <option key={option} value={option}>
+                {option.replace(/^interpolate/, "")}
+              </option>
+            ))}
+          </select>
+        </div>
+      );
+    }
+
+    if (metadata.type === "color") {
+      return (
+        <div style={{ marginBottom: "16px" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <label style={{ fontSize: "0.9rem" }}>
+              {key.replace(/_/g, " ")}
+            </label>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div
+                style={{
+                  width: "24px",
+                  height: "24px",
+                  borderRadius: "4px",
+                  backgroundColor: value as string,
+                  border: "2px solid rgba(255, 255, 255, 0.2)",
+                }}
+              />
+              <input
+                type="color"
+                value={value as string}
+                onChange={(e) =>
+                  handleSettingChange(
+                    key as keyof typeof DEFAULT_PHYSICS_CONFIG,
+                    e.target.value
+                  )
+                }
+                style={{
+                  width: "0",
+                  height: "0",
+                  padding: "0",
+                  border: "none",
+                  opacity: "0",
+                  position: "absolute",
+                }}
+                id={`color-${key}`}
+              />
+              <label
+                htmlFor={`color-${key}`}
+                style={{
+                  padding: "4px 8px",
+                  backgroundColor: "rgba(0, 0, 0, 0.3)",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontSize: "0.9rem",
+                  color: "rgba(255, 255, 255, 0.8)",
+                }}
+              >
+                {(value as string).toUpperCase()}
+              </label>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
     if (metadata.type === "vector") {
       return (
