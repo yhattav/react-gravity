@@ -261,6 +261,12 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
 
   // Handle settings changes
   useEffect(() => {
+    // Update quality settings
+    qualityRef.current = {
+      GRID_SIZE: settings.GRAVITY_VISION_GRID_SIZE,
+      CONTOUR_LEVELS: settings.GRAVITY_VISION_CONTOUR_LEVELS,
+    };
+
     throttledSettingsUpdate(settings);
   }, [settings, throttledSettingsUpdate]);
 
@@ -284,12 +290,6 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
       return;
     }
     lastWarpPointsKeyRef.current = currentKey;
-
-    // Update quality settings
-    qualityRef.current = {
-      GRID_SIZE: settings.GRAVITY_VISION_GRID_SIZE,
-      CONTOUR_LEVELS: settings.GRAVITY_VISION_CONTOUR_LEVELS,
-    };
 
     const container = containerRef.current;
     const { width, height } = container.getBoundingClientRect();
