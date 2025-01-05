@@ -116,6 +116,34 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
     CONTOUR_LEVELS: settings.GRAVITY_VISION_CONTOUR_LEVELS,
   });
 
+  // Setup or update the blur filter
+  const updateFilter = useCallback(
+    (svg: d3.Selection<SVGSVGElement, unknown, null, undefined>) => {
+      // Check if filter exists
+      console.count("updateFilter");
+      let defs = svg.select<SVGDefsElement>("defs");
+      if (defs.empty()) {
+        defs = svg.append("defs");
+      }
+
+      let filter = defs.select<SVGFilterElement>("filter");
+      if (filter.empty()) {
+        // Create new filter if it doesn't exist
+        filter = defs.append("filter").attr("id", "blur-filter");
+
+        filter
+          .append("feGaussianBlur")
+          .attr("stdDeviation", settings.GRAVITY_VISION_BLUR);
+      } else {
+        // Update the blur amount
+        filter
+          .select("feGaussianBlur")
+          .attr("stdDeviation", settings.GRAVITY_VISION_BLUR);
+      }
+    },
+    [settings.GRAVITY_VISION_BLUR]
+  );
+
   const updateVisualization = useCallback(
     (
       svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
@@ -167,6 +195,7 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
       let g = svg.select<SVGGElement>("g");
       if (g.empty()) {
         g = svg.append("g");
+        g.attr("filter", "url(#blur-filter)");
       }
 
       // Create a transition
@@ -233,6 +262,9 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
           .select(svgRef.current)
           .attr("width", width)
           .attr("height", height);
+
+        // Update filter when settings change
+        updateFilter(svg);
 
         // Calculate gravity field
         const field = calculateGravityField(

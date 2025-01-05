@@ -71,6 +71,7 @@ export interface PhysicsSettings {
   GRAVITY_VISION_STRENGTH: number;
   GRAVITY_VISION_FALLOFF: number;
   GRAVITY_VISION_MASS_THRESHOLD: number;
+  GRAVITY_VISION_BLUR: number;
 }
 
 export const DEFAULT_PHYSICS_CONFIG: PhysicsSettings = {
@@ -103,6 +104,7 @@ export const DEFAULT_PHYSICS_CONFIG: PhysicsSettings = {
   GRAVITY_VISION_STRENGTH: 500,
   GRAVITY_VISION_FALLOFF: 100,
   GRAVITY_VISION_MASS_THRESHOLD: 0.01,
+  GRAVITY_VISION_BLUR: 1,
 } as const;
 
 export const SETTINGS_METADATA: Record<
@@ -294,6 +296,13 @@ export const SETTINGS_METADATA: Record<
     min: 0,
     max: 0.1,
     step: 0.01,
+  },
+  GRAVITY_VISION_BLUR: {
+    type: "slider",
+    isDev: false,
+    min: 0,
+    max: 50,
+    step: 1,
   },
 } as const;
 

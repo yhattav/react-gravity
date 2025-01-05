@@ -67,6 +67,7 @@ const TABS: TabConfig[] = [
       "GRAVITY_VISION_STRENGTH",
       "GRAVITY_VISION_FALLOFF",
       "GRAVITY_VISION_MASS_THRESHOLD",
+      "GRAVITY_VISION_BLUR",
     ],
   },
   {
