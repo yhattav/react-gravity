@@ -5,6 +5,7 @@ import React, {
   useRef,
   useMemo,
 } from "react";
+import html2canvas from "html2canvas";
 import {
   Point2D,
   GravityPoint,
@@ -33,7 +34,7 @@ import "../../styles/global.scss";
 import { MdFullscreen, MdFullscreenExit, MdInvertColors } from "react-icons/md";
 import { BiReset } from "react-icons/bi";
 import { motion } from "framer-motion";
-import { BsPlayFill, BsPauseFill } from "react-icons/bs";
+import { BsPlayFill, BsPauseFill, BsFillCameraFill } from "react-icons/bs";
 import { DebugData } from "../../types/Debug";
 import { AiOutlineExport } from "react-icons/ai";
 import { VscLibrary } from "react-icons/vsc";
@@ -174,6 +175,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     initialScenario?.data.paths?.map(toSimulatorPath) || []
   );
   const [paperScope, setPaperScope] = useState<paper.PaperScope | null>(null);
+  const [isFlashing, setIsFlashing] = useState(false);
 
   // Audio files definition
   const audioFiles = useMemo(
@@ -800,6 +802,88 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     setPaperScope(scope);
   }, []);
 
+  const handleScreenshot = useCallback(
+    async (e: React.MouseEvent) => {
+      e.stopPropagation();
+
+      try {
+        // Show flash animation
+        setIsFlashing(true);
+
+        // Wait for flash animation to start
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        // Temporarily hide all overlays except signature
+        const overlayElements = gravityRef.current?.querySelectorAll(
+          ".floating-panel, .floating-button"
+        );
+        overlayElements?.forEach((el) => {
+          if (el instanceof HTMLElement) {
+            el.style.display = "none";
+          }
+        });
+
+        // Ensure signature is visible
+        const signature = document.querySelector(".signature");
+        if (signature instanceof HTMLElement) {
+          signature.style.display = "block";
+        }
+
+        // Take screenshot
+        if (!gravityRef.current) return;
+        const canvas = await html2canvas(gravityRef.current, {
+          background: "none",
+        });
+
+        // Convert to blob
+        const blob = await new Promise<Blob>((resolve) => {
+          canvas.toBlob((b) => {
+            if (b) resolve(b);
+          });
+        });
+
+        // Copy to clipboard
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "image/png": blob,
+          }),
+        ]);
+      } catch (error) {
+        console.error("Failed to take screenshot:", error);
+      } finally {
+        // Restore overlay state
+        const overlayElements = gravityRef.current?.querySelectorAll(
+          ".floating-panel, .floating-button"
+        );
+        overlayElements?.forEach((el) => {
+          if (el instanceof HTMLElement) {
+            el.style.display = "";
+          }
+        });
+
+        // Reset flash animation
+        setTimeout(() => setIsFlashing(false), 300);
+      }
+    },
+    [gravityRef]
+  );
+
+  // Add flash animation styles
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = `
+      @keyframes screenshot-flash {
+        0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+        50% { box-shadow: 0 0 0 100vmax rgba(255, 255, 255, 0.3); }
+        100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   // Create and expose the API
   useEffect(
     () => {
@@ -960,6 +1044,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           zIndex: 1,
           touchAction: "none", // Prevent default touch behaviors
           cursor: blockInteractions ? "default" : "pointer", // Show pointer cursor when interactions are enabled
+          animation: isFlashing ? "screenshot-flash 0.3s ease-out" : "none",
         }}
       >
         <PaperCanvas
@@ -990,6 +1075,15 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
                 onToggle={handleAudioToggle}
               />
             )}
+            <motion.button
+              onClick={handleScreenshot}
+              className="floating-panel floating-button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              title="Take Screenshot"
+            >
+              <BsFillCameraFill size={20} />
+            </motion.button>
             <motion.button
               onClick={(e) => {
                 e.stopPropagation();
