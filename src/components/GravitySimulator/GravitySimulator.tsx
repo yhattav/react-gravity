@@ -5,6 +5,7 @@ import React, {
   useRef,
   useMemo,
 } from "react";
+import html2canvas from "html2canvas";
 import {
   Point2D,
   GravityPoint,
@@ -33,7 +34,7 @@ import "../../styles/global.scss";
 import { MdFullscreen, MdFullscreenExit, MdInvertColors } from "react-icons/md";
 import { BiReset } from "react-icons/bi";
 import { motion } from "framer-motion";
-import { BsPlayFill, BsPauseFill } from "react-icons/bs";
+import { BsPlayFill, BsPauseFill, BsFillCameraFill } from "react-icons/bs";
 import { DebugData } from "../../types/Debug";
 import { AiOutlineExport } from "react-icons/ai";
 import { VscLibrary } from "react-icons/vsc";
@@ -174,6 +175,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     initialScenario?.data.paths?.map(toSimulatorPath) || []
   );
   const [paperScope, setPaperScope] = useState<paper.PaperScope | null>(null);
+  const [isFlashing, setIsFlashing] = useState(false);
 
   // Audio files definition
   const audioFiles = useMemo(
@@ -800,6 +802,67 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     setPaperScope(scope);
   }, []);
 
+  const handleScreenshot = useCallback(
+    async (e: React.MouseEvent) => {
+      e.stopPropagation();
+
+      try {
+        // Temporarily hide all overlays except signature
+        const overlayElements = gravityRef.current?.querySelectorAll(
+          ".floating-panel, .floating-button"
+        );
+        overlayElements?.forEach((el) => {
+          if (el instanceof HTMLElement) {
+            el.style.display = "none";
+          }
+        });
+
+        // Ensure signature is visible
+        const signature = document.querySelector(".signature");
+        if (signature instanceof HTMLElement) {
+          signature.style.display = "block";
+        }
+
+        // Take screenshot
+        if (!gravityRef.current) return;
+        const screenshotPromise = html2canvas(gravityRef.current, {
+          background: "none",
+        });
+
+        // Restore overlay state immediately after starting the screenshot
+        overlayElements?.forEach((el) => {
+          if (el instanceof HTMLElement) {
+            el.style.display = "";
+          }
+        });
+
+        // Wait for screenshot to complete
+        const canvas = await screenshotPromise;
+
+        setIsFlashing(true);
+        // Convert to blob
+        const blob = await new Promise<Blob>((resolve) => {
+          canvas.toBlob((b) => {
+            if (b) resolve(b);
+          });
+        });
+
+        // Copy to clipboard
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "image/png": blob,
+          }),
+        ]);
+
+        // Show flash animation after screenshot is taken and copied
+        setTimeout(() => setIsFlashing(false), 300);
+      } catch (error) {
+        console.error("Failed to take screenshot:", error);
+      }
+    },
+    [gravityRef]
+  );
+
   // Create and expose the API
   useEffect(
     () => {
@@ -893,55 +956,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
   const content = (
     <>
-      <style>
-        {`
-          @import url('https://fonts.googleapis.com/css2?family=Homemade+Apple&display=swap');
-          
-          @keyframes pulse {
-            0% { transform: translate(-50%, -50%) scale(1); }
-            50% { transform: translate(-50%, -50%) scale(1.1); }
-            100% { transform: translate(-50%, -50%) scale(1); }
-          }
-          
-          .star-label {
-            opacity: 0;
-            transition: opacity 0.2s ease-in-out;
-          }
-          
-          div:hover .star-label {
-            opacity: 1;
-          }
-
-          .signature {
-            position: absolute;
-            bottom: 15px;
-            left: 20px;
-            font-family: 'Homemade Apple', cursive;
-            font-size: 18px;
-            color: rgba(255, 255, 255, 0.40);
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-            user-select: none;
-            z-index: 1;
-            letter-spacing: 2px;
-            text-decoration: none;
-            transition: color 0.2s ease, text-shadow 0.2s ease;
-            cursor: pointer;
-          }
-
-          .signature:hover {
-            color: rgba(255, 255, 255, 0.6);
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-          }
-
-          .inverted {
-            filter: invert(1);
-          }
-
-          .not-inverted {
-            filter: invert(0);
-          }
-        `}
-      </style>
       <div
         ref={gravityRef}
         onClick={handleContainerClick}
@@ -960,6 +974,9 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           zIndex: 1,
           touchAction: "none", // Prevent default touch behaviors
           cursor: blockInteractions ? "default" : "pointer", // Show pointer cursor when interactions are enabled
+          animation: isFlashing
+            ? "screenshot-flash 0.15s ease-out forwards"
+            : "none",
         }}
       >
         <PaperCanvas
@@ -990,6 +1007,15 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
                 onToggle={handleAudioToggle}
               />
             )}
+            <motion.button
+              onClick={handleScreenshot}
+              className="floating-panel floating-button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              title="Take Screenshot"
+            >
+              <BsFillCameraFill size={20} />
+            </motion.button>
             <motion.button
               onClick={(e) => {
                 e.stopPropagation();
