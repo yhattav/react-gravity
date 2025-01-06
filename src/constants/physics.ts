@@ -2,35 +2,35 @@ import { StarTemplate } from "../types/star";
 import { GravityPoint, Point2D } from "../utils/types/physics";
 import { Point } from "paper";
 
-export interface SliderSettingMetadata {
-  type: "slider";
+export interface BaseSettingMetadata {
   isDev: boolean;
+  isRelevant: (settings: PhysicsSettings) => boolean;
+}
+
+export interface SliderSettingMetadata extends BaseSettingMetadata {
+  type: "slider";
   min: number;
   max: number;
   step: number;
 }
 
-export interface BooleanSettingMetadata {
+export interface BooleanSettingMetadata extends BaseSettingMetadata {
   type: "boolean";
-  isDev: boolean;
 }
 
-export interface VectorSettingMetadata {
+export interface VectorSettingMetadata extends BaseSettingMetadata {
   type: "vector";
-  isDev: boolean;
   max: Point2D;
   min: Point2D;
   label?: string;
 }
 
-export interface ColorSettingMetadata {
+export interface ColorSettingMetadata extends BaseSettingMetadata {
   type: "color";
-  isDev: boolean;
 }
 
-export interface SelectSettingMetadata {
+export interface SelectSettingMetadata extends BaseSettingMetadata {
   type: "select";
-  isDev: boolean;
   options: string[];
 }
 
@@ -119,6 +119,7 @@ export const SETTINGS_METADATA: Record<
     min: -0.5,
     max: 0.5,
     step: 0.001,
+    isRelevant: () => true,
   },
   NEW_PARTICLE_ELASTICITY: {
     type: "slider",
@@ -126,6 +127,7 @@ export const SETTINGS_METADATA: Record<
     min: 0,
     max: 1,
     step: 0.1,
+    isRelevant: () => true,
   },
   FRICTION: {
     type: "slider",
@@ -133,6 +135,7 @@ export const SETTINGS_METADATA: Record<
     min: 0.0,
     max: 1,
     step: 0.001,
+    isRelevant: () => true,
   },
   DELTA_TIME: {
     type: "slider",
@@ -140,6 +143,7 @@ export const SETTINGS_METADATA: Record<
     min: 1 / 120,
     max: 1 / 30,
     step: 1 / 120,
+    isRelevant: () => true,
   },
   POINTER_MASS: {
     type: "slider",
@@ -147,28 +151,34 @@ export const SETTINGS_METADATA: Record<
     min: 0,
     max: 1000000,
     step: 10000,
+    isRelevant: () => true,
   },
   SHOW_VELOCITY_ARROWS: {
     type: "boolean",
     isDev: false,
+    isRelevant: () => true,
   },
   SHOW_FORCE_ARROWS: {
     type: "boolean",
     isDev: false,
+    isRelevant: () => true,
   },
   CONSTANT_FORCE: {
     type: "vector",
     isDev: false,
     max: { x: 2, y: 2 },
     min: { x: -2, y: -2 },
+    isRelevant: () => true,
   },
   SOLID_BOUNDARIES: {
     type: "boolean",
     isDev: false,
+    isRelevant: () => true,
   },
   PARTICLES_EXERT_GRAVITY: {
     type: "boolean",
     isDev: false,
+    isRelevant: () => true,
   },
   PARTICLE_TRAIL_LENGTH: {
     type: "slider",
@@ -176,10 +186,12 @@ export const SETTINGS_METADATA: Record<
     min: 0,
     max: 100,
     step: 1,
+    isRelevant: () => true,
   },
   SHOW_GRAVITY_VISION: {
     type: "boolean",
     isDev: false,
+    isRelevant: () => true,
   },
   GRAVITY_GRID_DENSITY: {
     type: "slider",
@@ -187,10 +199,12 @@ export const SETTINGS_METADATA: Record<
     min: 10,
     max: 40,
     step: 1,
+    isRelevant: (settings) => settings.SHOW_GRAVITY_VISION,
   },
   SHOW_D3_GRAVITY_VISION: {
     type: "boolean",
     isDev: false,
+    isRelevant: () => true,
   },
   MASTER_VOLUME: {
     type: "slider",
@@ -198,6 +212,7 @@ export const SETTINGS_METADATA: Record<
     min: 0,
     max: 1,
     step: 0.01,
+    isRelevant: () => true,
   },
   AMBIENT_VOLUME: {
     type: "slider",
@@ -205,6 +220,7 @@ export const SETTINGS_METADATA: Record<
     min: 0,
     max: 1,
     step: 0.01,
+    isRelevant: () => true, //settings.MASTER_VOLUME > 0,
   },
   PARTICLE_VOLUME: {
     type: "slider",
@@ -212,6 +228,7 @@ export const SETTINGS_METADATA: Record<
     min: 0,
     max: 1,
     step: 0.01,
+    isRelevant: () => true, //settings.MASTER_VOLUME > 0,
   },
   GRAVITY_VISION_OPACITY: {
     type: "slider",
@@ -219,6 +236,7 @@ export const SETTINGS_METADATA: Record<
     min: 0,
     max: 1,
     step: 0.1,
+    isRelevant: (settings) => settings.SHOW_D3_GRAVITY_VISION,
   },
   GRAVITY_VISION_STROKE_OPACITY: {
     type: "slider",
@@ -226,6 +244,7 @@ export const SETTINGS_METADATA: Record<
     min: 0,
     max: 1,
     step: 0.1,
+    isRelevant: (settings) => settings.SHOW_D3_GRAVITY_VISION,
   },
   GRAVITY_VISION_STROKE_WIDTH: {
     type: "slider",
@@ -233,10 +252,12 @@ export const SETTINGS_METADATA: Record<
     min: 0,
     max: 5,
     step: 0.5,
+    isRelevant: (settings) => settings.SHOW_D3_GRAVITY_VISION,
   },
   GRAVITY_VISION_STROKE_COLOR: {
     type: "color",
     isDev: false,
+    isRelevant: (settings) => settings.SHOW_D3_GRAVITY_VISION,
   },
   GRAVITY_VISION_COLOR_SCHEME: {
     type: "select",
@@ -249,10 +270,12 @@ export const SETTINGS_METADATA: Record<
       "interpolateWarm",
       "interpolateCool",
     ],
+    isRelevant: (settings) => settings.SHOW_D3_GRAVITY_VISION,
   },
   GRAVITY_VISION_INVERT_COLORS: {
     type: "boolean",
     isDev: false,
+    isRelevant: (settings) => settings.SHOW_D3_GRAVITY_VISION,
   },
   GRAVITY_VISION_GRID_SIZE: {
     type: "slider",
@@ -260,6 +283,7 @@ export const SETTINGS_METADATA: Record<
     min: 50,
     max: 200,
     step: 5,
+    isRelevant: (settings) => settings.SHOW_D3_GRAVITY_VISION,
   },
   GRAVITY_VISION_CONTOUR_LEVELS: {
     type: "slider",
@@ -267,6 +291,7 @@ export const SETTINGS_METADATA: Record<
     min: 3,
     max: 50,
     step: 1,
+    isRelevant: (settings) => settings.SHOW_D3_GRAVITY_VISION,
   },
   GRAVITY_VISION_THROTTLE_MS: {
     type: "slider",
@@ -274,6 +299,7 @@ export const SETTINGS_METADATA: Record<
     min: 0,
     max: 1000,
     step: 5,
+    isRelevant: (settings) => settings.SHOW_D3_GRAVITY_VISION,
   },
   GRAVITY_VISION_TRANSITION_MS: {
     type: "slider",
@@ -281,6 +307,7 @@ export const SETTINGS_METADATA: Record<
     min: 0,
     max: 500,
     step: 10,
+    isRelevant: (settings) => settings.SHOW_D3_GRAVITY_VISION,
   },
   GRAVITY_VISION_STRENGTH: {
     type: "slider",
@@ -288,6 +315,7 @@ export const SETTINGS_METADATA: Record<
     min: 100,
     max: 1000,
     step: 10,
+    isRelevant: (settings) => settings.SHOW_D3_GRAVITY_VISION,
   },
   GRAVITY_VISION_FALLOFF: {
     type: "slider",
@@ -295,6 +323,7 @@ export const SETTINGS_METADATA: Record<
     min: 50,
     max: 200,
     step: 1,
+    isRelevant: (settings) => settings.SHOW_D3_GRAVITY_VISION,
   },
   GRAVITY_VISION_MASS_THRESHOLD: {
     type: "slider",
@@ -302,6 +331,7 @@ export const SETTINGS_METADATA: Record<
     min: 0,
     max: 0.1,
     step: 0.01,
+    isRelevant: (settings) => settings.SHOW_D3_GRAVITY_VISION,
   },
   GRAVITY_VISION_BLUR: {
     type: "slider",
@@ -309,6 +339,7 @@ export const SETTINGS_METADATA: Record<
     min: 0,
     max: 50,
     step: 1,
+    isRelevant: (settings) => settings.SHOW_D3_GRAVITY_VISION,
   },
 } as const;
 

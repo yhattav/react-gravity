@@ -116,7 +116,8 @@ export const SimulatorSettings: React.FC<SimulatorSettingsProps> = ({
 
   const shouldShowSetting = (key: keyof typeof DEFAULT_PHYSICS_CONFIG) => {
     const isDevSetting = SETTINGS_METADATA[key]?.isDev;
-    return !isDevSetting || (isDevelopment && showDevSettings);
+    const isRelevant = SETTINGS_METADATA[key]?.isRelevant(settings);
+    return (!isDevSetting || (isDevelopment && showDevSettings)) && isRelevant;
   };
 
   const renderSettingControl = (key: keyof typeof DEFAULT_PHYSICS_CONFIG) => {
