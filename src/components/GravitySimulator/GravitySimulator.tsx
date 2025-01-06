@@ -925,6 +925,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             letter-spacing: 2px;
             text-decoration: none;
             transition: color 0.2s ease, text-shadow 0.2s ease;
+            cursor: pointer;
           }
 
           .signature:hover {
@@ -958,6 +959,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           background: "linear-gradient(45deg, #1a1a1a, #2a2a2a)",
           zIndex: 1,
           touchAction: "none", // Prevent default touch behaviors
+          cursor: blockInteractions ? "default" : "pointer", // Show pointer cursor when interactions are enabled
         }}
       >
         <PaperCanvas

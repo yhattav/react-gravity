@@ -6,6 +6,7 @@
   backdrop-filter: blur($blur-amount);
   color: $text-color;
   z-index: 1001;
+  cursor: default;
 }
 
 .floating-button {
@@ -35,6 +36,17 @@
     border-top-left-radius: 12px;
     border-top-right-radius: 12px;
   }
+}
+
+.vertical-panel {
+  position: absolute;
+  bottom: 90px;
+  right: 20px;
+  max-height: calc(100vh - 200px);
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 .star-palette {
