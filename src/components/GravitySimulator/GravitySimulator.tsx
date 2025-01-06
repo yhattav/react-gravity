@@ -839,6 +839,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         // Wait for screenshot to complete
         const canvas = await screenshotPromise;
 
+        setIsFlashing(true);
         // Convert to blob
         const blob = await new Promise<Blob>((resolve) => {
           canvas.toBlob((b) => {
@@ -854,7 +855,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         ]);
 
         // Show flash animation after screenshot is taken and copied
-        setIsFlashing(true);
         setTimeout(() => setIsFlashing(false), 300);
       } catch (error) {
         console.error("Failed to take screenshot:", error);
