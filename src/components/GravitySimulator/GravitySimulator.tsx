@@ -958,6 +958,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           background: "linear-gradient(45deg, #1a1a1a, #2a2a2a)",
           zIndex: 1,
           touchAction: "none", // Prevent default touch behaviors
+          cursor: blockInteractions ? "default" : "pointer", // Show pointer cursor when interactions are enabled
         }}
       >
         <PaperCanvas
