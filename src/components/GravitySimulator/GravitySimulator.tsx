@@ -807,12 +807,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       e.stopPropagation();
 
       try {
-        // Show flash animation
-        setIsFlashing(true);
-
-        // Wait for flash animation to start
-        await new Promise((resolve) => setTimeout(resolve, 50));
-
         // Temporarily hide all overlays except signature
         const overlayElements = gravityRef.current?.querySelectorAll(
           ".floating-panel, .floating-button"
@@ -831,9 +825,19 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
         // Take screenshot
         if (!gravityRef.current) return;
-        const canvas = await html2canvas(gravityRef.current, {
+        const screenshotPromise = html2canvas(gravityRef.current, {
           background: "none",
         });
+
+        // Restore overlay state immediately after starting the screenshot
+        overlayElements?.forEach((el) => {
+          if (el instanceof HTMLElement) {
+            el.style.display = "";
+          }
+        });
+
+        // Wait for screenshot to complete
+        const canvas = await screenshotPromise;
 
         // Convert to blob
         const blob = await new Promise<Blob>((resolve) => {
@@ -848,21 +852,12 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             "image/png": blob,
           }),
         ]);
+
+        // Show flash animation after screenshot is taken and copied
+        setIsFlashing(true);
+        setTimeout(() => setIsFlashing(false), 300);
       } catch (error) {
         console.error("Failed to take screenshot:", error);
-      } finally {
-        // Restore overlay state
-        const overlayElements = gravityRef.current?.querySelectorAll(
-          ".floating-panel, .floating-button"
-        );
-        overlayElements?.forEach((el) => {
-          if (el instanceof HTMLElement) {
-            el.style.display = "";
-          }
-        });
-
-        // Reset flash animation
-        setTimeout(() => setIsFlashing(false), 300);
       }
     },
     [gravityRef]
@@ -873,9 +868,23 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     const style = document.createElement("style");
     style.textContent = `
       @keyframes screenshot-flash {
-        0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
-        50% { box-shadow: 0 0 0 100vmax rgba(255, 255, 255, 0.3); }
-        100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+        0% { opacity: 0; }
+        10% { opacity: 0.7; }
+        100% { opacity: 0; }
+      }
+      .flash-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: white;
+        pointer-events: none;
+        z-index: 9999;
+        opacity: 0;
+      }
+      .flash-overlay.flashing {
+        animation: screenshot-flash 0.15s ease-out forwards;
       }
     `;
     document.head.appendChild(style);
@@ -1044,9 +1053,10 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           zIndex: 1,
           touchAction: "none", // Prevent default touch behaviors
           cursor: blockInteractions ? "default" : "pointer", // Show pointer cursor when interactions are enabled
-          animation: isFlashing ? "screenshot-flash 0.3s ease-out" : "none",
         }}
       >
+        <div className={`flash-overlay ${isFlashing ? "flashing" : ""}`} />
+
         <PaperCanvas
           simulatorId={simulatorId}
           onCanvasReady={handleCanvasReady}
