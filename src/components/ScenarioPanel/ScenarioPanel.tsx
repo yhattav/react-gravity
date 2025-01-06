@@ -61,7 +61,7 @@ export const ScenarioPanel: React.FC<ScenarioPanelProps> = ({
           exit={{ opacity: 0, y: 20 }}
           transition={{ type: "spring", damping: 20, stiffness: 300 }}
           onClick={(e) => e.stopPropagation()}
-          className="floating-panel settings-panel"
+          className="floating-panel scenario-panel vertical-panel"
           style={{ color: "rgba(255, 255, 255, 0.9)" }}
         >
           <div

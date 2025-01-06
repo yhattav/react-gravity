@@ -925,6 +925,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             letter-spacing: 2px;
             text-decoration: none;
             transition: color 0.2s ease, text-shadow 0.2s ease;
+            cursor: pointer;
           }
 
           .signature:hover {
