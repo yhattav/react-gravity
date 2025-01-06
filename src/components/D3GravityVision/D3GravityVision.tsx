@@ -46,12 +46,14 @@ const calculateGravityField = (
         const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
 
         const massScale = warpPoint.effectiveMass / averageMass;
-        const potential =
-          settings.GRAVITY_VISION_STRENGTH *
-          massScale *
-          (1 / (1 + dist / settings.GRAVITY_VISION_FALLOFF));
+        if (massScale > 0.01) {
+          const potential =
+            settings.GRAVITY_VISION_STRENGTH *
+            massScale *
+            (1 / (1 + dist / settings.GRAVITY_VISION_FALLOFF));
 
-        totalPotential += potential;
+          totalPotential += potential;
+        }
       });
 
       field[i][j] = totalPotential;
@@ -120,7 +122,6 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
   const updateFilter = useCallback(
     (svg: d3.Selection<SVGSVGElement, unknown, null, undefined>) => {
       // Check if filter exists
-      console.count("updateFilter");
       let defs = svg.select<SVGDefsElement>("defs");
       if (defs.empty()) {
         defs = svg.append("defs");
@@ -153,11 +154,8 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
       field: number[][],
       width: number,
       height: number,
-      quality: QualitySettings,
-      source: "warpPoints" | "settings"
+      quality: QualitySettings
     ) => {
-      console.count("updateVisualization");
-      console.log(source);
       // Find min/max values for better threshold distribution
       const values = field.flat();
       const minVal = Math.min(...values);
@@ -253,7 +251,7 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
         if (
           !containerRef.current ||
           !svgRef.current ||
-          !settings.SHOW_GRAVITY_VISION
+          !settings.SHOW_D3_GRAVITY_VISION
         )
           return;
 
@@ -279,14 +277,7 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
           settings
         );
 
-        updateVisualization(
-          svg,
-          field,
-          width,
-          height,
-          qualityRef.current,
-          "settings"
-        );
+        updateVisualization(svg, field, width, height, qualityRef.current);
       },
       100,
       { trailing: true }
@@ -315,14 +306,7 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
         );
 
         // Update visualization
-        updateVisualization(
-          svg,
-          field,
-          width,
-          height,
-          qualityRef.current,
-          "warpPoints"
-        );
+        updateVisualization(svg, field, width, height, qualityRef.current);
       },
       settings.GRAVITY_VISION_THROTTLE_MS,
       { trailing: true }
@@ -346,7 +330,7 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
     if (
       !containerRef.current ||
       !svgRef.current ||
-      !settings.SHOW_GRAVITY_VISION
+      !settings.SHOW_D3_GRAVITY_VISION
     )
       return;
 
@@ -383,7 +367,7 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
     };
   }, [throttledSettingsUpdate, throttledWarpPointUpdate]);
 
-  if (!settings.SHOW_GRAVITY_VISION) return null;
+  if (!settings.SHOW_D3_GRAVITY_VISION) return null;
 
   return (
     <svg
