@@ -421,7 +421,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         )
       );
     },
-    [offset]
+    [offset, gravityPoints]
   );
 
   const handleDragEnd = useCallback(() => {
