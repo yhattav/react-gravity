@@ -863,36 +863,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     [gravityRef]
   );
 
-  // Add flash animation styles
-  useEffect(() => {
-    const style = document.createElement("style");
-    style.textContent = `
-      @keyframes screenshot-flash {
-        0% { opacity: 0; }
-        10% { opacity: 0.7; }
-        100% { opacity: 0; }
-      }
-      .flash-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: white;
-        pointer-events: none;
-        z-index: 9999;
-        opacity: 0;
-      }
-      .flash-overlay.flashing {
-        animation: screenshot-flash 0.15s ease-out forwards;
-      }
-    `;
-    document.head.appendChild(style);
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
-
   // Create and expose the API
   useEffect(
     () => {
@@ -986,55 +956,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
   const content = (
     <>
-      <style>
-        {`
-          @import url('https://fonts.googleapis.com/css2?family=Homemade+Apple&display=swap');
-          
-          @keyframes pulse {
-            0% { transform: translate(-50%, -50%) scale(1); }
-            50% { transform: translate(-50%, -50%) scale(1.1); }
-            100% { transform: translate(-50%, -50%) scale(1); }
-          }
-          
-          .star-label {
-            opacity: 0;
-            transition: opacity 0.2s ease-in-out;
-          }
-          
-          div:hover .star-label {
-            opacity: 1;
-          }
-
-          .signature {
-            position: absolute;
-            bottom: 15px;
-            left: 20px;
-            font-family: 'Homemade Apple', cursive;
-            font-size: 18px;
-            color: rgba(255, 255, 255, 0.40);
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-            user-select: none;
-            z-index: 1;
-            letter-spacing: 2px;
-            text-decoration: none;
-            transition: color 0.2s ease, text-shadow 0.2s ease;
-            cursor: pointer;
-          }
-
-          .signature:hover {
-            color: rgba(255, 255, 255, 0.6);
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-          }
-
-          .inverted {
-            filter: invert(1);
-          }
-
-          .not-inverted {
-            filter: invert(0);
-          }
-        `}
-      </style>
       <div
         ref={gravityRef}
         onClick={handleContainerClick}
@@ -1053,10 +974,11 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           zIndex: 1,
           touchAction: "none", // Prevent default touch behaviors
           cursor: blockInteractions ? "default" : "pointer", // Show pointer cursor when interactions are enabled
+          animation: isFlashing
+            ? "screenshot-flash 0.15s ease-out forwards"
+            : "none",
         }}
       >
-        <div className={`flash-overlay ${isFlashing ? "flashing" : ""}`} />
-
         <PaperCanvas
           simulatorId={simulatorId}
           onCanvasReady={handleCanvasReady}
