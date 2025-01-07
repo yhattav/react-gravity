@@ -63,6 +63,9 @@ import { PaperCanvas } from "../PaperCanvas/PaperCanvas";
 import { MusicPlayer } from "../MusicPlayer/MusicPlayer";
 import { AudioManager } from "../../utils/audio/AudioManager";
 import { VolumeSettings } from "../../utils/audio/AudioManager";
+import { WebGLParticleRenderer } from "../WebGLParticleRenderer/WebGLParticleRenderer";
+import { SiThreedotjs } from "react-icons/si";
+import { ThreeParticleRenderer } from "../ThreeParticleRenderer/ThreeParticleRenderer";
 
 const generatePastelColor = () => {
   const r = Math.floor(Math.random() * 75 + 180);
@@ -82,6 +85,8 @@ export interface GravitySimulatorProps {
   disableSound?: boolean;
   onApiReady?: (api: GravitySimulatorApi) => void;
   simulatorId?: string;
+  useWebGL?: boolean;
+  useThreeJs?: boolean;
 }
 
 export interface GravitySimulatorApi {
@@ -134,6 +139,8 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   disableSound = false,
   onApiReady,
   simulatorId = "default",
+  useWebGL: initialUseWebGL = false,
+  useThreeJs: initialUseThreeJs = false,
 }) => {
   const [isSimulationStarted, setIsSimulationStarted] = useState(
     !!initialScenario
@@ -176,6 +183,12 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   );
   const [paperScope, setPaperScope] = useState<paper.PaperScope | null>(null);
   const [isFlashing, setIsFlashing] = useState(false);
+  const [rendererDimensions, setRendererDimensions] = useState({
+    width: 0,
+    height: 0,
+  });
+  const [useWebGL, setUseWebGL] = useState(initialUseWebGL);
+  const [useThreeJs, setUseThreeJs] = useState(initialUseThreeJs);
 
   // Audio files definition
   const audioFiles = useMemo(
@@ -960,6 +973,22 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     [handleSelectScenario] // Only depends on handleSelectScenario
   );
 
+  // Add effect to update dimensions
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (gravityRef.current) {
+        setRendererDimensions({
+          width: gravityRef.current.clientWidth,
+          height: gravityRef.current.clientHeight,
+        });
+      }
+    };
+
+    updateDimensions();
+    window.addEventListener("resize", updateDimensions);
+    return () => window.removeEventListener("resize", updateDimensions);
+  }, []);
+
   const content = (
     <>
       <div
@@ -1088,6 +1117,38 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             >
               <MdInvertColors size={20} />
             </motion.button>
+
+            <motion.button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (useThreeJs) {
+                  setUseThreeJs(false);
+                } else if (useWebGL) {
+                  setUseWebGL(false);
+                  setUseThreeJs(true);
+                } else {
+                  setUseWebGL(true);
+                }
+              }}
+              className="floating-panel floating-button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              title={
+                useThreeJs
+                  ? "Switch to Paper.js"
+                  : useWebGL
+                  ? "Switch to Three.js"
+                  : "Switch to WebGL"
+              }
+            >
+              {useThreeJs ? (
+                "Paper.js"
+              ) : useWebGL ? (
+                <SiThreedotjs size={20} />
+              ) : (
+                "WebGL"
+              )}
+            </motion.button>
           </div>
         )}
 
@@ -1115,15 +1176,42 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
         {paperScope && (
           <>
-            {isSimulationStarted && (
-              <ParticleRenderer
-                scope={paperScope}
-                particlesRef={particlesRef}
-                isPausedRef={isPausedRef}
-                shouldReset={shouldResetRenderer}
-                onResetComplete={() => setShouldResetRenderer(false)}
-              />
-            )}
+            {isSimulationStarted &&
+              (useThreeJs ? (
+                <ThreeParticleRenderer
+                  particlesRef={particlesRef}
+                  gravityPoints={gravityPoints}
+                  isPausedRef={isPausedRef}
+                  width={rendererDimensions.width}
+                  height={rendererDimensions.height}
+                  physicsConfig={{
+                    DELTA_TIME: physicsConfig.DELTA_TIME,
+                    FRICTION: physicsConfig.FRICTION,
+                    SOLID_BOUNDARIES: physicsConfig.SOLID_BOUNDARIES,
+                  }}
+                />
+              ) : useWebGL ? (
+                <WebGLParticleRenderer
+                  particlesRef={particlesRef}
+                  gravityPoints={gravityPoints}
+                  isPausedRef={isPausedRef}
+                  width={rendererDimensions.width}
+                  height={rendererDimensions.height}
+                  physicsConfig={{
+                    DELTA_TIME: physicsConfig.DELTA_TIME,
+                    FRICTION: physicsConfig.FRICTION,
+                    SOLID_BOUNDARIES: physicsConfig.SOLID_BOUNDARIES,
+                  }}
+                />
+              ) : (
+                <ParticleRenderer
+                  scope={paperScope}
+                  particlesRef={particlesRef}
+                  isPausedRef={isPausedRef}
+                  shouldReset={shouldResetRenderer}
+                  onResetComplete={() => setShouldResetRenderer(false)}
+                />
+              ))}
 
             <PathRenderer
               scope={paperScope}
