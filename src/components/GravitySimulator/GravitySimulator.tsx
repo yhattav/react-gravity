@@ -817,10 +817,10 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           }
         });
 
-        // Ensure signature is visible
-        const signature = document.querySelector(".signature");
-        if (signature instanceof HTMLElement) {
-          signature.style.display = "block";
+        // Show prefix and ensure signature is visible
+        const prefix = document.querySelector(".signature-prefix");
+        if (prefix instanceof HTMLElement) {
+          prefix.style.display = "block";
         }
 
         // Take screenshot
@@ -829,6 +829,9 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           background: "none",
         });
 
+        // Wait for screenshot to complete
+        const canvas = await screenshotPromise;
+
         // Restore overlay state immediately after starting the screenshot
         overlayElements?.forEach((el) => {
           if (el instanceof HTMLElement) {
@@ -836,10 +839,13 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           }
         });
 
-        // Wait for screenshot to complete
-        const canvas = await screenshotPromise;
+        // Hide prefix again
+        if (prefix instanceof HTMLElement) {
+          prefix.style.display = "none";
+        }
 
         setIsFlashing(true);
+
         // Convert to blob
         const blob = await new Promise<Blob>((resolve) => {
           canvas.toBlob((b) => {
@@ -1202,15 +1208,18 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
               shareableLink={shareableLink}
             />
 
-            <a
-              href="https://github.com/yhattav"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="signature"
-              onClick={(e) => e.stopPropagation()}
-            >
-              Y·Hattav
-            </a>
+            <div className="signature-container">
+              <div className="signature-prefix">React Gravity</div>
+              <a
+                href="https://github.com/yhattav"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="signature"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Y·Hattav
+              </a>
+            </div>
           </>
         )}
       </div>
