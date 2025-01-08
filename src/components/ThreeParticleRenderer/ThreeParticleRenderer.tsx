@@ -72,6 +72,8 @@ export const ThreeParticleRenderer: React.FC<ThreeParticleRendererProps> = ({
         attribute vec3 color;
         attribute float size;
         varying vec3 vColor;
+        uniform float time;
+
         void main() {
           vColor = color;
           vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
@@ -81,11 +83,28 @@ export const ThreeParticleRenderer: React.FC<ThreeParticleRendererProps> = ({
       `,
       fragmentShader: `
         varying vec3 vColor;
+        uniform float time;
+
         void main() {
           vec2 coord = gl_PointCoord - vec2(0.5);
           float r = length(coord) * 2.0;
-          float alpha = 1.0 - smoothstep(0.8, 1.0, r);
-          gl_FragColor = vec4(vColor, alpha);
+          
+          // Create a soft core
+          float core = 1.0 - smoothstep(0.0, 0.5, r);
+          
+          // Create an outer glow
+          float glow = exp(-r * 3.0) * 0.3;
+          
+          // Combine core and glow
+          float alpha = core + glow;
+          
+          // Add a subtle pulse effect
+          alpha *= 0.8 + 0.2 * sin(time * 3.0);
+          
+          // Make the color more vibrant in the center
+          vec3 finalColor = mix(vColor * 1.5, vColor, r);
+          
+          gl_FragColor = vec4(finalColor, alpha);
         }
       `,
       transparent: true,
@@ -97,7 +116,7 @@ export const ThreeParticleRenderer: React.FC<ThreeParticleRendererProps> = ({
     scene.add(particles);
     particlesRef.current = particles;
 
-    // Create trails system with improved comet effect
+    // Create trails system
     const trailsGeometry = new THREE.BufferGeometry();
     trailsGeometryRef.current = trailsGeometry;
 
@@ -129,7 +148,7 @@ export const ThreeParticleRenderer: React.FC<ThreeParticleRendererProps> = ({
           vec2 coord = gl_PointCoord - vec2(0.5);
           float r = length(coord) * 2.0;
           float alpha = (1.0 - smoothstep(0.0, 1.0, r)) * vAlpha * opacity;
-          vec3 finalColor = vColor * (1.0 + 0.5 * vAlpha);
+          vec3 finalColor = vColor * (1.0 + 0.3 * vAlpha);
           gl_FragColor = vec4(finalColor, alpha);
         }
       `,
@@ -145,6 +164,8 @@ export const ThreeParticleRenderer: React.FC<ThreeParticleRendererProps> = ({
     const animate = () => {
       frameIdRef.current = requestAnimationFrame(animate);
       if (!isPausedRef.current) {
+        // Update time uniform for particle animation
+        particleMaterial.uniforms.time.value += 0.016; // Approximately 60 FPS
         updateParticles();
         updateTrails();
       }
