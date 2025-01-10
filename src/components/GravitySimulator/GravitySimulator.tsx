@@ -30,12 +30,8 @@ import { SimulatorSettings } from "../SimulatorSettings/SimulatorSettings";
 import { useSettings } from "../../contexts/SettingsContext";
 import { throttle, debounce } from "lodash";
 import "../../styles/global.scss";
-import { MdFullscreen, MdFullscreenExit, MdInvertColors } from "react-icons/md";
-import { BiReset } from "react-icons/bi";
 import { motion } from "framer-motion";
-import { BsPlayFill, BsPauseFill, BsFillCameraFill } from "react-icons/bs";
 import { DebugData } from "../../types/Debug";
-import { AiOutlineExport } from "react-icons/ai";
 import { VscLibrary } from "react-icons/vsc";
 import { ScenarioPanel } from "../ScenarioPanel/ScenarioPanel";
 import { Scenario } from "../../types/scenario";
@@ -55,10 +51,10 @@ import {
   toSimulatorPath,
 } from "../../utils/types/path";
 import { PaperCanvas } from "../PaperCanvas/PaperCanvas";
-import { MusicPlayer } from "../MusicPlayer/MusicPlayer";
 import { AudioManager } from "../../utils/audio/AudioManager";
 import { VolumeSettings } from "../../utils/audio/AudioManager";
 import { SimulatorRenderer } from "../SimulatorRenderer/SimulatorRenderer";
+import { SimulatorControls } from "../SimulatorControls/SimulatorControls";
 
 const generatePastelColor = () => {
   const r = Math.floor(Math.random() * 75 + 180);
@@ -651,26 +647,22 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     });
   }, []);
 
-  const exportScenario = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      const scenario: Scenario = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: "",
-        description: "User saved scenario",
-        data: {
-          settings: physicsConfig,
-          gravityPoints: gravityPoints.map(toSerializableGravityPoint),
-          particles: particles.map(toSerializableParticle),
-          paths: paths.map(toSerializableSimulatorPath),
-        },
-      };
-      setShareableLink(createShareableLink(scenario));
-      setIsPaused(true);
-      setIsSaveModalOpen(true);
-    },
-    [physicsConfig, gravityPoints, particles, paths]
-  );
+  const exportScenario = useCallback(() => {
+    const scenario: Scenario = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: "",
+      description: "User saved scenario",
+      data: {
+        settings: physicsConfig,
+        gravityPoints: gravityPoints.map(toSerializableGravityPoint),
+        particles: particles.map(toSerializableParticle),
+        paths: paths.map(toSerializableSimulatorPath),
+      },
+    };
+    setShareableLink(createShareableLink(scenario));
+    setIsPaused(true);
+    setIsSaveModalOpen(true);
+  }, [physicsConfig, gravityPoints, particles, paths, setIsPaused]);
 
   const handleSaveScenario = useCallback(
     (name: string) => {
@@ -956,6 +948,24 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     [handleSelectScenario] // Only depends on handleSelectScenario
   );
 
+  // Add handler functions
+  const handlePause = useCallback(() => {
+    setIsPaused(!isPaused);
+  }, [isPaused]);
+
+  const handleReset = useCallback(() => {
+    setParticles([]);
+    setIsSimulationStarted(false);
+  }, []);
+
+  const handleFullscreenToggle = useCallback(() => {
+    toggleFullscreen();
+  }, [toggleFullscreen]);
+
+  const handleInvertColors = useCallback(() => {
+    setIsColorInverted((prev) => !prev);
+  }, []);
+
   const content = (
     <>
       <div
@@ -989,102 +999,22 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         />
 
         {!removeOverlay && (
-          <div
-            style={{
-              position: "absolute",
-              top: 20,
-              right: 20,
-              display: "flex",
-              gap: "10px",
-              zIndex: 1001,
-              width: "fit-content",
-              height: "40px",
-              alignItems: "center",
-            }}
-          >
-            {!disableSound && (
-              <MusicPlayer
-                isPlaying={isAudioPlaying}
-                isLoaded={isAudioLoaded}
-                onToggle={handleAudioToggle}
-              />
-            )}
-            <motion.button
-              onClick={handleScreenshot}
-              className="floating-panel floating-button"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              title="Take Screenshot"
-            >
-              <BsFillCameraFill size={20} />
-            </motion.button>
-            <motion.button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsPaused(!isPaused);
-              }}
-              className="floating-panel floating-button"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              title={isPaused ? "Resume Simulation" : "Pause Simulation"}
-            >
-              {isPaused ? <BsPlayFill size={20} /> : <BsPauseFill size={20} />}
-            </motion.button>
-
-            <motion.button
-              onClick={(e) => {
-                e.stopPropagation();
-                setParticles([]);
-                setIsSimulationStarted(false);
-              }}
-              className="floating-panel floating-button"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              title="Reset Simulation"
-            >
-              <BiReset size={20} />
-            </motion.button>
-
-            <motion.button
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleFullscreen();
-              }}
-              className="floating-panel floating-button"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-            >
-              {isFullscreen ? (
-                <MdFullscreenExit size={20} />
-              ) : (
-                <MdFullscreen size={20} />
-              )}
-            </motion.button>
-
-            <motion.button
-              onClick={exportScenario}
-              className="floating-panel floating-button"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              title="Export Scenario"
-            >
-              <AiOutlineExport size={20} />
-            </motion.button>
-
-            <motion.button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsColorInverted((prev) => !prev);
-              }}
-              className="floating-panel floating-button"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              title="Invert Colors"
-            >
-              <MdInvertColors size={20} />
-            </motion.button>
-          </div>
+          <SimulatorControls
+            onPause={handlePause}
+            onReset={handleReset}
+            onFullscreen={handleFullscreenToggle}
+            onExport={exportScenario}
+            onInvertColors={handleInvertColors}
+            onScreenshot={handleScreenshot}
+            onScenarioPanel={handleScenarioPanelToggle}
+            onSettingsPanel={handleSettingsPanelToggle}
+            isPaused={isPaused}
+            isFullscreen={isFullscreen}
+            isAudioPlaying={isAudioPlaying}
+            isAudioLoaded={isAudioLoaded}
+            onAudioToggle={handleAudioToggle}
+            disableSound={disableSound}
+          />
         )}
 
         {!removeOverlay && (

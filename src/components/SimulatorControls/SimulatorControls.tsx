@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { motion } from "framer-motion";
 import { MdFullscreen, MdFullscreenExit, MdInvertColors } from "react-icons/md";
 import { BiReset } from "react-icons/bi";
@@ -41,6 +41,23 @@ export const SimulatorControls: React.FC<SimulatorControlsProps> = ({
   onAudioToggle,
   disableSound,
 }) => {
+  const handleClick = useCallback(
+    <T extends Element>(handler: (e: React.MouseEvent<T>) => void) =>
+      (e: React.MouseEvent<T>) => {
+        e.stopPropagation();
+        handler(e);
+      },
+    []
+  );
+
+  const handleSimpleClick = useCallback(
+    (handler: () => void) => (e: React.MouseEvent) => {
+      e.stopPropagation();
+      handler();
+    },
+    []
+  );
+
   return (
     <>
       <div
@@ -60,11 +77,11 @@ export const SimulatorControls: React.FC<SimulatorControlsProps> = ({
           <MusicPlayer
             isPlaying={isAudioPlaying ?? false}
             isLoaded={isAudioLoaded ?? false}
-            onToggle={onAudioToggle}
+            onToggle={handleClick(onAudioToggle)}
           />
         )}
         <motion.button
-          onClick={onScreenshot}
+          onClick={handleClick(onScreenshot)}
           className="floating-panel floating-button"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -73,7 +90,7 @@ export const SimulatorControls: React.FC<SimulatorControlsProps> = ({
           <BsFillCameraFill size={20} />
         </motion.button>
         <motion.button
-          onClick={onPause}
+          onClick={handleSimpleClick(onPause)}
           className="floating-panel floating-button"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -83,7 +100,7 @@ export const SimulatorControls: React.FC<SimulatorControlsProps> = ({
         </motion.button>
 
         <motion.button
-          onClick={onReset}
+          onClick={handleSimpleClick(onReset)}
           className="floating-panel floating-button"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -93,7 +110,7 @@ export const SimulatorControls: React.FC<SimulatorControlsProps> = ({
         </motion.button>
 
         <motion.button
-          onClick={onFullscreen}
+          onClick={handleSimpleClick(onFullscreen)}
           className="floating-panel floating-button"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -107,7 +124,7 @@ export const SimulatorControls: React.FC<SimulatorControlsProps> = ({
         </motion.button>
 
         <motion.button
-          onClick={onExport}
+          onClick={handleClick(onExport)}
           className="floating-panel floating-button"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -117,7 +134,7 @@ export const SimulatorControls: React.FC<SimulatorControlsProps> = ({
         </motion.button>
 
         <motion.button
-          onClick={onInvertColors}
+          onClick={handleSimpleClick(onInvertColors)}
           className="floating-panel floating-button"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -138,7 +155,7 @@ export const SimulatorControls: React.FC<SimulatorControlsProps> = ({
         }}
       >
         <motion.button
-          onClick={onScenarioPanel}
+          onClick={handleClick(onScenarioPanel)}
           className="floating-panel floating-button"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -148,7 +165,7 @@ export const SimulatorControls: React.FC<SimulatorControlsProps> = ({
         </motion.button>
 
         <motion.button
-          onClick={onSettingsPanel}
+          onClick={handleClick(onSettingsPanel)}
           className="floating-panel floating-button"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
