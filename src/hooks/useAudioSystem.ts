@@ -1,22 +1,35 @@
-import { useState, useEffect } from "react";
-import { throttle } from "lodash";
+import { useState, useEffect, useCallback } from "react";
 import { AudioManager, VolumeSettings } from "../utils/audio/AudioManager";
+import { throttle } from "lodash";
 import { Particle } from "../types/particle";
-import { PhysicsSettings } from "../constants/physics";
 
-export const useAudioSystem = (
-  disableSound: boolean,
-  physicsConfig: PhysicsSettings,
-  particles: Particle[],
-  audioFiles: string[]
-) => {
+interface UseAudioSystemProps {
+  disableSound: boolean;
+  particles: Particle[];
+  volumeSettings: VolumeSettings;
+  audioFiles: string[];
+}
+
+interface UseAudioSystemReturn {
+  isAudioLoaded: boolean;
+  isAudioPlaying: boolean;
+  handleAudioToggle: (e: React.MouseEvent) => Promise<void>;
+  notifyFirstInteraction: () => void;
+}
+
+export const useAudioSystem = ({
+  disableSound,
+  particles,
+  volumeSettings,
+  audioFiles,
+}: UseAudioSystemProps): UseAudioSystemReturn => {
   const [audioManager] = useState(() =>
     disableSound
       ? null
       : AudioManager.getInstance({
-          masterVolume: physicsConfig.MASTER_VOLUME,
-          ambientVolume: physicsConfig.AMBIENT_VOLUME,
-          particleVolume: physicsConfig.PARTICLE_VOLUME,
+          masterVolume: volumeSettings.masterVolume,
+          ambientVolume: volumeSettings.ambientVolume,
+          particleVolume: volumeSettings.particleVolume,
         })
   );
   const [isAudioLoaded, setIsAudioLoaded] = useState(false);
@@ -28,17 +41,15 @@ export const useAudioSystem = (
 
     const initAudio = async () => {
       await audioManager.initialize(audioFiles);
-      setIsAudioLoaded(true);
     };
     initAudio();
 
     return () => {
       audioManager.cleanup();
-      setIsAudioLoaded(false);
     };
   }, [audioManager, disableSound, audioFiles]);
 
-  // Update volume settings when they change
+  // Update audio manager when volume settings change
   useEffect(() => {
     if (disableSound || !audioManager) return;
 
@@ -50,30 +61,23 @@ export const useAudioSystem = (
       { leading: true, trailing: true }
     );
 
-    updateVolumes({
-      masterVolume: physicsConfig.MASTER_VOLUME,
-      ambientVolume: physicsConfig.AMBIENT_VOLUME,
-      particleVolume: physicsConfig.PARTICLE_VOLUME,
-    });
+    updateVolumes(volumeSettings);
 
     return () => {
       updateVolumes.cancel();
     };
-  }, [
-    audioManager,
-    disableSound,
-    physicsConfig.MASTER_VOLUME,
-    physicsConfig.AMBIENT_VOLUME,
-    physicsConfig.PARTICLE_VOLUME,
-  ]);
+  }, [audioManager, disableSound, volumeSettings]);
 
   // Track particle sound effects
   useEffect(() => {
     if (disableSound || !audioManager) return;
 
+    // Get current particle IDs
     const currentParticleIds = new Set(
       particles.map((p) => p.id).filter(Boolean)
     );
+
+    // Get existing sound effect IDs
     const existingSoundEffectIds = new Set(
       audioManager.getActiveSoundEffectIds()
     );
@@ -96,8 +100,10 @@ export const useAudioSystem = (
       }
     });
 
+    // Cleanup on unmount or when disableSound changes
     return () => {
       if (disableSound) {
+        // Remove all sound effects when sound is disabled
         audioManager.getActiveSoundEffectIds().forEach((id) => {
           audioManager.removeSoundEffect(id);
         });
@@ -113,11 +119,15 @@ export const useAudioSystem = (
       particles.forEach((particle) => {
         if (!particle.id) return;
 
+        // Calculate velocity magnitude
         const velocityMagnitude = particle.velocity.length;
-        const VELOCITY_THRESHOLD = 0.1;
-        const NORMAL_VELOCITY = 200;
+
+        // Define velocity thresholds
+        const VELOCITY_THRESHOLD = 0.1; // Minimum velocity for sound
+        const NORMAL_VELOCITY = 200; // Velocity at which noise is at 4000Hz
 
         if (velocityMagnitude < VELOCITY_THRESHOLD) {
+          // Complete silence when nearly stationary
           audioManager.updateSoundEffect(particle.id, {
             frequency: 0,
             volume: -100,
@@ -125,13 +135,21 @@ export const useAudioSystem = (
           return;
         }
 
+        // Calculate normalized velocity ratio (0 to 1)
         const normalizedVelocity = Math.min(
           velocityMagnitude / NORMAL_VELOCITY,
           5
         );
+
+        // Calculate noise frequency (0Hz to 8000Hz)
+        // At normal velocity (ratio = 1), frequency will be 4000Hz
         const frequency = normalizedVelocity * 4000;
+
+        // Calculate volume (-70dB to -40dB)
+        // More velocity = louder, but with a soft cap
         const volume = -50 + Math.min(normalizedVelocity, 1) * 20;
 
+        // Update sound effect parameters
         audioManager.updateSoundEffect(particle.id, {
           frequency,
           volume,
@@ -140,18 +158,31 @@ export const useAudioSystem = (
     });
   }, [particles, audioManager, disableSound]);
 
-  const handleAudioToggle = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleAudioToggle = useCallback(
+    async (e: React.MouseEvent) => {
+      if (disableSound || !audioManager) return;
+      e.stopPropagation();
+      await audioManager.togglePlayback();
+      setIsAudioPlaying(audioManager.getIsPlaying());
+    },
+    [audioManager, disableSound]
+  );
+
+  const notifyFirstInteraction = useCallback(() => {
     if (disableSound || !audioManager) return;
-    e.stopPropagation();
-    await audioManager.togglePlayback();
-    setIsAudioPlaying(audioManager.getIsPlaying());
-  };
+
+    audioManager.notifyFirstInteraction();
+    if (audioManager.getIsLoaded()) {
+      setIsAudioLoaded(audioManager.getIsLoaded());
+      audioManager.play();
+      setIsAudioPlaying(true);
+    }
+  }, [audioManager, disableSound]);
 
   return {
-    audioManager,
     isAudioLoaded,
     isAudioPlaying,
-    setIsAudioPlaying,
     handleAudioToggle,
+    notifyFirstInteraction,
   };
 };

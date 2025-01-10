@@ -51,10 +51,9 @@ import {
   toSimulatorPath,
 } from "../../utils/types/path";
 import { PaperCanvas } from "../PaperCanvas/PaperCanvas";
-import { AudioManager } from "../../utils/audio/AudioManager";
-import { VolumeSettings } from "../../utils/audio/AudioManager";
 import { SimulatorRenderer } from "../SimulatorRenderer/SimulatorRenderer";
 import { SimulatorControls } from "../SimulatorControls/SimulatorControls";
+import { useAudioSystem } from "../../hooks/useAudioSystem";
 
 const generatePastelColor = () => {
   const r = Math.floor(Math.random() * 75 + 180);
@@ -179,175 +178,29 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     []
   );
 
-  // Initialize audio manager with current settings
-  const [audioManager] = useState(() =>
-    disableSound
-      ? null
-      : AudioManager.getInstance({
-          masterVolume: physicsConfig.MASTER_VOLUME,
-          ambientVolume: physicsConfig.AMBIENT_VOLUME,
-          particleVolume: physicsConfig.PARTICLE_VOLUME,
-        })
-  );
-  const [isAudioLoaded, setIsAudioLoaded] = useState(false);
-  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
-
-  // Initialize audio files
-  useEffect(() => {
-    if (disableSound || !audioManager) return;
-
-    const initAudio = async () => {
-      await audioManager.initialize(audioFiles);
-    };
-    initAudio();
-
-    return () => {
-      audioManager.cleanup();
-    };
-  }, [audioManager, disableSound, audioFiles]);
-
-  // Handle first interaction
-  useEffect(() => {
-    if (disableSound || !audioManager) return;
-
-    if (firstInteractionDetected) {
-      audioManager.notifyFirstInteraction();
-      if (audioManager.getIsLoaded()) {
-        setIsAudioLoaded(audioManager.getIsLoaded());
-        audioManager.play();
-        setIsAudioPlaying(true);
-      }
-    }
-  }, [firstInteractionDetected, audioManager, disableSound]);
-
-  // Update audio manager when volume settings change
-  useEffect(() => {
-    if (disableSound || !audioManager) return;
-
-    const updateVolumes = throttle(
-      (settings: VolumeSettings) => {
-        audioManager.updateVolumeSettings(settings);
-      },
-      100,
-      { leading: true, trailing: true }
-    );
-
-    updateVolumes({
+  // Use the audio system hook
+  const {
+    isAudioLoaded,
+    isAudioPlaying,
+    handleAudioToggle,
+    notifyFirstInteraction,
+  } = useAudioSystem({
+    disableSound,
+    particles,
+    volumeSettings: {
       masterVolume: physicsConfig.MASTER_VOLUME,
       ambientVolume: physicsConfig.AMBIENT_VOLUME,
       particleVolume: physicsConfig.PARTICLE_VOLUME,
-    });
-
-    return () => {
-      updateVolumes.cancel();
-    };
-  }, [
-    audioManager,
-    disableSound,
-    physicsConfig.MASTER_VOLUME,
-    physicsConfig.AMBIENT_VOLUME,
-    physicsConfig.PARTICLE_VOLUME,
-  ]);
-
-  // Track particle sound effects
-  useEffect(() => {
-    if (disableSound || !audioManager) return;
-
-    // Get current particle IDs
-    const currentParticleIds = new Set(
-      particles.map((p) => p.id).filter(Boolean)
-    );
-
-    // Get existing sound effect IDs
-    const existingSoundEffectIds = new Set(
-      audioManager.getActiveSoundEffectIds()
-    );
-
-    // Remove sound effects for particles that no longer exist
-    existingSoundEffectIds.forEach((effectId) => {
-      if (!currentParticleIds.has(effectId)) {
-        audioManager.removeSoundEffect(effectId);
-      }
-    });
-
-    // Add sound effects for new particles
-    particles.forEach((particle) => {
-      if (!particle.id) return;
-      if (!existingSoundEffectIds.has(particle.id)) {
-        audioManager.addParticleSoundEffect(particle.id, {
-          volume: -100, // Start silent
-          frequency: 0, // Start with no frequency
-        });
-      }
-    });
-
-    // Cleanup on unmount or when disableSound changes
-    return () => {
-      if (disableSound) {
-        // Remove all sound effects when sound is disabled
-        audioManager.getActiveSoundEffectIds().forEach((id) => {
-          audioManager.removeSoundEffect(id);
-        });
-      }
-    };
-  }, [particles, audioManager, disableSound]); // Run whenever particles array changes
-
-  // Update sound effect parameters based on particle properties
-  useEffect(() => {
-    if (disableSound || !audioManager) return;
-
-    requestAnimationFrame(() => {
-      particles.forEach((particle) => {
-        if (!particle.id) return;
-
-        // Calculate velocity magnitude
-        const velocityMagnitude = particle.velocity.length;
-
-        // Define velocity thresholds
-        const VELOCITY_THRESHOLD = 0.1; // Minimum velocity for sound
-        const NORMAL_VELOCITY = 200; // Velocity at which noise is at 4000Hz
-
-        if (velocityMagnitude < VELOCITY_THRESHOLD) {
-          // Complete silence when nearly stationary
-          audioManager.updateSoundEffect(particle.id, {
-            frequency: 0,
-            volume: -100,
-          });
-          return;
-        }
-
-        // Calculate normalized velocity ratio (0 to 1)
-        const normalizedVelocity = Math.min(
-          velocityMagnitude / NORMAL_VELOCITY,
-          5
-        );
-
-        // Calculate noise frequency (0Hz to 8000Hz)
-        // At normal velocity (ratio = 1), frequency will be 4000Hz
-        const frequency = normalizedVelocity * 4000;
-
-        // Calculate volume (-70dB to -40dB)
-        // More velocity = louder, but with a soft cap
-        const volume = -50 + Math.min(normalizedVelocity, 1) * 20;
-
-        // Update sound effect parameters
-        audioManager.updateSoundEffect(particle.id, {
-          frequency,
-          volume,
-        });
-      });
-    });
-  }, [particles, audioManager, disableSound]);
-
-  const handleAudioToggle = useCallback(
-    async (e: React.MouseEvent<HTMLButtonElement>) => {
-      if (disableSound || !audioManager) return;
-      e.stopPropagation();
-      await audioManager.togglePlayback();
-      setIsAudioPlaying(audioManager.getIsPlaying());
     },
-    [audioManager, disableSound]
-  );
+    audioFiles,
+  });
+
+  // Handle first interaction
+  useEffect(() => {
+    if (firstInteractionDetected) {
+      notifyFirstInteraction();
+    }
+  }, [firstInteractionDetected, notifyFirstInteraction]);
 
   useEffect(() => {
     const updateOffset = () => {
