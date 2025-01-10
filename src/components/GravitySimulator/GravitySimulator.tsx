@@ -6,14 +6,13 @@ import React, {
   useMemo,
 } from "react";
 import html2canvas from "html2canvas";
+import { Point } from "paper";
 import {
   Point2D,
   GravityPoint,
   Vector,
   WarpPoint,
 } from "../../utils/types/physics";
-import { GravityPointComponent } from "../GravityPoint/GravityPoint";
-import { ParticleRenderer } from "../ParticleRenderer/ParticleRenderer";
 import { StarPalette } from "../StarPalette/StarPalette";
 import { StarTemplate } from "../../types/star";
 import {
@@ -45,24 +44,21 @@ import { SaveScenarioModal } from "../SaveScenarioModal/SaveScenarioModal";
 import { createShareableLink } from "../../utils/compression";
 import { Particle, ParticleMechanics } from "../../types/particle";
 import { Position } from "@yhattav/react-component-cursor";
-import { Point } from "paper";
 import {
   toGravityPoint,
   toSerializableGravityPoint,
 } from "../../utils/types/physics";
 import { toParticle, toSerializableParticle } from "../../types/particle";
-import { D3GravityVision } from "../D3GravityVision/D3GravityVision";
-import { GravityVision } from "../GravityVision/GravityVision";
 import {
   SimulatorPath,
   toSerializableSimulatorPath,
   toSimulatorPath,
 } from "../../utils/types/path";
-import { PathRenderer } from "../PathRenderer/PathRenderer";
 import { PaperCanvas } from "../PaperCanvas/PaperCanvas";
 import { MusicPlayer } from "../MusicPlayer/MusicPlayer";
 import { AudioManager } from "../../utils/audio/AudioManager";
 import { VolumeSettings } from "../../utils/audio/AudioManager";
+import { SimulatorRenderer } from "../SimulatorRenderer/SimulatorRenderer";
 
 const generatePastelColor = () => {
   const r = Math.floor(Math.random() * 75 + 180);
@@ -1099,61 +1095,26 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           />
         )}
 
-        {gravityPoints.map((point, index) => (
-          <GravityPointComponent
-            key={point.id || index}
-            point={point}
-            index={index}
-            onDrag={handleDrag}
-            reportNewPosition={handleReportNewPosition}
-            onDragEnd={handleDragEnd}
-            onDelete={handlePointDelete}
-            containerRef={gravityRef}
-            disabled={blockInteractions}
-          />
-        ))}
-
         {paperScope && (
-          <>
-            {isSimulationStarted && (
-              <ParticleRenderer
-                scope={paperScope}
-                particlesRef={particlesRef}
-                isPausedRef={isPausedRef}
-                shouldReset={shouldResetRenderer}
-                onResetComplete={() => setShouldResetRenderer(false)}
-              />
-            )}
-
-            <PathRenderer
-              scope={paperScope}
-              paths={paths}
-              shouldReset={shouldResetRenderer}
-              onResetComplete={() => {
-                setShouldResetRenderer(false);
-              }}
-              simulatorId={simulatorId}
-            />
-
-            {!removeOverlay && physicsConfig.SHOW_GRAVITY_VISION && (
-              <GravityVision
-                scope={paperScope}
-                warpPoints={generateWarpPoints()}
-                settings={physicsConfig}
-                containerRef={gravityRef}
-                isPausedRef={isPausedRef}
-              />
-            )}
-
-            {!removeOverlay && physicsConfig.SHOW_D3_GRAVITY_VISION && (
-              <D3GravityVision
-                warpPoints={generateWarpPoints()}
-                settings={physicsConfig}
-                containerRef={gravityRef}
-                isPausedRef={isPausedRef}
-              />
-            )}
-          </>
+          <SimulatorRenderer
+            paperScope={paperScope}
+            particlesRef={particlesRef}
+            gravityPoints={gravityPoints}
+            paths={paths}
+            isPausedRef={isPausedRef}
+            shouldReset={shouldResetRenderer}
+            onResetComplete={() => setShouldResetRenderer(false)}
+            settings={physicsConfig}
+            containerRef={gravityRef}
+            handlePointDelete={handlePointDelete}
+            handleReportNewPosition={handleReportNewPosition}
+            handleDrag={handleDrag}
+            handleDragEnd={handleDragEnd}
+            blockInteractions={blockInteractions}
+            isSimulationStarted={isSimulationStarted}
+            simulatorId={simulatorId}
+            warpPoints={generateWarpPoints()}
+          />
         )}
 
         {!removeOverlay && (
