@@ -35,6 +35,8 @@ export const useParticleSystem = (
       particle: ParticleMechanics,
       allParticles: Array<ParticleMechanics> = []
     ): ParticleMechanics => {
+      if (particle.frozen) return particle;
+
       const otherParticles = allParticles.filter((p) => p !== particle);
       const calculatedForce = calculateTotalForce(
         particle.position,
