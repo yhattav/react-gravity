@@ -1,4 +1,5 @@
 import { useCallback, useRef } from "react";
+import { Point } from "paper";
 import { Point2D } from "../utils/types/physics";
 import { Particle } from "../types/particle";
 import { Position } from "@yhattav/react-component-cursor";
@@ -8,7 +9,11 @@ interface InteractionHandlersProps {
   isDragging: boolean;
   isDraggingNewStar: boolean;
   isSimulationStarted: boolean;
-  createParticle: (position: Point2D, velocity: Point2D) => Particle;
+  createParticle: (
+    position: Point2D,
+    velocity: Point2D,
+    options?: Partial<Omit<Particle, "position" | "id" | "velocity">>
+  ) => Particle;
   setParticles: React.Dispatch<React.SetStateAction<Particle[]>>;
   setIsSimulationStarted: (started: boolean) => void;
   detectFirstInteraction: () => void;
@@ -48,6 +53,11 @@ export const useInteractionHandlers = ({
         isDragging: true,
       };
 
+      setParticles((current) => [
+        ...current,
+        createParticle(coordinates, { x: 0, y: 0 }, { frozen: true }),
+      ]);
+
       if (!isSimulationStarted) {
         setIsSimulationStarted(true);
       }
@@ -60,6 +70,8 @@ export const useInteractionHandlers = ({
       isSimulationStarted,
       setIsSimulationStarted,
       detectFirstInteraction,
+      createParticle,
+      setParticles,
     ]
   );
 
@@ -73,17 +85,25 @@ export const useInteractionHandlers = ({
           : { x: e.clientX, y: e.clientY };
 
       const startPos = dragStateRef.current.startPosition;
-      const velocityX = (startPos.x - endCoordinates.x) * 0.1; // Scale factor to make velocity more manageable
+      const velocityX = (startPos.x - endCoordinates.x) * 0.1;
       const velocityY = (startPos.y - endCoordinates.y) * 0.1;
 
-      setParticles((current) => [
-        ...current,
-        createParticle(startPos, { x: velocityX, y: velocityY }),
-      ]);
+      setParticles((current) => {
+        const particles = [...current];
+        const lastParticle = particles[particles.length - 1];
+        if (lastParticle && lastParticle.frozen) {
+          particles[particles.length - 1] = {
+            ...lastParticle,
+            frozen: false,
+            velocity: new Point(velocityX, velocityY),
+          };
+        }
+        return particles;
+      });
 
       dragStateRef.current = null;
     },
-    [createParticle, setParticles]
+    [setParticles]
   );
 
   const handleTouchStart = useCallback(
