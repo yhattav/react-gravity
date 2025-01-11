@@ -12,6 +12,8 @@ import {
   GravityPoint,
   Vector,
   WarpPoint,
+  toGravityPoint,
+  toSerializableGravityPoint,
 } from "../../utils/types/physics";
 import { StarPalette } from "../StarPalette/StarPalette";
 import { StarTemplate } from "../../types/star";
@@ -37,23 +39,23 @@ import { ScenarioPanel } from "../ScenarioPanel/ScenarioPanel";
 import { Scenario } from "../../types/scenario";
 import { SettingOutlined } from "@ant-design/icons";
 import { SaveScenarioModal } from "../SaveScenarioModal/SaveScenarioModal";
-import { createShareableLink } from "../../utils/compression";
-import { Particle, ParticleMechanics } from "../../types/particle";
+import {
+  Particle,
+  ParticleMechanics,
+  toParticle,
+  toSerializableParticle,
+} from "../../types/particle";
 import { Position } from "@yhattav/react-component-cursor";
 import {
-  toGravityPoint,
-  toSerializableGravityPoint,
-} from "../../utils/types/physics";
-import { toParticle, toSerializableParticle } from "../../types/particle";
-import {
   SimulatorPath,
-  toSerializableSimulatorPath,
   toSimulatorPath,
+  toSerializableSimulatorPath,
 } from "../../utils/types/path";
 import { PaperCanvas } from "../PaperCanvas/PaperCanvas";
 import { SimulatorRenderer } from "../SimulatorRenderer/SimulatorRenderer";
 import { SimulatorControls } from "../SimulatorControls/SimulatorControls";
 import { useAudioSystem } from "../../hooks/useAudioSystem";
+import { useScenarioManagement } from "../../hooks/useScenarioManagement";
 
 const generatePastelColor = () => {
   const r = Math.floor(Math.random() * 75 + 180);
@@ -155,10 +157,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const isPausedRef = useRef(false);
-  const [isScenarioPanelOpen, setIsScenarioPanelOpen] = useState(false);
-  const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
-  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
-  const [shareableLink, setShareableLink] = useState<string>("");
   const [isColorInverted, setIsColorInverted] = useState(false);
   const [offset, setOffset] = useState<Vector>(new Point(0, 0));
   const [shouldResetRenderer, setShouldResetRenderer] = useState(false);
@@ -167,6 +165,35 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   );
   const [paperScope, setPaperScope] = useState<paper.PaperScope | null>(null);
   const [isFlashing, setIsFlashing] = useState(false);
+
+  // Use the scenario management hook
+  const {
+    isScenarioPanelOpen,
+    setIsScenarioPanelOpen,
+    isSettingsPanelOpen,
+    setIsSettingsPanelOpen,
+    isSaveModalOpen,
+    setIsSaveModalOpen,
+    shareableLink,
+    handleExportScenario,
+    handleSaveScenario,
+    handleSelectScenario,
+    handleScenarioPanelToggle,
+    handleSettingsPanelToggle,
+  } = useScenarioManagement({
+    physicsConfig,
+    gravityPoints,
+    particles,
+    paths,
+    setIsPaused,
+    setGravityPoints,
+    setParticles,
+    setPaths,
+    updateSettings,
+    setIsSimulationStarted,
+    setShouldResetRenderer,
+    saveScenario,
+  });
 
   // Audio files definition
   const audioFiles = useMemo(
@@ -500,103 +527,8 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     });
   }, []);
 
-  const exportScenario = useCallback(() => {
-    const scenario: Scenario = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: "",
-      description: "User saved scenario",
-      data: {
-        settings: physicsConfig,
-        gravityPoints: gravityPoints.map(toSerializableGravityPoint),
-        particles: particles.map(toSerializableParticle),
-        paths: paths.map(toSerializableSimulatorPath),
-      },
-    };
-    setShareableLink(createShareableLink(scenario));
-    setIsPaused(true);
-    setIsSaveModalOpen(true);
-  }, [physicsConfig, gravityPoints, particles, paths, setIsPaused]);
-
-  const handleSaveScenario = useCallback(
-    (name: string) => {
-      const scenario: Scenario = {
-        id: Math.random().toString(36).substr(2, 9),
-        name,
-        description: "User saved scenario",
-        data: {
-          settings: physicsConfig,
-          gravityPoints: gravityPoints.map(toSerializableGravityPoint),
-          particles: particles.map(toSerializableParticle),
-          paths: paths.map(toSerializableSimulatorPath),
-        },
-      };
-      saveScenario(scenario);
-      setIsSaveModalOpen(false);
-    },
-    [physicsConfig, gravityPoints, particles, paths, saveScenario]
-  );
-
-  const handleSelectScenario = useCallback(
-    (scenario: Scenario) => {
-      // First pause the simulation
-      const isCurrentlyPaused = isPaused;
-      setIsPaused(true);
-
-      // Trigger reset for all renderers
-      setShouldResetRenderer(true);
-
-      // Clear current state
-      setParticles([]);
-      setGravityPoints([]);
-      setPaths([]);
-      setPaperScope(null);
-
-      // Wait for cleanup to complete before setting new data
-      requestAnimationFrame(() => {
-        // Update settings
-        updateSettings(scenario.data.settings);
-
-        // Set new data in the next frame
-        requestAnimationFrame(() => {
-          setGravityPoints(
-            (scenario.data.gravityPoints?.map(toGravityPoint) || []).map(
-              (point) => ({
-                ...point,
-                id: point.id || Math.random().toString(36).substr(2, 9),
-              })
-            )
-          );
-
-          setParticles(
-            scenario.data.particles?.map((particle) => ({
-              ...toParticle(particle),
-              force: new Point(0, 0),
-            })) || []
-          );
-
-          setPaths(scenario.data.paths?.map(toSimulatorPath) || []);
-
-          // Complete reset and resume simulation
-          setShouldResetRenderer(false);
-          setIsSimulationStarted(true);
-          setIsScenarioPanelOpen(false);
-          setIsPaused(isCurrentlyPaused);
-        });
-      });
-    },
-    [updateSettings, isPaused]
-  );
-
-  const handleSettingsPanelToggle = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsSettingsPanelOpen((prev) => !prev);
-    setIsScenarioPanelOpen(false);
-  }, []);
-
-  const handleScenarioPanelToggle = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsScenarioPanelOpen((prev) => !prev);
-    setIsSettingsPanelOpen(false);
+  const handleCanvasReady = useCallback((scope: paper.PaperScope) => {
+    setPaperScope(scope);
   }, []);
 
   const generateWarpPoints = useCallback((): WarpPoint[] => {
@@ -638,10 +570,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
     return warpPoints;
   }, [gravityPoints, particles, pointerPosRef, offset, physicsConfig]);
-
-  const handleCanvasReady = useCallback((scope: paper.PaperScope) => {
-    setPaperScope(scope);
-  }, []);
 
   const handleScreenshot = useCallback(
     async (e: React.MouseEvent) => {
@@ -798,7 +726,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       setFirstInteractionDetected(true);
       handleSelectScenario(scenario);
     },
-    [handleSelectScenario] // Only depends on handleSelectScenario
+    [handleSelectScenario]
   );
 
   // Add handler functions
@@ -837,8 +765,8 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           height: "100%",
           background: "linear-gradient(45deg, #1a1a1a, #2a2a2a)",
           zIndex: 1,
-          touchAction: "none", // Prevent default touch behaviors
-          cursor: blockInteractions ? "default" : "pointer", // Show pointer cursor when interactions are enabled
+          touchAction: "none",
+          cursor: blockInteractions ? "default" : "pointer",
           animation: isFlashing
             ? "screenshot-flash 0.15s ease-out forwards"
             : "none",
@@ -856,7 +784,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             onPause={handlePause}
             onReset={handleReset}
             onFullscreen={handleFullscreenToggle}
-            onExport={exportScenario}
+            onExport={handleExportScenario}
             onInvertColors={handleInvertColors}
             onScreenshot={handleScreenshot}
             onScenarioPanel={handleScenarioPanelToggle}
