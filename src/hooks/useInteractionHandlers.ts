@@ -40,6 +40,7 @@ export const useInteractionHandlers = ({
 
   const handleContainerMouseDown = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
+      console.log("handleContainerMouseDown", e.target);
       if (blockInteractions) return;
       if (isStarDragging || isDraggingNewStar) return;
 

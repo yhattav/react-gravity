@@ -30,7 +30,9 @@ export const GravityPointComponent: React.FC<GravityPointComponentProps> = ({
   const timeoutRef = useRef<NodeJS.Timeout>();
   const isDraggingRef = useRef(false);
 
-  const handlePointerDown = () => {
+  const handleMouseDown = (e: React.MouseEvent) => {
+    console.log("handleMouseDown");
+    e.stopPropagation();
     isDraggingRef.current = false;
     timeoutRef.current = setTimeout(() => {
       isDraggingRef.current = true;
@@ -56,7 +58,7 @@ export const GravityPointComponent: React.FC<GravityPointComponentProps> = ({
     [containerRef, reportNewPosition, index]
   );
 
-  const handlePointerUp = () => {
+  const handleClick = () => {
     clearTimeout(timeoutRef.current);
     if (!isDraggingRef.current) {
       onDelete(index);
@@ -79,8 +81,8 @@ export const GravityPointComponent: React.FC<GravityPointComponentProps> = ({
       }}
       initial={{ x: point.position.x, y: point.position.y }}
       onDragEnd={onDragEnd}
-      onPointerDown={disabled ? undefined : handlePointerDown}
-      onPointerUp={disabled ? undefined : handlePointerUp}
+      onMouseDown={disabled ? undefined : handleMouseDown}
+      onClick={disabled ? undefined : handleClick}
       data-point={index}
       style={{
         position: "absolute",
