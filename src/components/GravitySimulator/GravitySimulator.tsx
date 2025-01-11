@@ -193,18 +193,24 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   );
 
   // Use the interaction handlers hook
-  const { handleContainerClick, handleTouchStart, handleTouchMove } =
-    useInteractionHandlers({
-      blockInteractions,
-      isDragging,
-      isDraggingNewStar,
-      isSimulationStarted,
-      createParticle: (position) => createParticle(position, { x: 0, y: 0 }),
-      setParticles,
-      setIsSimulationStarted,
-      detectFirstInteraction,
-      pointerPosRef,
-    });
+  const {
+    handleContainerMouseDown,
+    handleContainerMouseUp,
+    handleMouseMove,
+    handleTouchStart,
+    handleTouchEnd,
+    handleTouchMove,
+  } = useInteractionHandlers({
+    blockInteractions,
+    isDragging,
+    isDraggingNewStar,
+    isSimulationStarted,
+    createParticle,
+    setParticles,
+    setIsSimulationStarted,
+    detectFirstInteraction,
+    pointerPosRef,
+  });
 
   // Initialize particles with initial scenario data if available
   useEffect(() => {
@@ -499,8 +505,11 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     <>
       <div
         ref={gravityRef}
-        onClick={handleContainerClick}
+        onMouseDown={handleContainerMouseDown}
+        onMouseUp={handleContainerMouseUp}
+        onMouseMove={handleMouseMove}
         onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
         onTouchMove={handleTouchMove}
         className={`${className} ${
           isColorInverted ? "inverted" : "not-inverted"
