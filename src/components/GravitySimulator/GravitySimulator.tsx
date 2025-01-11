@@ -151,7 +151,9 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     handleFullscreenToggle: baseHandleFullscreenToggle,
     handleInvertColors,
     detectFirstInteraction,
-  } = useSimulatorState(initialScenario, blockInteractions);
+  } = useSimulatorState(initialScenario, blockInteractions, () =>
+    setParticles([])
+  );
 
   // Wrap fullscreen toggle to include gravityRef
   const handleFullscreenToggle = useCallback(() => {

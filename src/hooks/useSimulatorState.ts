@@ -3,7 +3,8 @@ import { Scenario } from "../types/scenario";
 
 export const useSimulatorState = (
   initialScenario?: Scenario,
-  blockInteractions = false
+  blockInteractions = false,
+  clearParticles?: () => void
 ) => {
   const [isSimulationStarted, setIsSimulationStarted] = useState(
     !!initialScenario
@@ -23,9 +24,12 @@ export const useSimulatorState = (
 
   const handleReset = useCallback(() => {
     if (blockInteractions) return;
+    if (clearParticles) {
+      clearParticles();
+    }
     setIsSimulationStarted(false);
     setShouldResetRenderer(true);
-  }, [blockInteractions]);
+  }, [blockInteractions, clearParticles]);
 
   const handleFullscreenToggle = useCallback(
     (gravityRef: React.RefObject<HTMLDivElement>) => {
