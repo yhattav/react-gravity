@@ -86,8 +86,8 @@ export const useInteractionHandlers = ({
           : { x: e.clientX, y: e.clientY };
 
       const startPos = dragStateRef.current.startPosition;
-      const velocityX = (startPos.x - endCoordinates.x) * 0.1;
-      const velocityY = (startPos.y - endCoordinates.y) * 0.1;
+      const velocityX = startPos.x - endCoordinates.x;
+      const velocityY = startPos.y - endCoordinates.y;
 
       // Update the last particle to unfreeze it and set its velocity
       setParticles((current) => {
@@ -120,8 +120,8 @@ export const useInteractionHandlers = ({
       if (dragStateRef.current?.isDragging) {
         const currentPos = { x: e.clientX, y: e.clientY };
         const startPos = dragStateRef.current.startPosition;
-        const velocityX = (startPos.x - currentPos.x) * 0.1;
-        const velocityY = (startPos.y - currentPos.y) * 0.1;
+        const velocityX = startPos.x - currentPos.x;
+        const velocityY = startPos.y - currentPos.y;
 
         setParticles((current) => {
           const particles = [...current];
@@ -174,8 +174,8 @@ export const useInteractionHandlers = ({
           y: e.touches[0].clientY,
         };
         const startPos = dragStateRef.current.startPosition;
-        const velocityX = (startPos.x - currentPos.x) * 0.1;
-        const velocityY = (startPos.y - currentPos.y) * 0.1;
+        const velocityX = startPos.x - currentPos.x;
+        const velocityY = startPos.y - currentPos.y;
 
         setParticles((current) => {
           const particles = [...current];
