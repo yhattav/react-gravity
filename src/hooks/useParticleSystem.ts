@@ -10,6 +10,7 @@ import {
 } from "../utils/physics/physicsUtils";
 import { PhysicsSettings } from "../constants/physics";
 import { SimulatorPath } from "../utils/types/path";
+import { Position } from "@yhattav/react-component-cursor";
 
 const generatePastelColor = () => {
   const r = Math.floor(Math.random() * 75 + 180);
@@ -21,7 +22,7 @@ const generatePastelColor = () => {
 export const useParticleSystem = (
   physicsConfig: PhysicsSettings,
   offset: Vector,
-  pointerPosRef: React.RefObject<Point2D>,
+  pointerPosRef: React.RefObject<Position>,
   gravityPoints: GravityPoint[],
   paths: SimulatorPath[],
   gravityRef: React.RefObject<HTMLDivElement>

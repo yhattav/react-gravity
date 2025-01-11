@@ -17,12 +17,6 @@ import {
 } from "../../utils/types/physics";
 import { StarPalette } from "../StarPalette/StarPalette";
 import { StarTemplate } from "../../types/star";
-import {
-  calculateTotalForce,
-  calculateAcceleration,
-  calculateNewVelocity,
-  handleBoundaryCollision,
-} from "../../utils/physics/physicsUtils";
 import { getContainerOffset } from "../../utils/dom/domUtils";
 import {
   INITIAL_GRAVITY_POINTS,
@@ -41,7 +35,6 @@ import { SettingOutlined } from "@ant-design/icons";
 import { SaveScenarioModal } from "../SaveScenarioModal/SaveScenarioModal";
 import {
   Particle,
-  ParticleMechanics,
   toParticle,
   toSerializableParticle,
 } from "../../types/particle";
@@ -59,13 +52,7 @@ import { useScenarioManagement } from "../../hooks/useScenarioManagement";
 import { useGravityPoints } from "../../hooks/useGravityPoints";
 import { useInteractionHandlers } from "../../hooks/useInteractionHandlers";
 import { useSimulatorState } from "../../hooks/useSimulatorState";
-
-const generatePastelColor = () => {
-  const r = Math.floor(Math.random() * 75 + 180);
-  const g = Math.floor(Math.random() * 75 + 180);
-  const b = Math.floor(Math.random() * 75 + 180);
-  return `rgb(${r}, ${g}, ${b})`;
-};
+import { useParticleSystem } from "../../hooks/useParticleSystem";
 
 export interface GravitySimulatorProps {
   gravityRef: React.RefObject<HTMLDivElement>;
@@ -131,6 +118,58 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   onApiReady,
   simulatorId = "default",
 }) => {
+  const {
+    settings: physicsConfig,
+    updateSettings,
+    saveScenario,
+  } = useSettings();
+
+  useEffect(() => {
+    if (initialScenario?.data.settings) {
+      updateSettings(initialScenario.data.settings);
+    }
+  }, [initialScenario, updateSettings]);
+
+  const [offset, setOffset] = useState<Vector>(new Point(0, 0));
+  const [paths, setPaths] = useState<SimulatorPath[]>(
+    initialScenario?.data.paths?.map(toSimulatorPath) || []
+  );
+  const [paperScope, setPaperScope] = useState<paper.PaperScope | null>(null);
+  const isPausedRef = useRef(false);
+
+  // Use the gravity points hook
+  const {
+    gravityPoints,
+    setGravityPoints,
+    isDragging,
+    isDraggingNewStar,
+    handlePointDelete,
+    handleReportNewPosition,
+    handleDrag,
+    handleDragEnd,
+    handleStarDragStart,
+    handleStarDragEnd,
+  } = useGravityPoints(
+    initialScenario?.data.gravityPoints?.map(toGravityPoint) ||
+      INITIAL_GRAVITY_POINTS
+  );
+
+  // Use the particle system hook
+  const {
+    particles,
+    setParticles,
+    particlesRef,
+    updateParticleMechanics,
+    createParticle,
+  } = useParticleSystem(
+    physicsConfig,
+    offset,
+    pointerPosRef,
+    gravityPoints,
+    paths,
+    gravityRef
+  );
+
   // Use simulator state hook
   const {
     isSimulationStarted,
@@ -155,33 +194,31 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     setParticles([])
   );
 
+  // Use the interaction handlers hook
+  const { handleContainerClick, handleTouchStart, handleTouchMove } =
+    useInteractionHandlers({
+      blockInteractions,
+      isDragging,
+      isDraggingNewStar,
+      isSimulationStarted,
+      createParticle,
+      setParticles,
+      setIsSimulationStarted,
+      detectFirstInteraction,
+      pointerPosRef,
+    });
+
+  // Initialize particles with initial scenario data if available
+  useEffect(() => {
+    if (initialScenario?.data.particles) {
+      setParticles(initialScenario.data.particles.map(toParticle));
+    }
+  }, [initialScenario, setParticles]);
+
   // Wrap fullscreen toggle to include gravityRef
   const handleFullscreenToggle = useCallback(() => {
     baseHandleFullscreenToggle(gravityRef);
   }, [baseHandleFullscreenToggle, gravityRef]);
-
-  const [particles, setParticles] = useState<Particle[]>(
-    initialScenario?.data.particles?.map(toParticle) || []
-  );
-  const particlesRef = useRef<Particle[]>([]);
-  const isPausedRef = useRef(false);
-
-  // Use the gravity points hook
-  const {
-    gravityPoints,
-    setGravityPoints,
-    isDragging,
-    isDraggingNewStar,
-    handlePointDelete,
-    handleReportNewPosition,
-    handleDrag,
-    handleDragEnd,
-    handleStarDragStart,
-    handleStarDragEnd,
-  } = useGravityPoints(
-    initialScenario?.data.gravityPoints?.map(toGravityPoint) ||
-      INITIAL_GRAVITY_POINTS
-  );
 
   // Only wrap functions that need additional functionality
   const wrappedHandleStarDragStart = useCallback(() => {
@@ -206,23 +243,44 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     [handlePointDelete, detectFirstInteraction]
   );
 
-  const {
-    settings: physicsConfig,
-    updateSettings,
-    saveScenario,
-  } = useSettings();
-
   useEffect(() => {
-    if (initialScenario?.data.settings) {
-      updateSettings(initialScenario.data.settings);
-    }
-  }, [initialScenario, updateSettings]);
+    if (!isSimulationStarted || isPaused) return;
+    let animationFrameId: number;
 
-  const [offset, setOffset] = useState<Vector>(new Point(0, 0));
-  const [paths, setPaths] = useState<SimulatorPath[]>(
-    initialScenario?.data.paths?.map(toSimulatorPath) || []
-  );
-  const [paperScope, setPaperScope] = useState<paper.PaperScope | null>(null);
+    const updateParticles = () => {
+      setParticles((currentParticles) =>
+        currentParticles.map((particle) => {
+          const mechanics = updateParticleMechanics(particle, currentParticles);
+          return { ...particle, ...mechanics };
+        })
+      );
+
+      animationFrameId = requestAnimationFrame(updateParticles);
+    };
+
+    animationFrameId = requestAnimationFrame(updateParticles);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [isSimulationStarted, isPaused, updateParticleMechanics, setParticles]);
+
+  // Update ref when isPaused changes
+  useEffect(() => {
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
+
+  // Debug data effect
+  useEffect(() => {
+    onDebugData?.({
+      particle: {
+        position: particles.map((particle) => particle.position),
+        velocity: particles.map((particle) => particle.velocity),
+      },
+      pointer: {
+        position: pointerPosRef.current,
+      },
+      velocity: particles.map((particle) => particle.velocity),
+      totalForce: particles.map((particle) => particle.force),
+    });
+  }, [particles, pointerPosRef, onDebugData]);
 
   // Use the scenario management hook
   const {
@@ -322,133 +380,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     return () =>
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
-
-  const updateParticleMechanics = useCallback(
-    (
-      particle: ParticleMechanics,
-      allParticles: Array<ParticleMechanics> = []
-    ): ParticleMechanics => {
-      const otherParticles = allParticles.filter((p) => p !== particle);
-      const calculatedForce = calculateTotalForce(
-        particle.position,
-        new Point(pointerPosRef?.current || { x: 0, y: 0 }).subtract(
-          new Point(offset)
-        ),
-        gravityPoints,
-        physicsConfig.POINTER_MASS,
-        otherParticles,
-        paths,
-        physicsConfig.PARTICLES_EXERT_GRAVITY
-      );
-      const force = new Point(calculatedForce.x, calculatedForce.y).add(
-        new Point(physicsConfig.CONSTANT_FORCE)
-      );
-
-      const acceleration = calculateAcceleration(force, particle.mass);
-      let newVelocity = calculateNewVelocity(
-        particle.velocity,
-        acceleration,
-        physicsConfig.DELTA_TIME,
-        physicsConfig.FRICTION
-      );
-      let newPosition = new Point(particle.position).add(
-        new Point(newVelocity).multiply(physicsConfig.DELTA_TIME)
-      );
-
-      // Handle boundary collisions if enabled
-      if (physicsConfig.SOLID_BOUNDARIES) {
-        const collision = handleBoundaryCollision(
-          newPosition,
-          newVelocity,
-          gravityRef,
-          particle.elasticity
-        );
-        newPosition = collision.position;
-        newVelocity = collision.velocity;
-      }
-
-      return {
-        position: newPosition,
-        velocity: newVelocity,
-        force,
-        mass: particle.mass,
-        elasticity: particle.elasticity,
-      };
-    },
-    [gravityPoints, paths, physicsConfig, gravityRef, offset, pointerPosRef]
-  );
-
-  useEffect(() => {
-    if (!isSimulationStarted || isPaused) return;
-    let animationFrameId: number;
-    //const lastTime = performance.now();
-    // let accumulator = 0;
-
-    const updateParticles = () => {
-      setParticles((currentParticles) =>
-        currentParticles.map((particle) => {
-          const mechanics = updateParticleMechanics(particle, currentParticles);
-          return { ...particle, ...mechanics };
-        })
-      );
-
-      animationFrameId = requestAnimationFrame(updateParticles);
-    };
-
-    animationFrameId = requestAnimationFrame(updateParticles);
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [isSimulationStarted, isPaused, updateParticleMechanics]);
-
-  const createParticle = useCallback(
-    (
-      position: Point2D,
-      options: Partial<Omit<Particle, "position" | "id">> = {}
-    ): Particle => {
-      const newPosition = new Point(position).subtract(new Point(offset));
-
-      return {
-        id: Math.random().toString(36).substr(2, 9),
-        position: newPosition,
-        velocity: new Point(0, 0),
-        force: new Point(0, 0),
-        mass: physicsConfig.NEW_PARTICLE_MASS,
-        elasticity: physicsConfig.NEW_PARTICLE_ELASTICITY,
-        color: generatePastelColor(),
-        size: 10,
-        showVectors: true,
-        ...options,
-      };
-    },
-    [physicsConfig, offset]
-  );
-
-  // Use the interaction handlers hook
-  const { handleContainerClick, handleTouchStart, handleTouchMove } =
-    useInteractionHandlers({
-      blockInteractions,
-      isDragging,
-      isDraggingNewStar,
-      isSimulationStarted,
-      createParticle,
-      setParticles,
-      setIsSimulationStarted,
-      detectFirstInteraction,
-      pointerPosRef,
-    });
-
-  useEffect(() => {
-    onDebugData?.({
-      particle: {
-        position: particles.map((particle) => particle.position),
-        velocity: particles.map((particle) => particle.velocity),
-      },
-      pointer: {
-        position: pointerPosRef.current,
-      },
-      velocity: particles.map((particle) => particle.velocity),
-      totalForce: particles.map((particle) => particle.force),
-    });
-  }, [particles, pointerPosRef, onDebugData]);
 
   const handleCanvasReady = useCallback((scope: paper.PaperScope) => {
     setPaperScope(scope);
@@ -638,11 +569,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   useEffect(() => {
     particlesRef.current = particles;
   }, [particles]);
-
-  // Update ref when isPaused changes
-  useEffect(() => {
-    isPausedRef.current = isPaused;
-  }, [isPaused]);
 
   const onSelectScenario = useCallback(
     (scenario: Scenario) => {
