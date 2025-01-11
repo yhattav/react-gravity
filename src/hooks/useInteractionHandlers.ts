@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { Point2D } from "../utils/types/physics";
 import { Particle } from "../types/particle";
+import { Position } from "@yhattav/react-component-cursor";
 
 interface InteractionHandlersProps {
   blockInteractions: boolean;
@@ -11,7 +12,7 @@ interface InteractionHandlersProps {
   setParticles: React.Dispatch<React.SetStateAction<Particle[]>>;
   setIsSimulationStarted: (started: boolean) => void;
   detectFirstInteraction: () => void;
-  pointerPosRef: React.RefObject<Point2D>;
+  pointerPosRef: React.RefObject<Position>;
 }
 
 export const useInteractionHandlers = ({

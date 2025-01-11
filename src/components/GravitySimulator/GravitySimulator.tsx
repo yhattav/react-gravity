@@ -57,6 +57,7 @@ import { SimulatorControls } from "../SimulatorControls/SimulatorControls";
 import { useAudioSystem } from "../../hooks/useAudioSystem";
 import { useScenarioManagement } from "../../hooks/useScenarioManagement";
 import { useGravityPoints } from "../../hooks/useGravityPoints";
+import { useInteractionHandlers } from "../../hooks/useInteractionHandlers";
 
 const generatePastelColor = () => {
   const r = Math.floor(Math.random() * 75 + 180);
@@ -401,60 +402,19 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     [physicsConfig, offset]
   );
 
-  const handleContainerClick = useCallback(
-    (e: React.MouseEvent | React.TouchEvent) => {
-      if (blockInteractions) return;
-      if (isDragging || isDraggingNewStar) return;
-
-      // Get the correct coordinates whether it's a touch or mouse event
-      const coordinates =
-        "touches" in e
-          ? { x: e.touches[0].clientX, y: e.touches[0].clientY }
-          : { x: e.clientX, y: e.clientY };
-
-      if (!isSimulationStarted) {
-        setIsSimulationStarted(true);
-      }
-      if (!firstInteractionDetected) {
-        setFirstInteractionDetected(true);
-      }
-      setParticles((current) => [
-        ...current,
-        createParticle({ x: coordinates.x, y: coordinates.y }),
-      ]);
-    },
-    [
-      isSimulationStarted,
+  // Use the interaction handlers hook
+  const { handleContainerClick, handleTouchStart, handleTouchMove } =
+    useInteractionHandlers({
+      blockInteractions,
       isDragging,
       isDraggingNewStar,
+      isSimulationStarted,
       createParticle,
-      blockInteractions,
-      firstInteractionDetected,
-    ]
-  );
-
-  // Add touch event handlers
-  const handleTouchStart = useCallback(
-    (e: React.TouchEvent) => {
-      if (blockInteractions) return;
-      if (pointerPosRef.current) {
-        pointerPosRef.current.x = e.touches[0].clientX;
-        pointerPosRef.current.y = e.touches[0].clientY;
-      }
-    },
-    [blockInteractions, pointerPosRef]
-  );
-
-  const handleTouchMove = useCallback(
-    (e: React.TouchEvent) => {
-      if (blockInteractions) return;
-      if (pointerPosRef.current) {
-        pointerPosRef.current.x = e.touches[0].clientX;
-        pointerPosRef.current.y = e.touches[0].clientY;
-      }
-    },
-    [blockInteractions, pointerPosRef]
-  );
+      setParticles,
+      setIsSimulationStarted,
+      detectFirstInteraction: () => setFirstInteractionDetected(true),
+      pointerPosRef,
+    });
 
   useEffect(() => {
     onDebugData?.({
