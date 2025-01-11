@@ -104,6 +104,80 @@ export interface GravitySimulatorApi {
   getGravityPointsCount: () => number;
 }
 
+interface VelocityPreviewProps {
+  dragStateRef: React.RefObject<{
+    startPosition: Point2D;
+    isDragging: boolean;
+  }>;
+  pointerPosRef: React.RefObject<Position>;
+}
+
+const VelocityPreview: React.FC<VelocityPreviewProps> = ({
+  dragStateRef,
+  pointerPosRef,
+}) => {
+  const [previewLine, setPreviewLine] = useState<{
+    start: Point2D;
+    end: Point2D;
+  } | null>(null);
+
+  useEffect(() => {
+    const updatePreview = () => {
+      if (
+        dragStateRef.current?.isDragging &&
+        pointerPosRef.current?.x != null &&
+        pointerPosRef.current?.y != null
+      ) {
+        setPreviewLine({
+          start: dragStateRef.current.startPosition,
+          end: {
+            x: pointerPosRef.current.x,
+            y: pointerPosRef.current.y,
+          },
+        });
+      } else {
+        setPreviewLine(null);
+      }
+      requestAnimationFrame(updatePreview);
+    };
+
+    const animationId = requestAnimationFrame(updatePreview);
+    return () => cancelAnimationFrame(animationId);
+  }, [dragStateRef, pointerPosRef]);
+
+  if (!previewLine) return null;
+
+  return (
+    <svg
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        pointerEvents: "none",
+        zIndex: 2,
+      }}
+    >
+      <line
+        x1={previewLine.start.x}
+        y1={previewLine.start.y}
+        x2={previewLine.end.x}
+        y2={previewLine.end.y}
+        stroke="rgba(255, 255, 255, 0.5)"
+        strokeWidth="2"
+        strokeDasharray="5,5"
+      />
+      <circle
+        cx={previewLine.start.x}
+        cy={previewLine.start.y}
+        r="4"
+        fill="rgba(255, 255, 255, 0.5)"
+      />
+    </svg>
+  );
+};
+
 export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   gravityRef,
   pointerPosRef,
@@ -193,18 +267,25 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   );
 
   // Use the interaction handlers hook
-  const { handleContainerClick, handleTouchStart, handleTouchMove } =
-    useInteractionHandlers({
-      blockInteractions,
-      isDragging,
-      isDraggingNewStar,
-      isSimulationStarted,
-      createParticle: (position) => createParticle(position, { x: 0, y: 0 }),
-      setParticles,
-      setIsSimulationStarted,
-      detectFirstInteraction,
-      pointerPosRef,
-    });
+  const {
+    handleContainerMouseDown,
+    handleContainerMouseUp,
+    handleTouchStart,
+    handleTouchEnd,
+    handleTouchMove,
+    handleMouseMove,
+    dragStateRef,
+  } = useInteractionHandlers({
+    blockInteractions,
+    isDragging,
+    isDraggingNewStar,
+    isSimulationStarted,
+    createParticle,
+    setParticles,
+    setIsSimulationStarted,
+    detectFirstInteraction,
+    pointerPosRef,
+  });
 
   // Initialize particles with initial scenario data if available
   useEffect(() => {
@@ -499,8 +580,11 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     <>
       <div
         ref={gravityRef}
-        onClick={handleContainerClick}
+        onMouseDown={handleContainerMouseDown}
+        onMouseUp={handleContainerMouseUp}
+        onMouseMove={handleMouseMove}
         onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
         onTouchMove={handleTouchMove}
         className={`${className} ${
           isColorInverted ? "inverted" : "not-inverted"
@@ -525,6 +609,11 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           onCanvasReady={handleCanvasReady}
           shouldReset={shouldResetRenderer}
           onResetComplete={() => setShouldResetRenderer(false)}
+        />
+
+        <VelocityPreview
+          dragStateRef={dragStateRef}
+          pointerPosRef={pointerPosRef}
         />
 
         {!removeOverlay && (
