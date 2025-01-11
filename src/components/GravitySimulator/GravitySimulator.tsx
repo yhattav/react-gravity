@@ -79,7 +79,8 @@ export interface GravitySimulatorApi {
   // Particle Management
   addParticle: (
     position: Point2D,
-    options?: Partial<Omit<Particle, "position" | "id">>
+    velocity: Point2D,
+    options?: Partial<Omit<Particle, "position" | "id" | "velocity">>
   ) => void;
   removeAllParticles: () => void;
 
@@ -198,7 +199,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       isDragging,
       isDraggingNewStar,
       isSimulationStarted,
-      createParticle,
+      createParticle: (position) => createParticle(position, { x: 0, y: 0 }),
       setParticles,
       setIsSimulationStarted,
       detectFirstInteraction,
@@ -432,11 +433,11 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         toggleFullscreen: handleFullscreenToggle,
         invertColors: (invert: boolean) => setIsColorInverted(invert),
 
-        addParticle: (position, options) => {
+        addParticle: (position, velocity, options) => {
           setIsSimulationStarted(true);
           setParticles((current) => [
             ...current,
-            createParticle(position, options),
+            createParticle(position, velocity, options),
           ]);
         },
         removeAllParticles: () => setParticles([]),
