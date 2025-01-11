@@ -35,6 +35,8 @@ export const useParticleSystem = (
       particle: ParticleMechanics,
       allParticles: Array<ParticleMechanics> = []
     ): ParticleMechanics => {
+      if (particle.frozen) return particle;
+
       const otherParticles = allParticles.filter((p) => p !== particle);
       const calculatedForce = calculateTotalForce(
         particle.position,
@@ -87,14 +89,16 @@ export const useParticleSystem = (
   const createParticle = useCallback(
     (
       position: Point2D,
-      options: Partial<Omit<Particle, "position" | "id">> = {}
+      velocity: Point2D,
+      options: Partial<Omit<Particle, "position" | "id" | "velocity">> = {}
     ): Particle => {
       const newPosition = new Point(position).subtract(new Point(offset));
+      const initialVelocity = new Point(velocity);
 
       return {
         id: Math.random().toString(36).substr(2, 9),
         position: newPosition,
-        velocity: new Point(0, 0),
+        velocity: initialVelocity,
         force: new Point(0, 0),
         mass: physicsConfig.NEW_PARTICLE_MASS,
         elasticity: physicsConfig.NEW_PARTICLE_ELASTICITY,

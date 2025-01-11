@@ -79,7 +79,8 @@ export interface GravitySimulatorApi {
   // Particle Management
   addParticle: (
     position: Point2D,
-    options?: Partial<Omit<Particle, "position" | "id">>
+    velocity: Point2D,
+    options?: Partial<Omit<Particle, "position" | "id" | "velocity">>
   ) => void;
   removeAllParticles: () => void;
 
@@ -192,18 +193,24 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   );
 
   // Use the interaction handlers hook
-  const { handleContainerClick, handleTouchStart, handleTouchMove } =
-    useInteractionHandlers({
-      blockInteractions,
-      isDragging,
-      isDraggingNewStar,
-      isSimulationStarted,
-      createParticle,
-      setParticles,
-      setIsSimulationStarted,
-      detectFirstInteraction,
-      pointerPosRef,
-    });
+  const {
+    handleContainerMouseDown,
+    handleContainerMouseUp,
+    handleMouseMove,
+    handleTouchStart,
+    handleTouchEnd,
+    handleTouchMove,
+  } = useInteractionHandlers({
+    blockInteractions,
+    isDragging,
+    isDraggingNewStar,
+    isSimulationStarted,
+    createParticle,
+    setParticles,
+    setIsSimulationStarted,
+    detectFirstInteraction,
+    pointerPosRef,
+  });
 
   // Initialize particles with initial scenario data if available
   useEffect(() => {
@@ -432,11 +439,11 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
         toggleFullscreen: handleFullscreenToggle,
         invertColors: (invert: boolean) => setIsColorInverted(invert),
 
-        addParticle: (position, options) => {
+        addParticle: (position, velocity, options) => {
           setIsSimulationStarted(true);
           setParticles((current) => [
             ...current,
-            createParticle(position, options),
+            createParticle(position, velocity, options),
           ]);
         },
         removeAllParticles: () => setParticles([]),
@@ -498,8 +505,11 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     <>
       <div
         ref={gravityRef}
-        onClick={handleContainerClick}
+        onMouseDown={handleContainerMouseDown}
+        onMouseUp={handleContainerMouseUp}
+        onMouseMove={handleMouseMove}
         onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
         onTouchMove={handleTouchMove}
         className={`${className} ${
           isColorInverted ? "inverted" : "not-inverted"

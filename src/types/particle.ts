@@ -8,6 +8,7 @@ export interface ParticleMechanics {
   mass: number;
   elasticity: number;
   outgoingForceRatio?: number;
+  frozen?: boolean;
 }
 
 export interface Particle extends ParticleMechanics {
