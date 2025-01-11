@@ -25,6 +25,34 @@ interface SimulatorControlsProps {
   disableSound?: boolean;
 }
 
+interface ControlButton {
+  icon: React.ReactNode;
+  title: string;
+  onClick: (e: React.MouseEvent) => void;
+  condition?: boolean;
+  dynamicIcon?: boolean;
+  alternateIcon?: React.ReactNode;
+}
+
+const ControlButton: React.FC<ControlButton> = ({
+  icon,
+  title,
+  onClick,
+  dynamicIcon,
+  alternateIcon,
+}) => (
+  <motion.button
+    onClick={onClick}
+    onMouseDown={(e) => e.stopPropagation()}
+    className="floating-panel floating-button"
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.95 }}
+    title={title}
+  >
+    {dynamicIcon && alternateIcon ? alternateIcon : icon}
+  </motion.button>
+);
+
 export const SimulatorControls: React.FC<SimulatorControlsProps> = ({
   onPause,
   onReset,
@@ -58,6 +86,64 @@ export const SimulatorControls: React.FC<SimulatorControlsProps> = ({
     []
   );
 
+  const topButtons: ControlButton[] = [
+    {
+      icon: <BsFillCameraFill size={20} />,
+      title: "Take Screenshot",
+      onClick: handleClick(onScreenshot),
+    },
+    {
+      icon: <BsPlayFill size={20} />,
+      title: isPaused ? "Resume Simulation" : "Pause Simulation",
+      onClick: handleSimpleClick(onPause),
+      dynamicIcon: true,
+      alternateIcon: isPaused ? (
+        <BsPlayFill size={20} />
+      ) : (
+        <BsPauseFill size={20} />
+      ),
+    },
+    {
+      icon: <BiReset size={20} />,
+      title: "Reset Simulation",
+      onClick: handleSimpleClick(onReset),
+    },
+    {
+      icon: <MdFullscreen size={20} />,
+      title: isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen",
+      onClick: handleSimpleClick(onFullscreen),
+      dynamicIcon: true,
+      alternateIcon: isFullscreen ? (
+        <MdFullscreenExit size={20} />
+      ) : (
+        <MdFullscreen size={20} />
+      ),
+    },
+    {
+      icon: <AiOutlineExport size={20} />,
+      title: "Export Scenario",
+      onClick: handleClick(onExport),
+    },
+    {
+      icon: <MdInvertColors size={20} />,
+      title: "Invert Colors",
+      onClick: handleSimpleClick(onInvertColors),
+    },
+  ];
+
+  const bottomButtons: ControlButton[] = [
+    {
+      icon: <VscLibrary size={20} />,
+      title: "Scenarios",
+      onClick: handleClick(onScenarioPanel),
+    },
+    {
+      icon: <SettingOutlined size={20} />,
+      title: "Settings",
+      onClick: handleClick(onSettingsPanel),
+    },
+  ];
+
   return (
     <>
       <div
@@ -80,68 +166,9 @@ export const SimulatorControls: React.FC<SimulatorControlsProps> = ({
             onToggle={handleClick(onAudioToggle)}
           />
         )}
-        <motion.button
-          onClick={handleClick(onScreenshot)}
-          className="floating-panel floating-button"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          title="Take Screenshot"
-        >
-          <BsFillCameraFill size={20} />
-        </motion.button>
-        <motion.button
-          onClick={handleSimpleClick(onPause)}
-          className="floating-panel floating-button"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          title={isPaused ? "Resume Simulation" : "Pause Simulation"}
-        >
-          {isPaused ? <BsPlayFill size={20} /> : <BsPauseFill size={20} />}
-        </motion.button>
-
-        <motion.button
-          onClick={handleSimpleClick(onReset)}
-          className="floating-panel floating-button"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          title="Reset Simulation"
-        >
-          <BiReset size={20} />
-        </motion.button>
-
-        <motion.button
-          onClick={handleSimpleClick(onFullscreen)}
-          className="floating-panel floating-button"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-        >
-          {isFullscreen ? (
-            <MdFullscreenExit size={20} />
-          ) : (
-            <MdFullscreen size={20} />
-          )}
-        </motion.button>
-
-        <motion.button
-          onClick={handleClick(onExport)}
-          className="floating-panel floating-button"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          title="Export Scenario"
-        >
-          <AiOutlineExport size={20} />
-        </motion.button>
-
-        <motion.button
-          onClick={handleSimpleClick(onInvertColors)}
-          className="floating-panel floating-button"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          title="Invert Colors"
-        >
-          <MdInvertColors size={20} />
-        </motion.button>
+        {topButtons.map((button, index) => (
+          <ControlButton key={index} {...button} />
+        ))}
       </div>
 
       <div
@@ -154,25 +181,9 @@ export const SimulatorControls: React.FC<SimulatorControlsProps> = ({
           zIndex: 1001,
         }}
       >
-        <motion.button
-          onClick={handleClick(onScenarioPanel)}
-          className="floating-panel floating-button"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          title="Scenarios"
-        >
-          <VscLibrary size={20} />
-        </motion.button>
-
-        <motion.button
-          onClick={handleClick(onSettingsPanel)}
-          className="floating-panel floating-button"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          title="Settings"
-        >
-          <SettingOutlined size={20} />
-        </motion.button>
+        {bottomButtons.map((button, index) => (
+          <ControlButton key={index} {...button} />
+        ))}
       </div>
     </>
   );
