@@ -25,12 +25,9 @@ import { SimulatorSettings } from "../SimulatorSettings/SimulatorSettings";
 import { useSettings } from "../../contexts/SettingsContext";
 import { debounce } from "lodash";
 import "../../styles/global.scss";
-import { motion } from "framer-motion";
 import { DebugData } from "../../types/Debug";
-import { VscLibrary } from "react-icons/vsc";
 import { ScenarioPanel } from "../ScenarioPanel/ScenarioPanel";
 import { Scenario } from "../../types/scenario";
-import { SettingOutlined } from "@ant-design/icons";
 import { SaveScenarioModal } from "../SaveScenarioModal/SaveScenarioModal";
 import {
   Particle,
@@ -585,37 +582,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
               isOpen={isSettingsPanelOpen}
               onClose={() => setIsSettingsPanelOpen(false)}
             />
-
-            <div
-              style={{
-                position: "absolute",
-                bottom: 20,
-                right: 20,
-                display: "flex",
-                gap: "10px",
-                zIndex: 1001,
-              }}
-            >
-              <motion.button
-                onClick={handleScenarioPanelToggle}
-                className="floating-panel floating-button"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                title="Scenarios"
-              >
-                <VscLibrary size={20} />
-              </motion.button>
-
-              <motion.button
-                onClick={handleSettingsPanelToggle}
-                className="floating-panel floating-button"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                title="Settings"
-              >
-                <SettingOutlined size={20} />
-              </motion.button>
-            </div>
 
             <ScenarioPanel
               isOpen={isScenarioPanelOpen}
