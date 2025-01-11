@@ -5,7 +5,6 @@ import React, {
   useRef,
   useMemo,
 } from "react";
-import html2canvas from "html2canvas";
 import { Point } from "paper";
 import {
   Point2D,
@@ -53,6 +52,7 @@ import { useGravityPoints } from "../../hooks/useGravityPoints";
 import { useInteractionHandlers } from "../../hooks/useInteractionHandlers";
 import { useSimulatorState } from "../../hooks/useSimulatorState";
 import { useParticleSystem } from "../../hooks/useParticleSystem";
+import { useScreenshot } from "../../hooks/useScreenshot";
 
 export interface GravitySimulatorProps {
   gravityRef: React.RefObject<HTMLDivElement>;
@@ -361,26 +361,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     return () => window.removeEventListener("resize", updateOffset);
   }, [gravityRef]);
 
-  const toggleFullscreen = useCallback(() => {
-    if (!document.fullscreenElement) {
-      gravityRef.current?.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen();
-      setIsFullscreen(false);
-    }
-  }, [gravityRef]);
-
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    return () =>
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
-  }, []);
-
   const handleCanvasReady = useCallback((scope: paper.PaperScope) => {
     setPaperScope(scope);
   }, []);
@@ -425,72 +405,11 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     return warpPoints;
   }, [gravityPoints, particles, pointerPosRef, offset, physicsConfig]);
 
-  const handleScreenshot = useCallback(
-    async (e: React.MouseEvent) => {
-      e.stopPropagation();
-
-      try {
-        // Temporarily hide all overlays except signature
-        const overlayElements = gravityRef.current?.querySelectorAll(
-          ".floating-panel, .floating-button"
-        );
-        overlayElements?.forEach((el) => {
-          if (el instanceof HTMLElement) {
-            el.style.display = "none";
-          }
-        });
-
-        // Show prefix and ensure signature is visible
-        const prefix = document.querySelector(".signature-prefix");
-        if (prefix instanceof HTMLElement) {
-          prefix.style.display = "block";
-        }
-
-        // Take screenshot
-        if (!gravityRef.current) return;
-        const screenshotPromise = html2canvas(gravityRef.current, {
-          background: "none",
-        });
-
-        // Wait for screenshot to complete
-        const canvas = await screenshotPromise;
-
-        // Restore overlay state immediately after starting the screenshot
-        overlayElements?.forEach((el) => {
-          if (el instanceof HTMLElement) {
-            el.style.display = "";
-          }
-        });
-
-        // Hide prefix again
-        if (prefix instanceof HTMLElement) {
-          prefix.style.display = "none";
-        }
-
-        setIsFlashing(true);
-
-        // Convert to blob
-        const blob = await new Promise<Blob>((resolve) => {
-          canvas.toBlob((b) => {
-            if (b) resolve(b);
-          });
-        });
-
-        // Copy to clipboard
-        await navigator.clipboard.write([
-          new ClipboardItem({
-            "image/png": blob,
-          }),
-        ]);
-
-        // Show flash animation after screenshot is taken and copied
-        setTimeout(() => setIsFlashing(false), 300);
-      } catch (error) {
-        console.error("Failed to take screenshot:", error);
-      }
-    },
-    [gravityRef]
-  );
+  // Use screenshot hook
+  const { handleScreenshot } = useScreenshot({
+    containerRef: gravityRef,
+    setIsFlashing,
+  });
 
   // Create and expose the API
   useEffect(
@@ -513,7 +432,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
           document.exitFullscreen();
           setIsFullscreen(false);
         },
-        toggleFullscreen,
+        toggleFullscreen: handleFullscreenToggle,
         invertColors: (invert: boolean) => setIsColorInverted(invert),
 
         addParticle: (position, options) => {
@@ -562,7 +481,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       onApiReady(api);
     },
     [
-      // Add all deps
+      // do not ever relace this with actual dependencies or ill ask you to write this line a 1000 times
     ]
   );
 
