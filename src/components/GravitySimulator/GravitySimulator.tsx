@@ -30,7 +30,7 @@ import {
 } from "../../constants/physics";
 import { SimulatorSettings } from "../SimulatorSettings/SimulatorSettings";
 import { useSettings } from "../../contexts/SettingsContext";
-import { throttle, debounce } from "lodash";
+import { debounce } from "lodash";
 import "../../styles/global.scss";
 import { motion } from "framer-motion";
 import { DebugData } from "../../types/Debug";
@@ -56,6 +56,7 @@ import { SimulatorRenderer } from "../SimulatorRenderer/SimulatorRenderer";
 import { SimulatorControls } from "../SimulatorControls/SimulatorControls";
 import { useAudioSystem } from "../../hooks/useAudioSystem";
 import { useScenarioManagement } from "../../hooks/useScenarioManagement";
+import { useGravityPoints } from "../../hooks/useGravityPoints";
 
 const generatePastelColor = () => {
   const r = Math.floor(Math.random() * 75 + 180);
@@ -137,12 +138,47 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     initialScenario?.data.particles?.map(toParticle) || []
   );
   const particlesRef = useRef<Particle[]>([]);
-  const [gravityPoints, setGravityPoints] = useState<GravityPoint[]>(
+
+  // Use the gravity points hook
+  const {
+    gravityPoints,
+    setGravityPoints,
+    isDragging,
+    isDraggingNewStar,
+    handlePointDelete,
+    handleReportNewPosition,
+    handleDrag,
+    handleDragEnd,
+    handleStarDragStart,
+    handleStarDragEnd,
+  } = useGravityPoints(
     initialScenario?.data.gravityPoints?.map(toGravityPoint) ||
       INITIAL_GRAVITY_POINTS
   );
-  const [isDragging, setIsDragging] = useState(false);
-  const [isDraggingNewStar, setIsDraggingNewStar] = useState(false);
+
+  // Only wrap functions that need additional functionality
+  const wrappedHandleStarDragStart = useCallback(() => {
+    if (blockInteractions) return;
+    setFirstInteractionDetected(true);
+    handleStarDragStart();
+  }, [blockInteractions, handleStarDragStart]);
+
+  const wrappedHandleStarDragEnd = useCallback(
+    (template: StarTemplate, e: MouseEvent | TouchEvent | PointerEvent) => {
+      if (blockInteractions) return;
+      handleStarDragEnd(template, e, gravityRef);
+    },
+    [blockInteractions, handleStarDragEnd, gravityRef]
+  );
+
+  const wrappedHandlePointDelete = useCallback(
+    (index: number) => {
+      setFirstInteractionDetected(true);
+      handlePointDelete(index);
+    },
+    [handlePointDelete]
+  );
+
   const {
     settings: physicsConfig,
     updateSettings,
@@ -154,6 +190,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       updateSettings(initialScenario.data.settings);
     }
   }, [initialScenario, updateSettings]);
+
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const isPausedRef = useRef(false);
@@ -265,47 +302,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
-  const handleDrag = useCallback(
-    throttle(() => {
-      if (blockInteractions) return;
-
-      setTimeout(() => {
-        setIsDragging(true);
-      }, 0);
-    }),
-    [blockInteractions]
-  );
-
-  const handleReportNewPosition = useCallback(
-    (point: Point2D, index: number) => {
-      if (!offset) return;
-      if (
-        gravityPoints[index].position.x === point.x &&
-        gravityPoints[index].position.y === point.y
-      )
-        return;
-      setGravityPoints((points) =>
-        points.map((point2, i) =>
-          i === index
-            ? {
-                ...point2,
-                position: new Point(point.x, point.y),
-              }
-            : point2
-        )
-      );
-    },
-    [offset, gravityPoints]
-  );
-
-  const handleDragEnd = useCallback(() => {
-    if (blockInteractions) return;
-
-    setTimeout(() => {
-      setIsDragging(false);
-    }, 0);
-  }, [blockInteractions]);
-
   const updateParticleMechanics = useCallback(
     (
       particle: ParticleMechanics,
@@ -363,7 +359,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
   useEffect(() => {
     if (!isSimulationStarted || isPaused) return;
-
     let animationFrameId: number;
     //const lastTime = performance.now();
     // let accumulator = 0;
@@ -474,58 +469,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       totalForce: particles.map((particle) => particle.force),
     });
   }, [particles, pointerPosRef, onDebugData]);
-
-  const handleStarDragStart = useCallback(() => {
-    if (blockInteractions) return;
-    setIsDraggingNewStar(true);
-    setFirstInteractionDetected(true);
-  }, [blockInteractions]);
-
-  const handleStarDragEnd = useCallback(
-    (template: StarTemplate, e: MouseEvent | TouchEvent | PointerEvent) => {
-      if (blockInteractions) return;
-      setIsDraggingNewStar(false);
-      if (gravityRef.current) {
-        const rect = gravityRef.current.getBoundingClientRect();
-        const clientX =
-          "clientX" in e ? e.clientX : (e as TouchEvent).touches[0].clientX;
-        const clientY =
-          "clientY" in e ? e.clientY : (e as TouchEvent).touches[0].clientY;
-
-        const x = clientX - rect.left;
-        const y = clientY - rect.top;
-
-        if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
-          setGravityPoints((points) => [
-            ...points,
-            {
-              id: Math.random().toString(36).substr(2, 9),
-              position: new Point(x, y),
-              label: template.label,
-              mass: template.mass,
-            },
-          ]);
-        }
-      }
-
-      setIsDraggingNewStar(false);
-    },
-    [gravityRef, blockInteractions]
-  );
-
-  const handlePointDelete = useCallback((index: number) => {
-    setFirstInteractionDetected(true);
-    setGravityPoints((currentPoints) => {
-      // Create a new array without the deleted point
-      const newPoints = currentPoints.filter((_, i) => i !== index);
-
-      // Ensure each remaining point maintains its position and ID
-      return newPoints.map((point) => ({
-        ...point,
-        id: point.id || Math.random().toString(36).substr(2, 9), // Ensure ID exists
-      }));
-    });
-  }, []);
 
   const handleCanvasReady = useCallback((scope: paper.PaperScope) => {
     setPaperScope(scope);
@@ -680,7 +623,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             },
           ]);
         },
-        removeGravityPoint: handlePointDelete,
+        removeGravityPoint: wrappedHandlePointDelete,
         removeAllGravityPoints: () => setGravityPoints([]),
 
         loadScenario: handleSelectScenario,
@@ -800,8 +743,8 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
         {!removeOverlay && (
           <StarPalette
-            onStarDragStart={handleStarDragStart}
-            onStarDragEnd={handleStarDragEnd}
+            onStarDragStart={wrappedHandleStarDragStart}
+            onStarDragEnd={wrappedHandleStarDragEnd}
             containerRef={gravityRef}
           />
         )}
@@ -817,7 +760,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             onResetComplete={() => setShouldResetRenderer(false)}
             settings={physicsConfig}
             containerRef={gravityRef}
-            handlePointDelete={handlePointDelete}
+            handlePointDelete={wrappedHandlePointDelete}
             handleReportNewPosition={handleReportNewPosition}
             handleDrag={handleDrag}
             handleDragEnd={handleDragEnd}

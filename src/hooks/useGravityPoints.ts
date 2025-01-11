@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Point } from "paper";
 import { GravityPoint, Point2D } from "../utils/types/physics";
 import { StarTemplate } from "../types/star";
@@ -8,6 +8,10 @@ export const useGravityPoints = (initialPoints: GravityPoint[] = []) => {
     useState<GravityPoint[]>(initialPoints);
   const [isDragging, setIsDragging] = useState(false);
   const [isDraggingNewStar, setIsDraggingNewStar] = useState(false);
+  const gravityPointsRef = useRef<GravityPoint[]>(gravityPoints);
+
+  // Keep ref in sync with state
+  gravityPointsRef.current = gravityPoints;
 
   const handlePointDelete = useCallback((index: number) => {
     setGravityPoints((currentPoints) => {
@@ -21,9 +25,10 @@ export const useGravityPoints = (initialPoints: GravityPoint[] = []) => {
 
   const handleReportNewPosition = useCallback(
     (point: Point2D, index: number) => {
+      const currentPoints = gravityPointsRef.current;
       if (
-        gravityPoints[index].position.x === point.x &&
-        gravityPoints[index].position.y === point.y
+        currentPoints[index]?.position.x === point.x &&
+        currentPoints[index]?.position.y === point.y
       )
         return;
       setGravityPoints((points) =>
@@ -37,7 +42,7 @@ export const useGravityPoints = (initialPoints: GravityPoint[] = []) => {
         )
       );
     },
-    [gravityPoints]
+    [] // No dependencies needed since we use ref
   );
 
   const handleDrag = useCallback(() => {
