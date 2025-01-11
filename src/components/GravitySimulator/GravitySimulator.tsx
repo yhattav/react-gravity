@@ -58,6 +58,7 @@ import { useAudioSystem } from "../../hooks/useAudioSystem";
 import { useScenarioManagement } from "../../hooks/useScenarioManagement";
 import { useGravityPoints } from "../../hooks/useGravityPoints";
 import { useInteractionHandlers } from "../../hooks/useInteractionHandlers";
+import { useSimulatorState } from "../../hooks/useSimulatorState";
 
 const generatePastelColor = () => {
   const r = Math.floor(Math.random() * 75 + 180);
@@ -130,15 +131,38 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   onApiReady,
   simulatorId = "default",
 }) => {
-  const [isSimulationStarted, setIsSimulationStarted] = useState(
-    !!initialScenario
-  );
-  const [firstInteractionDetected, setFirstInteractionDetected] =
-    useState(false);
+  // Use simulator state hook
+  const {
+    isSimulationStarted,
+    setIsSimulationStarted,
+    firstInteractionDetected,
+    isPaused,
+    setIsPaused,
+    isFullscreen,
+    setIsFullscreen,
+    isColorInverted,
+    setIsColorInverted,
+    isFlashing,
+    setIsFlashing,
+    shouldResetRenderer,
+    setShouldResetRenderer,
+    handlePause,
+    handleReset,
+    handleFullscreenToggle: baseHandleFullscreenToggle,
+    handleInvertColors,
+    detectFirstInteraction,
+  } = useSimulatorState(initialScenario, blockInteractions);
+
+  // Wrap fullscreen toggle to include gravityRef
+  const handleFullscreenToggle = useCallback(() => {
+    baseHandleFullscreenToggle(gravityRef);
+  }, [baseHandleFullscreenToggle, gravityRef]);
+
   const [particles, setParticles] = useState<Particle[]>(
     initialScenario?.data.particles?.map(toParticle) || []
   );
   const particlesRef = useRef<Particle[]>([]);
+  const isPausedRef = useRef(false);
 
   // Use the gravity points hook
   const {
@@ -160,9 +184,9 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   // Only wrap functions that need additional functionality
   const wrappedHandleStarDragStart = useCallback(() => {
     if (blockInteractions) return;
-    setFirstInteractionDetected(true);
+    detectFirstInteraction();
     handleStarDragStart();
-  }, [blockInteractions, handleStarDragStart]);
+  }, [blockInteractions, handleStarDragStart, detectFirstInteraction]);
 
   const wrappedHandleStarDragEnd = useCallback(
     (template: StarTemplate, e: MouseEvent | TouchEvent | PointerEvent) => {
@@ -174,10 +198,10 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
   const wrappedHandlePointDelete = useCallback(
     (index: number) => {
-      setFirstInteractionDetected(true);
+      detectFirstInteraction();
       handlePointDelete(index);
     },
-    [handlePointDelete]
+    [handlePointDelete, detectFirstInteraction]
   );
 
   const {
@@ -192,17 +216,11 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     }
   }, [initialScenario, updateSettings]);
 
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const isPausedRef = useRef(false);
-  const [isColorInverted, setIsColorInverted] = useState(false);
   const [offset, setOffset] = useState<Vector>(new Point(0, 0));
-  const [shouldResetRenderer, setShouldResetRenderer] = useState(false);
   const [paths, setPaths] = useState<SimulatorPath[]>(
     initialScenario?.data.paths?.map(toSimulatorPath) || []
   );
   const [paperScope, setPaperScope] = useState<paper.PaperScope | null>(null);
-  const [isFlashing, setIsFlashing] = useState(false);
 
   // Use the scenario management hook
   const {
@@ -412,7 +430,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
       createParticle,
       setParticles,
       setIsSimulationStarted,
-      detectFirstInteraction: () => setFirstInteractionDetected(true),
+      detectFirstInteraction,
       pointerPosRef,
     });
 
@@ -626,29 +644,11 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
   const onSelectScenario = useCallback(
     (scenario: Scenario) => {
-      setFirstInteractionDetected(true);
+      detectFirstInteraction();
       handleSelectScenario(scenario);
     },
-    [handleSelectScenario]
+    [handleSelectScenario, detectFirstInteraction]
   );
-
-  // Add handler functions
-  const handlePause = useCallback(() => {
-    setIsPaused(!isPaused);
-  }, [isPaused]);
-
-  const handleReset = useCallback(() => {
-    setParticles([]);
-    setIsSimulationStarted(false);
-  }, []);
-
-  const handleFullscreenToggle = useCallback(() => {
-    toggleFullscreen();
-  }, [toggleFullscreen]);
-
-  const handleInvertColors = useCallback(() => {
-    setIsColorInverted((prev) => !prev);
-  }, []);
 
   const content = (
     <>
