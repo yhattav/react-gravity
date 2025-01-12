@@ -47,6 +47,20 @@ export const MassSlider: React.FC<MassSliderProps> = ({
       }}
       onClick={(e) => {
         e.stopPropagation();
+
+        if (sliderRef.current) {
+          const sliderRect = sliderRef.current.getBoundingClientRect();
+          const relativePos = isVertical
+            ? e.clientY - sliderRect.top
+            : e.clientX - sliderRect.left;
+
+          const percentage =
+            Math.max(0, Math.min(innerLength, relativePos)) / innerLength;
+
+          const adjustedPercentage = isVertical ? 1 - percentage : percentage;
+          const mass = percentageToMass(adjustedPercentage);
+          onChange(mass);
+        }
       }}
     >
       <div
