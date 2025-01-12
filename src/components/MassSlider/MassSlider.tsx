@@ -91,6 +91,7 @@ export const MassSlider: React.FC<MassSliderProps> = ({
           onDragStart={() => onDragStart?.()}
           onDragEnd={() => onDragEnd?.()}
           initial={isVertical ? { y: initialPosition } : { x: initialPosition }}
+          animate={isVertical ? { y: initialPosition } : { x: initialPosition }}
           onDrag={(_, info) => {
             if (sliderRef.current) {
               const sliderRect = sliderRef.current.getBoundingClientRect();
