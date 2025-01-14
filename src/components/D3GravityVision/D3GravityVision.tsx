@@ -367,7 +367,7 @@ export const D3GravityVision: React.FC<D3GravityVisionProps> = ({
     };
   }, [throttledSettingsUpdate, throttledWarpPointUpdate]);
 
-  if (!settings.SHOW_D3_GRAVITY_VISION) return null;
+  if (!settings.SHOW_D3_GRAVITY_VISION || warpPoints.length === 0) return null;
 
   return (
     <svg
