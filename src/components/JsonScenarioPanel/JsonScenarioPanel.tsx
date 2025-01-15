@@ -5,17 +5,20 @@ import { Scenario } from "../../types/scenario";
 import { IoClose } from "react-icons/io5";
 import { ScenarioSchema } from "../../schemas/scenario";
 import { fromZodError } from "zod-validation-error";
+import { VscSync } from "react-icons/vsc";
 
 interface JsonScenarioPanelProps {
   isOpen: boolean;
   onClose: () => void;
   onApplyScenario: (scenario: Scenario) => void;
+  getCurrentScenario: () => Scenario;
 }
 
 export const JsonScenarioPanel: React.FC<JsonScenarioPanelProps> = ({
   isOpen,
   onClose,
   onApplyScenario,
+  getCurrentScenario,
 }) => {
   const [jsonError, setJsonError] = useState<string | null>(null);
   const [editorContent, setEditorContent] = useState<string>(`{
@@ -76,6 +79,18 @@ export const JsonScenarioPanel: React.FC<JsonScenarioPanelProps> = ({
     }
   };
 
+  const handleLoadCurrentState = () => {
+    try {
+      const currentScenario = getCurrentScenario();
+      setEditorContent(JSON.stringify(currentScenario, null, 2));
+      setJsonError(null);
+    } catch (error) {
+      setJsonError(
+        error instanceof Error ? error.message : "Failed to load current state"
+      );
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -102,22 +117,41 @@ export const JsonScenarioPanel: React.FC<JsonScenarioPanelProps> = ({
               }}
             >
               <h3 style={{ margin: 0 }}>Load JSON Scenario</h3>
-              <motion.button
-                onClick={onClose}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "white",
-                  cursor: "pointer",
-                  padding: 0,
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <IoClose size={24} />
-              </motion.button>
+              <div style={{ display: "flex", gap: "12px" }}>
+                <motion.button
+                  onClick={handleLoadCurrentState}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "white",
+                    cursor: "pointer",
+                    padding: 0,
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                  title="Load Current State"
+                >
+                  <VscSync size={20} />
+                </motion.button>
+                <motion.button
+                  onClick={onClose}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "white",
+                    cursor: "pointer",
+                    padding: 0,
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <IoClose size={24} />
+                </motion.button>
+              </div>
             </div>
           </div>
 
