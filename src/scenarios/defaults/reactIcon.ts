@@ -19,10 +19,10 @@ export const reactIcon: Scenario = {
     },
     gravityPoints: [
       {
-        x: 25,
-        y: 25,
+        position: { x: 25, y: 25 },
         label: "Nucleus",
         mass: 100000,
+        id: "nucleus",
       },
     ],
     particles: [

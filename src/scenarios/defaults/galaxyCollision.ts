@@ -20,41 +20,41 @@ export const galaxyCollision: Scenario = {
     gravityPoints: [
       // First galaxy
       {
-        x: 200,
-        y: 200,
+        position: { x: 200, y: 200 },
         label: "Galaxy 1 Core",
         mass: 100000,
+        id: "galaxy1-core",
       },
       {
-        x: 250,
-        y: 150,
+        position: { x: 250, y: 150 },
         label: "Star 1",
         mass: 20000,
+        id: "star1",
       },
       {
-        x: 150,
-        y: 250,
+        position: { x: 150, y: 250 },
         label: "Star 2",
         mass: 20000,
+        id: "star2",
       },
       // Second galaxy
       {
-        x: 800,
-        y: 600,
+        position: { x: 800, y: 600 },
         label: "Galaxy 2 Core",
         mass: 100000,
+        id: "galaxy2-core",
       },
       {
-        x: 750,
-        y: 650,
+        position: { x: 750, y: 650 },
         label: "Star 3",
         mass: 20000,
+        id: "star3",
       },
       {
-        x: 850,
-        y: 550,
+        position: { x: 850, y: 550 },
         label: "Star 4",
         mass: 20000,
+        id: "star4",
       },
     ],
     particles: [

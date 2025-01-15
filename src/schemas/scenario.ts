@@ -13,8 +13,7 @@ export const PathPointSchema = z.object({
 });
 
 export const SerializableGravityPointSchema = z.object({
-  x: z.number(),
-  y: z.number(),
+  position: Point2DSchema,
   label: z.string(),
   mass: z.number(),
   id: z.string().optional(),

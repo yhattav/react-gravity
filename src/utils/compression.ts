@@ -46,9 +46,9 @@ const modSettings = (settings: ScenarioData["settings"]): string => {
 };
 
 const modGravityPoint = (point: SerializableGravityPoint): string => {
-  return `${point.x + SEPARATORS[3]}${point.y + SEPARATORS[3]}${
-    point.label + SEPARATORS[3]
-  }${point.mass}`;
+  return `${point.position.x + SEPARATORS[3]}${
+    point.position.y + SEPARATORS[3]
+  }${point.label + SEPARATORS[3]}${point.mass}`;
 };
 
 const modParticle = (particle: SerializableParticle): string => {
@@ -123,8 +123,7 @@ const demodSettings = (str: string): ScenarioData["settings"] => {
 const demodGravityPoint = (str: string): SerializableGravityPoint => {
   const [x, y, label, mass] = str.split(SEPARATORS[3]);
   return {
-    x: Number(x),
-    y: Number(y),
+    position: { x: Number(x), y: Number(y) },
     label,
     mass: Number(mass),
   };

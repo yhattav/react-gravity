@@ -11,10 +11,13 @@ const starMass = 30000;
 const stars = Array.from({ length: numStars }).map((_, i) => {
   const angle = (i * 2 * Math.PI) / numStars;
   return {
-    x: centerX + ringRadius * Math.cos(angle),
-    y: centerY + ringRadius * Math.sin(angle),
+    position: {
+      x: centerX + ringRadius * Math.cos(angle),
+      y: centerY + ringRadius * Math.sin(angle),
+    },
     label: `Star ${i + 1}`,
     mass: starMass,
+    id: `star-${i + 1}`,
   };
 });
 

@@ -20,10 +20,10 @@ export const react: Scenario = {
     },
     gravityPoints: [
       {
-        x: 275,
-        y: 300,
+        position: { x: 275, y: 300 },
         label: "Nucleus",
         mass: 100000,
+        id: "nucleus",
       },
     ],
     particles: [

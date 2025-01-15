@@ -18,7 +18,7 @@ import { type SerializableGravityPoint } from "../../schemas/scenario";
 import { type GravityPoint } from "../../schemas/physics";
 
 export const toGravityPoint = (p: SerializableGravityPoint): GravityPoint => ({
-  position: new Point(p.x, p.y),
+  position: new Point(p.position.x, p.position.y),
   label: p.label,
   mass: p.mass,
   id: p.id,
@@ -27,8 +27,7 @@ export const toGravityPoint = (p: SerializableGravityPoint): GravityPoint => ({
 export const toSerializableGravityPoint = (
   p: GravityPoint
 ): SerializableGravityPoint => ({
-  x: p.position.x,
-  y: p.position.y,
+  position: { x: p.position.x, y: p.position.y },
   label: p.label,
   mass: p.mass,
   id: p.id,
