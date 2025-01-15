@@ -3,9 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import Editor, { OnChange } from "@monaco-editor/react";
 import { Scenario, ScenarioData } from "../../types/scenario";
 import { IoClose } from "react-icons/io5";
-import { SerializableGravityPoint } from "../../utils/types/physics";
+import { SerializableGravityPoint, Point2D } from "../../utils/types/physics";
 import { SerializableParticle } from "../../types/particle";
-import { SerializableSimulatorPath } from "../../utils/types/path";
+import { SerializableSimulatorPath, PathPoint } from "../../utils/types/path";
+import { PhysicsSettings } from "../../constants/physics";
 
 interface JsonScenarioPanelProps {
   isOpen: boolean;
@@ -13,98 +14,159 @@ interface JsonScenarioPanelProps {
   onApplyScenario: (scenario: Scenario) => void;
 }
 
+interface UnknownObject {
+  [key: string]: unknown;
+}
+
+const isPoint2D = (point: unknown): point is Point2D => {
+  if (!point || typeof point !== "object") return false;
+  const p = point as UnknownObject;
+  return (
+    typeof p.x === "number" &&
+    typeof p.y === "number" &&
+    Object.keys(p).length === 2
+  );
+};
+
 const validateGravityPoint = (
-  point: any
+  point: unknown
 ): point is SerializableGravityPoint => {
+  if (!point || typeof point !== "object") return false;
+  const p = point as UnknownObject;
+
   return (
-    typeof point === "object" &&
-    point !== null &&
-    typeof point.position === "object" &&
-    point.position !== null &&
-    typeof point.position.x === "number" &&
-    typeof point.position.y === "number" &&
-    typeof point.mass === "number" &&
-    (!point.id || typeof point.id === "string")
+    isPoint2D({ x: p.x as number, y: p.y as number }) &&
+    typeof p.mass === "number" &&
+    typeof p.label === "string" &&
+    (!p.id || typeof p.id === "string")
   );
 };
 
-const validateParticle = (particle: any): particle is SerializableParticle => {
+const validateParticle = (
+  particle: unknown
+): particle is SerializableParticle => {
+  if (!particle || typeof particle !== "object") return false;
+  const p = particle as UnknownObject;
+
   return (
-    typeof particle === "object" &&
-    particle !== null &&
-    typeof particle.position === "object" &&
-    particle.position !== null &&
-    typeof particle.position.x === "number" &&
-    typeof particle.position.y === "number" &&
-    typeof particle.velocity === "object" &&
-    particle.velocity !== null &&
-    typeof particle.velocity.x === "number" &&
-    typeof particle.velocity.y === "number" &&
-    typeof particle.mass === "number" &&
-    (!particle.id || typeof particle.id === "string")
+    isPoint2D(p.position as Point2D) &&
+    isPoint2D(p.velocity as Point2D) &&
+    typeof p.mass === "number" &&
+    typeof p.id === "string" &&
+    typeof p.elasticity === "number" &&
+    (!p.outgoingForceRatio || typeof p.outgoingForceRatio === "number") &&
+    (!p.size || typeof p.size === "number") &&
+    (!p.color || typeof p.color === "string") &&
+    (!p.showVectors || typeof p.showVectors === "boolean")
   );
 };
 
-const validatePath = (path: any): path is SerializableSimulatorPath => {
+const validatePathPoint = (point: unknown): point is PathPoint => {
+  if (!point || typeof point !== "object") return false;
+  const p = point as UnknownObject;
+
+  const hasValidHandles =
+    (!p.handleIn || isPoint2D(p.handleIn as Point2D)) &&
+    (!p.handleOut || isPoint2D(p.handleOut as Point2D));
+
+  return isPoint2D({ x: p.x as number, y: p.y as number }) && hasValidHandles;
+};
+
+const validatePath = (path: unknown): path is SerializableSimulatorPath => {
+  if (!path || typeof path !== "object") return false;
+  const p = path as UnknownObject;
+
   return (
-    typeof path === "object" &&
-    path !== null &&
-    Array.isArray(path.points) &&
-    path.points.every(
-      (point: any) =>
-        typeof point === "object" &&
-        point !== null &&
-        typeof point.x === "number" &&
-        typeof point.y === "number"
-    )
+    typeof p.id === "string" &&
+    Array.isArray(p.points) &&
+    p.points.every(validatePathPoint) &&
+    typeof p.closed === "boolean" &&
+    isPoint2D(p.position as Point2D) &&
+    typeof p.label === "string" &&
+    typeof p.mass === "number" &&
+    (!p.strokeColor || typeof p.strokeColor === "string") &&
+    (!p.fillColor || typeof p.fillColor === "string") &&
+    (!p.strokeWidth || typeof p.strokeWidth === "number") &&
+    (!p.opacity || typeof p.opacity === "number")
   );
 };
 
-const validateScenarioData = (data: any): data is ScenarioData => {
-  if (typeof data !== "object" || data === null) {
+const validateSettings = (
+  settings: unknown
+): settings is Partial<PhysicsSettings> => {
+  if (!settings || typeof settings !== "object") return false;
+  const s = settings as UnknownObject;
+
+  // Check each property has the correct type if present
+  for (const [key, value] of Object.entries(s)) {
+    switch (key) {
+      case "CONSTANT_FORCE":
+        if (!isPoint2D(value as Point2D)) return false;
+        break;
+      case "SHOW_VELOCITY_ARROWS":
+      case "SHOW_FORCE_ARROWS":
+      case "SOLID_BOUNDARIES":
+      case "PARTICLES_EXERT_GRAVITY":
+      case "SHOW_GRAVITY_VISION":
+      case "SHOW_D3_GRAVITY_VISION":
+      case "GRAVITY_VISION_INVERT_COLORS":
+        if (typeof value !== "boolean") return false;
+        break;
+      case "GRAVITY_VISION_STROKE_COLOR":
+      case "GRAVITY_VISION_COLOR_SCHEME":
+        if (typeof value !== "string") return false;
+        break;
+      default:
+        if (value !== undefined && typeof value !== "number") return false;
+    }
+  }
+
+  return true;
+};
+
+const validateScenarioData = (data: unknown): data is ScenarioData => {
+  if (!data || typeof data !== "object") {
     throw new Error("Data must be an object");
   }
+  const d = data as UnknownObject;
 
-  // Validate settings (optional but must be an object if present)
-  if (
-    data.settings !== undefined &&
-    (typeof data.settings !== "object" || data.settings === null)
-  ) {
-    throw new Error("Settings must be an object if present");
+  // Validate settings
+  if (d.settings !== undefined && !validateSettings(d.settings)) {
+    throw new Error("Invalid settings format");
   }
 
-  // Validate gravityPoints (optional but must be array of valid gravity points if present)
-  if (data.gravityPoints !== undefined) {
-    if (!Array.isArray(data.gravityPoints)) {
+  // Validate gravityPoints
+  if (d.gravityPoints !== undefined) {
+    if (!Array.isArray(d.gravityPoints)) {
       throw new Error("gravityPoints must be an array");
     }
-    if (!data.gravityPoints.every(validateGravityPoint)) {
+    if (!d.gravityPoints.every(validateGravityPoint)) {
       throw new Error(
-        "Invalid gravity point format. Each gravity point must have position (x, y) and mass"
+        "Invalid gravity point format. Each gravity point must have position (x, y), label, and mass"
       );
     }
   }
 
-  // Validate particles (optional but must be array of valid particles if present)
-  if (data.particles !== undefined) {
-    if (!Array.isArray(data.particles)) {
+  // Validate particles
+  if (d.particles !== undefined) {
+    if (!Array.isArray(d.particles)) {
       throw new Error("particles must be an array");
     }
-    if (!data.particles.every(validateParticle)) {
+    if (!d.particles.every(validateParticle)) {
       throw new Error(
-        "Invalid particle format. Each particle must have position (x, y), velocity (x, y), and mass"
+        "Invalid particle format. Each particle must have position (x, y), velocity (x, y), mass, and elasticity"
       );
     }
   }
 
-  // Validate paths (optional but must be array of valid paths if present)
-  if (data.paths !== undefined) {
-    if (!Array.isArray(data.paths)) {
+  // Validate paths
+  if (d.paths !== undefined) {
+    if (!Array.isArray(d.paths)) {
       throw new Error("paths must be an array");
     }
-    if (!data.paths.every(validatePath)) {
+    if (!d.paths.every(validatePath)) {
       throw new Error(
-        "Invalid path format. Each path must have an array of points with x and y coordinates"
+        "Invalid path format. Each path must have points array, position, label, and mass"
       );
     }
   }
@@ -123,18 +185,27 @@ export const JsonScenarioPanel: React.FC<JsonScenarioPanelProps> = ({
   "name": "Custom Scenario",
   "description": "A custom scenario loaded from JSON",
   "data": {
-    "settings": {},
+    "settings": {
+      "NEW_PARTICLE_MASS": 0.1,
+      "NEW_PARTICLE_ELASTICITY": 0.8,
+      "FRICTION": 1,
+      "POINTER_MASS": 0
+    },
     "gravityPoints": [
       {
-        "position": { "x": 100, "y": 100 },
+        "x": 100,
+        "y": 100,
+        "label": "Custom Point",
         "mass": 1000
       }
     ],
     "particles": [
       {
+        "id": "particle-1",
         "position": { "x": 200, "y": 200 },
         "velocity": { "x": 0, "y": 0 },
-        "mass": 10
+        "mass": 10,
+        "elasticity": 0.8
       }
     ],
     "paths": []
