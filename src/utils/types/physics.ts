@@ -1,34 +1,21 @@
 import { Point, Path } from "paper";
 
-// Basic vector type for x,y coordinates (JSON serializable)
-export interface Point2D {
-  x: number;
-  y: number;
-}
-export interface WarpPoint {
-  position: Vector;
-  effectiveMass: number;
-}
-// Paper.js Point type - use the actual instance type
 export type Vector = InstanceType<typeof Point>;
 export type SerializablePath = InstanceType<typeof Path>;
-export type Force = Vector;
 
-export interface GravityPoint {
-  position: Vector;
-  label: string;
-  mass: number;
-  id?: string;
-}
+export {
+  type Point2D,
+  type SerializableGravityPoint,
+} from "../../schemas/scenario";
+export {
+  type WarpPoint,
+  type GravityPoint,
+  type Force,
+} from "../../schemas/physics";
 
-// Serializable version of GravityPoint
-export interface SerializableGravityPoint {
-  x: number;
-  y: number;
-  label: string;
-  mass: number;
-  id?: string;
-}
+// Keep the conversion utilities
+import { type SerializableGravityPoint } from "../../schemas/scenario";
+import { type GravityPoint } from "../../schemas/physics";
 
 export const toGravityPoint = (p: SerializableGravityPoint): GravityPoint => ({
   position: new Point(p.x, p.y),
