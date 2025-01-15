@@ -7,6 +7,7 @@ import { AiOutlineExport } from "react-icons/ai";
 import { VscLibrary } from "react-icons/vsc";
 import { SettingOutlined } from "@ant-design/icons";
 import { MusicPlayer } from "../MusicPlayer/MusicPlayer";
+import { IoCode } from "react-icons/io5";
 
 interface SimulatorControlsProps {
   onPause: () => void;
@@ -14,14 +15,15 @@ interface SimulatorControlsProps {
   onFullscreen: () => void;
   onExport: (e: React.MouseEvent) => void;
   onInvertColors: () => void;
-  onScreenshot: (e: React.MouseEvent) => void;
+  onScreenshot: (e: React.MouseEvent) => Promise<void>;
   onScenarioPanel: (e: React.MouseEvent) => void;
   onSettingsPanel: (e: React.MouseEvent) => void;
+  onJsonPanel: (e: React.MouseEvent) => void;
   isPaused: boolean;
   isFullscreen: boolean;
   isAudioPlaying?: boolean;
   isAudioLoaded?: boolean;
-  onAudioToggle?: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  onAudioToggle?: (e: React.MouseEvent) => void;
   disableSound?: boolean;
 }
 
@@ -62,6 +64,7 @@ export const SimulatorControls: React.FC<SimulatorControlsProps> = ({
   onScreenshot,
   onScenarioPanel,
   onSettingsPanel,
+  onJsonPanel,
   isPaused,
   isFullscreen,
   isAudioPlaying,
@@ -136,6 +139,11 @@ export const SimulatorControls: React.FC<SimulatorControlsProps> = ({
       icon: <VscLibrary size={20} />,
       title: "Scenarios",
       onClick: handleClick(onScenarioPanel),
+    },
+    {
+      icon: <IoCode size={20} />,
+      title: "Load JSON",
+      onClick: handleClick(onJsonPanel),
     },
     {
       icon: <SettingOutlined size={20} />,

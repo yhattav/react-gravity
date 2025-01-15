@@ -50,6 +50,7 @@ import { useInteractionHandlers } from "../../hooks/useInteractionHandlers";
 import { useSimulatorState } from "../../hooks/useSimulatorState";
 import { useParticleSystem } from "../../hooks/useParticleSystem";
 import { useScreenshot } from "../../hooks/useScreenshot";
+import { JsonScenarioPanel } from "../JsonScenarioPanel/JsonScenarioPanel";
 
 export interface GravitySimulatorProps {
   gravityRef: React.RefObject<HTMLDivElement>;
@@ -315,6 +316,12 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     saveScenario,
   });
 
+  const [isJsonPanelOpen, setIsJsonPanelOpen] = useState(false);
+
+  const handleJsonPanelToggle = useCallback(() => {
+    setIsJsonPanelOpen((prev) => !prev);
+  }, []);
+
   // Audio files definition
   const audioFiles = useMemo(
     () => [
@@ -546,6 +553,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             onScreenshot={handleScreenshot}
             onScenarioPanel={handleScenarioPanelToggle}
             onSettingsPanel={handleSettingsPanelToggle}
+            onJsonPanel={handleJsonPanelToggle}
             isPaused={isPaused}
             isFullscreen={isFullscreen}
             isAudioPlaying={isAudioPlaying}
@@ -597,6 +605,12 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
               isOpen={isScenarioPanelOpen}
               onClose={() => setIsScenarioPanelOpen(false)}
               onSelectScenario={onSelectScenario}
+            />
+
+            <JsonScenarioPanel
+              isOpen={isJsonPanelOpen}
+              onClose={() => setIsJsonPanelOpen(false)}
+              onApplyScenario={handleSelectScenario}
             />
 
             <SaveScenarioModal
