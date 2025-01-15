@@ -24,25 +24,25 @@ export const JsonScenarioPanel: React.FC<JsonScenarioPanelProps> = ({
   "description": "A custom scenario loaded from JSON",
   "data": {
     "settings": {
-      "NEW_PARTICLE_MASS": 0.1,
+      "NEW_PARTICLE_MASS": 0.02,
       "NEW_PARTICLE_ELASTICITY": 0.8,
       "FRICTION": 1,
-      "POINTER_MASS": 0
+      "POINTER_MASS": 500000
     },
     "gravityPoints": [
       {
-        "x": 100,
-        "y": 100,
+        "x": 300,
+        "y": 300,
         "label": "Custom Point",
-        "mass": 1000
+        "mass": 1000000
       }
     ],
     "particles": [
       {
         "id": "particle-1",
         "position": { "x": 200, "y": 200 },
-        "velocity": { "x": 0, "y": 0 },
-        "mass": 10,
+        "velocity": { "x": 0, "y": 30 },
+        "mass": 0.03,
         "elasticity": 0.8
       }
     ],
