@@ -1,28 +1,14 @@
 import { Path, Point, Segment } from "paper";
-import { Vector, SerializablePath } from "./physics";
+import { type Vector, type SerializablePath } from "./physics";
+import {
+  type PathPoint,
+  type SerializableSimulatorPath,
+} from "../../schemas/scenario";
 
-// Represents a point in a path with optional curve data
-export interface PathPoint {
-  x: number;
-  y: number;
-  handleIn?: { x: number; y: number }; // Control point for curves coming in
-  handleOut?: { x: number; y: number }; // Control point for curves going out
-}
-
-// The serializable version of a SimulatorPath
-export interface SerializableSimulatorPath {
-  id: string;
-  points: PathPoint[];
-  closed: boolean;
-  position: { x: number; y: number }; // Center/reference point
-  label: string;
-  mass: number;
-  // Additional styling properties
-  strokeColor?: string;
-  fillColor?: string;
-  strokeWidth?: number;
-  opacity?: number;
-}
+export {
+  type PathPoint,
+  type SerializableSimulatorPath,
+} from "../../schemas/scenario";
 
 // The runtime version using Paper.js objects
 export interface SimulatorPath {

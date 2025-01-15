@@ -1,37 +1,11 @@
 import { Point } from "paper/dist/paper-core";
-import { Vector, Point2D } from "../utils/types/physics";
+import { type SerializableParticle } from "../schemas/scenario";
+import { type Particle } from "../schemas/physics";
 
-export interface ParticleMechanics {
-  position: Vector;
-  velocity: Vector;
-  force: Vector;
-  mass: number;
-  elasticity: number;
-  outgoingForceRatio?: number;
-  frozen?: boolean;
-}
+export { type Particle, type ParticleMechanics } from "../schemas/physics";
+export { type SerializableParticle } from "../schemas/scenario";
 
-export interface Particle extends ParticleMechanics {
-  id: string;
-  color?: string;
-  size?: number;
-  showVectors?: boolean;
-}
-
-// Serializable versions
-export interface SerializableParticle {
-  id: string;
-  position: Point2D;
-  velocity: Point2D;
-  mass: number;
-  elasticity: number;
-  outgoingForceRatio?: number;
-  size?: number;
-  color?: string;
-  showVectors?: boolean;
-}
-
-// Conversion utilities
+// Keep the conversion utilities
 export const toParticle = (p: SerializableParticle): Particle => ({
   id: p.id,
   position: new Point(p.position.x, p.position.y),
