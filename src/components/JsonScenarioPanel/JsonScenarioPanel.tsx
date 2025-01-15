@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Editor, { OnChange } from "@monaco-editor/react";
 import { Scenario } from "../../types/scenario";
@@ -21,37 +21,13 @@ export const JsonScenarioPanel: React.FC<JsonScenarioPanelProps> = ({
   getCurrentScenario,
 }) => {
   const [jsonError, setJsonError] = useState<string | null>(null);
-  const [editorContent, setEditorContent] = useState<string>(`{
-  "id": "custom-scenario",
-  "name": "Custom Scenario",
-  "description": "A custom scenario loaded from JSON",
-  "data": {
-    "settings": {
-      "NEW_PARTICLE_MASS": 0.02,
-      "NEW_PARTICLE_ELASTICITY": 0.8,
-      "FRICTION": 1,
-      "POINTER_MASS": 500000
-    },
-    "gravityPoints": [
-      {
-        "x": 300,
-        "y": 300,
-        "label": "Custom Point",
-        "mass": 1000000
-      }
-    ],
-    "particles": [
-      {
-        "id": "particle-1",
-        "position": { "x": 200, "y": 200 },
-        "velocity": { "x": 0, "y": 30 },
-        "mass": 0.03,
-        "elasticity": 0.8
-      }
-    ],
-    "paths": []
-  }
-}`);
+  const [editorContent, setEditorContent] = useState<string>("");
+
+  useEffect(() => {
+    if (isOpen) {
+      handleLoadCurrentState();
+    }
+  }, [isOpen]);
 
   const handleEditorChange: OnChange = (value) => {
     setEditorContent(value || "");
