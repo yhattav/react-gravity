@@ -32,6 +32,7 @@ const calculateGravityField = (
 
   const cellWidth = width / gridSize;
   const cellHeight = height / gridSize;
+  const minDist = Math.min(cellWidth, cellHeight); // Use grid cell size as minimum distance
 
   for (let i = 0; i < gridSize; i++) {
     for (let j = 0; j < gridSize; j++) {
@@ -43,14 +44,17 @@ const calculateGravityField = (
       warpPoints.forEach((warpPoint) => {
         const dx = x - warpPoint.position.x;
         const dy = y - warpPoint.position.y;
-        const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        // Clamp the distance to minDist to prevent spikes
+        const clampedDist = Math.max(dist, minDist);
 
         const massScale = warpPoint.effectiveMass / averageMass;
         if (massScale > 0.01) {
           const potential =
             settings.GRAVITY_VISION_STRENGTH *
             massScale *
-            (1 / (1 + dist / settings.GRAVITY_VISION_FALLOFF));
+            (1 / (1 + clampedDist / settings.GRAVITY_VISION_FALLOFF));
 
           totalPotential += potential;
         }
