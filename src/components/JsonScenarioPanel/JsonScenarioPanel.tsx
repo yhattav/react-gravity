@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Editor, { OnChange } from "@monaco-editor/react";
 import { Scenario } from "../../types/scenario";
@@ -6,6 +6,7 @@ import { IoClose } from "react-icons/io5";
 import { ScenarioSchema } from "../../schemas/scenario";
 import { fromZodError } from "zod-validation-error";
 import { VscSync } from "react-icons/vsc";
+import { debounce } from "lodash";
 
 interface JsonScenarioPanelProps {
   isOpen: boolean;
@@ -24,13 +25,32 @@ export const JsonScenarioPanel: React.FC<JsonScenarioPanelProps> = ({
   const [editorContent, setEditorContent] = useState<string>("");
   const [scenarioDescription, setScenarioDescription] = useState<string>("");
 
+  // Create a debounced version of the prompt generator
+  const debouncedGenerateAndLogPrompt = useMemo(
+    () =>
+      debounce((description: string) => {
+        if (!description) return;
+        const prompt = generateLLMPrompt(description);
+        console.log("Generated LLM Prompt:", prompt);
+        navigator.clipboard.writeText(prompt).catch(console.error);
+      }, 100),
+    [getCurrentScenario]
+  );
+
+  // Update the prompt when description changes
+  useEffect(() => {
+    debouncedGenerateAndLogPrompt(scenarioDescription);
+    return () => {
+      debouncedGenerateAndLogPrompt.cancel();
+    };
+  }, [scenarioDescription, debouncedGenerateAndLogPrompt]);
   useEffect(() => {
     if (isOpen) {
       handleLoadCurrentState();
     }
   }, [isOpen]);
 
-  const generateLLMPrompt = () => {
+  const generateLLMPrompt = (description: string) => {
     // Get current simulator dimensions
     const simulatorElement = document.querySelector(".gravity-simulator");
     const width = simulatorElement?.clientWidth || 1000;
@@ -39,7 +59,7 @@ export const JsonScenarioPanel: React.FC<JsonScenarioPanelProps> = ({
     // Get current scenario state
     const currentScenario = getCurrentScenario();
 
-    const prompt = `You are a scenario generator for a gravity simulator. Your task is to create a JSON scenario based on the user's description.
+    return `You are a scenario generator for a gravity simulator. Your task is to create a JSON scenario based on the user's description.
 
 Environment Context:
 - Simulator dimensions: ${width}x${height} pixels
@@ -72,7 +92,7 @@ Scenario Requirements:
    - FRICTION (default: ${currentScenario.data.settings.FRICTION})
    - POINTER_MASS (default: ${currentScenario.data.settings.POINTER_MASS})
 
-User's Description: "${scenarioDescription}"
+User's Description: "${description}"
 
 Generate a valid JSON scenario that matches this description. The JSON must follow this structure:
 ${JSON.stringify(
@@ -98,9 +118,6 @@ Consider:
 - Realistic mass and velocity ranges for stable simulation
 
 Return only the valid JSON with no additional text.`;
-
-    console.log("Generated LLM Prompt:", prompt);
-    return prompt;
   };
 
   const handleDescriptionChange = (
@@ -108,7 +125,7 @@ Return only the valid JSON with no additional text.`;
   ) => {
     setScenarioDescription(e.target.value);
     if (e.target.value) {
-      generateLLMPrompt();
+      generateLLMPrompt(e.target.value);
     }
   };
 
