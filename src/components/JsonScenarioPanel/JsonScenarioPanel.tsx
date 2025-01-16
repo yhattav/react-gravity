@@ -7,12 +7,19 @@ import { ScenarioSchema } from "../../schemas/scenario";
 import { fromZodError } from "zod-validation-error";
 import { VscSync } from "react-icons/vsc";
 import { debounce } from "lodash";
+import { Select } from "antd";
+import OpenAI from "openai";
 
 interface JsonScenarioPanelProps {
   isOpen: boolean;
   onClose: () => void;
   onApplyScenario: (scenario: Scenario) => void;
   getCurrentScenario: () => Scenario;
+}
+
+interface AIServiceConfig {
+  service: "openai" | "anthropic" | "none";
+  apiKey: string;
 }
 
 export const JsonScenarioPanel: React.FC<JsonScenarioPanelProps> = ({
@@ -24,6 +31,90 @@ export const JsonScenarioPanel: React.FC<JsonScenarioPanelProps> = ({
   const [jsonError, setJsonError] = useState<string | null>(null);
   const [editorContent, setEditorContent] = useState<string>("");
   const [scenarioDescription, setScenarioDescription] = useState<string>("");
+  const [aiConfig, setAIConfig] = useState<AIServiceConfig>(() => {
+    const saved = localStorage.getItem("aiServiceConfig");
+    return saved ? JSON.parse(saved) : { service: "none", apiKey: "" };
+  });
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  // Save AI config to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem("aiServiceConfig", JSON.stringify(aiConfig));
+  }, [aiConfig]);
+
+  const generateWithAI = async (prompt: string) => {
+    if (aiConfig.service === "none" || !aiConfig.apiKey) {
+      console.log("No AI service configured. Prompt copied to clipboard.");
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      let generatedJson;
+
+      if (aiConfig.service === "openai") {
+        const openai = new OpenAI({
+          apiKey: aiConfig.apiKey,
+          dangerouslyAllowBrowser: true,
+        });
+
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o-mini",
+          store: true,
+          messages: [{ role: "user", content: prompt }],
+        });
+
+        generatedJson = (completion.choices[0]?.message?.content || "")
+          .replace(/^```json\n/, "")
+          .replace(/\n```$/, "");
+      } else if (aiConfig.service === "anthropic") {
+        const response = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": aiConfig.apiKey,
+            "anthropic-version": "2023-06-01",
+          },
+          body: JSON.stringify({
+            model: "claude-3-opus-20240229",
+            max_tokens: 4096,
+            messages: [{ role: "user", content: prompt }],
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        generatedJson = data.content[0].text
+          .replace(/^```json\n/, "")
+          .replace(/\n```$/, "");
+      }
+
+      try {
+        // Validate the generated JSON
+        const parsed = JSON.parse(generatedJson || "");
+        const result = ScenarioSchema.safeParse(parsed);
+        if (result.success) {
+          setEditorContent(JSON.stringify(parsed, null, 2));
+          setJsonError(null);
+        } else {
+          setJsonError("Generated JSON is not a valid scenario");
+        }
+      } catch (e: unknown) {
+        const errorMessage =
+          e instanceof Error ? e.message : "Unknown error parsing JSON";
+        setJsonError("Generated content is not valid JSON: " + errorMessage);
+      }
+    } catch (error) {
+      setJsonError(
+        error instanceof Error ? error.message : "AI generation failed"
+      );
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   // Create a debounced version of the prompt generator
   const debouncedGenerateAndLogPrompt = useMemo(
@@ -242,6 +333,75 @@ Return only the valid JSON with no additional text.`;
             }}
           >
             <div
+              style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}
+            >
+              <div style={{ flex: 1 }}>
+                <label
+                  htmlFor="ai-service"
+                  style={{
+                    color: "#fff",
+                    fontSize: "14px",
+                    display: "block",
+                    marginBottom: "8px",
+                  }}
+                >
+                  AI Service:
+                </label>
+                <Select
+                  id="ai-service"
+                  value={aiConfig.service}
+                  onChange={(value) =>
+                    setAIConfig((prev) => ({ ...prev, service: value }))
+                  }
+                  style={{ width: "100%" }}
+                  options={[
+                    { value: "none", label: "None (Copy Prompt)" },
+                    { value: "openai", label: "OpenAI GPT-4" },
+                    { value: "anthropic", label: "Anthropic Claude" },
+                  ]}
+                />
+              </div>
+              {aiConfig.service !== "none" && (
+                <div style={{ flex: 1 }}>
+                  <label
+                    htmlFor="api-key"
+                    style={{
+                      color: "#fff",
+                      fontSize: "14px",
+                      display: "block",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    API Key:
+                  </label>
+                  <input
+                    id="api-key"
+                    type="password"
+                    value={aiConfig.apiKey}
+                    onChange={(e) =>
+                      setAIConfig((prev) => ({
+                        ...prev,
+                        apiKey: e.target.value,
+                      }))
+                    }
+                    placeholder={`Enter your ${
+                      aiConfig.service === "openai" ? "OpenAI" : "Anthropic"
+                    } API key`}
+                    style={{
+                      width: "100%",
+                      padding: "4px 11px",
+                      backgroundColor: "#2d2d2d",
+                      color: "#fff",
+                      border: "1px solid #404040",
+                      borderRadius: "4px",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div
               style={{ display: "flex", flexDirection: "column", gap: "8px" }}
             >
               <label
@@ -250,23 +410,48 @@ Return only the valid JSON with no additional text.`;
               >
                 Describe the scenario you want to create:
               </label>
-              <textarea
-                id="scenario-description"
-                value={scenarioDescription}
-                onChange={handleDescriptionChange}
-                placeholder="Example: Create a solar system with a large star in the center and three planets orbiting around it at different distances..."
-                style={{
-                  width: "100%",
-                  height: "80px",
-                  padding: "8px 12px",
-                  backgroundColor: "#2d2d2d",
-                  color: "#fff",
-                  border: "1px solid #404040",
-                  borderRadius: "4px",
-                  fontSize: "14px",
-                  resize: "vertical",
-                }}
-              />
+              <div style={{ display: "flex", gap: "8px" }}>
+                <textarea
+                  id="scenario-description"
+                  value={scenarioDescription}
+                  onChange={handleDescriptionChange}
+                  placeholder="Example: Create a solar system with a large star in the center and three planets orbiting around it at different distances..."
+                  style={{
+                    flex: 1,
+                    height: "80px",
+                    padding: "8px 12px",
+                    backgroundColor: "#2d2d2d",
+                    color: "#fff",
+                    border: "1px solid #404040",
+                    borderRadius: "4px",
+                    fontSize: "14px",
+                    resize: "vertical",
+                  }}
+                />
+                {scenarioDescription && (
+                  <motion.button
+                    onClick={() =>
+                      generateWithAI(generateLLMPrompt(scenarioDescription))
+                    }
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    disabled={isGenerating}
+                    style={{
+                      background: "#1a90ff",
+                      color: "white",
+                      border: "none",
+                      padding: "8px 16px",
+                      borderRadius: "4px",
+                      cursor: isGenerating ? "wait" : "pointer",
+                      fontSize: "14px",
+                      opacity: isGenerating ? 0.7 : 1,
+                      alignSelf: "stretch",
+                    }}
+                  >
+                    {isGenerating ? "Generating..." : "Generate"}
+                  </motion.button>
+                )}
+              </div>
             </div>
 
             <div style={{ flex: 1, minHeight: 0 }}>
