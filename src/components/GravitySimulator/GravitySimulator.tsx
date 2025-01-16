@@ -509,6 +509,22 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     [handleSelectScenario, detectFirstInteraction]
   );
 
+  const handleSettingsPanelClose = useCallback(() => {
+    setIsSettingsPanelOpen(false);
+  }, []);
+
+  const handleScenarioPanelClose = useCallback(() => {
+    setIsScenarioPanelOpen(false);
+  }, []);
+
+  const handleJsonPanelClose = useCallback(() => {
+    setIsJsonPanelOpen(false);
+  }, []);
+
+  const handleSaveModalClose = useCallback(() => {
+    setIsSaveModalOpen(false);
+  }, []);
+
   const content = (
     <>
       <div
@@ -599,25 +615,25 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             <SimulatorSettings
               onSettingsChange={updateSettings}
               isOpen={isSettingsPanelOpen}
-              onClose={() => setIsSettingsPanelOpen(false)}
+              onClose={handleSettingsPanelClose}
             />
 
             <ScenarioPanel
               isOpen={isScenarioPanelOpen}
-              onClose={() => setIsScenarioPanelOpen(false)}
+              onClose={handleScenarioPanelClose}
               onSelectScenario={onSelectScenario}
             />
 
             <JsonScenarioPanel
               isOpen={isJsonPanelOpen}
-              onClose={() => setIsJsonPanelOpen(false)}
+              onClose={handleJsonPanelClose}
               onApplyScenario={handleSelectScenario}
               getCurrentScenario={getCurrentScenario}
             />
 
             <SaveScenarioModal
               isOpen={isSaveModalOpen}
-              onClose={() => setIsSaveModalOpen(false)}
+              onClose={handleSaveModalClose}
               onSave={handleSaveScenario}
               shareableLink={shareableLink}
             />
