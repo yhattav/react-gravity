@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import OpenAI from "openai";
-import { ScenarioSchema } from "../schemas/scenario";
+import { validateScenarioJson } from "../utils/validation/jsonValidation";
 
 export type AIService = "openai" | "anthropic" | "none";
 
@@ -34,23 +34,13 @@ export const useAIService = ({
   // Validate JSON content
   const validateJson = useCallback(
     (content: string) => {
-      try {
-        // Remove markdown code block markers if present
-        const cleanJson = content
-          .replace(/^```json\n/, "")
-          .replace(/\n```$/, "");
-        const parsed = JSON.parse(cleanJson);
-        const result = ScenarioSchema.safeParse(parsed);
-
-        if (result.success) {
-          onContentUpdate(JSON.stringify(parsed, null, 2));
-          onValidJson();
-          return true;
-        }
-        return false;
-      } catch {
-        return false;
+      const result = validateScenarioJson(content);
+      if (result.isValid && result.data) {
+        onContentUpdate(JSON.stringify(result.data, null, 2));
+        onValidJson();
+        return true;
       }
+      return false;
     },
     [onContentUpdate, onValidJson]
   );

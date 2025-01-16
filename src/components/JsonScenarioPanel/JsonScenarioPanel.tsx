@@ -3,13 +3,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import Editor, { OnChange } from "@monaco-editor/react";
 import { Scenario } from "../../types/scenario";
 import { IoClose } from "react-icons/io5";
-import { ScenarioSchema } from "../../schemas/scenario";
-import { fromZodError } from "zod-validation-error";
 import { VscSync } from "react-icons/vsc";
 import { debounce } from "lodash";
 import { Select } from "antd";
 import { generateScenarioPrompt } from "../../utils/prompts/scenarioPrompts";
 import { useAIService } from "../../hooks/useAIService";
+import {
+  validateScenarioJson,
+  formatScenarioJson,
+} from "../../utils/validation/jsonValidation";
 
 interface JsonScenarioPanelProps {
   isOpen: boolean;
@@ -41,7 +43,7 @@ const JsonScenarioPanelComponent: React.FC<JsonScenarioPanelProps> = ({
   useEffect(() => {
     if (isOpen) {
       const currentScenario = getCurrentScenario();
-      setEditorContent(JSON.stringify(currentScenario, null, 2));
+      setEditorContent(formatScenarioJson(currentScenario));
       setJsonError(null);
     }
   }, [isOpen, getCurrentScenario]);
@@ -92,29 +94,18 @@ const JsonScenarioPanelComponent: React.FC<JsonScenarioPanelProps> = ({
   };
 
   const handleApply = () => {
-    try {
-      const parsedJson = JSON.parse(editorContent);
-      const result = ScenarioSchema.safeParse(parsedJson);
-
-      if (!result.success) {
-        const validationError = fromZodError(result.error);
-        setJsonError(validationError.message);
-        return;
-      }
-
-      setJsonError(null);
+    const result = validateScenarioJson(editorContent);
+    if (result.isValid && result.data) {
       onApplyScenario(result.data);
       onClose();
-    } catch (error) {
-      setJsonError(
-        error instanceof Error ? error.message : "Invalid JSON format"
-      );
+    } else {
+      setJsonError(result.error || "Invalid scenario format");
     }
   };
 
   const handleLoadCurrentState = () => {
     const currentScenario = getCurrentScenario();
-    setEditorContent(JSON.stringify(currentScenario, null, 2));
+    setEditorContent(formatScenarioJson(currentScenario));
     setJsonError(null);
   };
 
