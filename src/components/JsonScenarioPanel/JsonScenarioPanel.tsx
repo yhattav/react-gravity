@@ -51,12 +51,6 @@ const JsonScenarioPanelComponent: React.FC<JsonScenarioPanelProps> = ({
     }
   }, [isOpen]);
 
-  const handleLoadCurrentState = () => {
-    const currentScenario = getCurrentScenario();
-    setEditorContent(JSON.stringify(currentScenario, null, 2));
-    setJsonError(null);
-  };
-
   // Stream the response and update content
   const updateStreamContent = (content: string) => {
     // Only update if the content is different to prevent unnecessary rerenders
