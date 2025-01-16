@@ -20,10 +20,10 @@ export const orbit: Scenario = {
     },
     gravityPoints: [
       {
-        x: 500,
-        y: 400,
+        position: { x: 500, y: 400 },
         label: "Central Star",
         mass: 1300000,
+        id: "central-star",
       },
     ],
     particles: [

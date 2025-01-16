@@ -47,6 +47,7 @@ interface UseScenarioManagementReturn {
   handleSelectScenario: (scenario: Scenario) => void;
   handleScenarioPanelToggle: (e: React.MouseEvent) => void;
   handleSettingsPanelToggle: (e: React.MouseEvent) => void;
+  getCurrentScenario: () => Scenario;
 }
 
 export const useScenarioManagement = ({
@@ -68,44 +69,39 @@ export const useScenarioManagement = ({
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [shareableLink, setShareableLink] = useState("");
 
+  const getCurrentScenario = useCallback((): Scenario => {
+    return {
+      id: Math.random().toString(36).substr(2, 9),
+      name: "Current State",
+      description: "Current simulator state",
+      data: {
+        settings: physicsConfig,
+        gravityPoints: gravityPoints.map(toSerializableGravityPoint),
+        particles: particles.map(toSerializableParticle),
+        paths: paths.map(toSerializableSimulatorPath),
+      },
+    };
+  }, [physicsConfig, gravityPoints, particles, paths]);
+
   const handleExportScenario = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      const scenario: Scenario = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: "",
-        description: "User saved scenario",
-        data: {
-          settings: physicsConfig,
-          gravityPoints: gravityPoints.map(toSerializableGravityPoint),
-          particles: particles.map(toSerializableParticle),
-          paths: paths.map(toSerializableSimulatorPath),
-        },
-      };
+      const scenario = getCurrentScenario();
       setShareableLink(createShareableLink(scenario));
       setIsPaused(true);
       setIsSaveModalOpen(true);
     },
-    [physicsConfig, gravityPoints, particles, paths, setIsPaused]
+    [getCurrentScenario, setIsPaused]
   );
 
   const handleSaveScenario = useCallback(
     (name: string) => {
-      const scenario: Scenario = {
-        id: Math.random().toString(36).substr(2, 9),
-        name,
-        description: "User saved scenario",
-        data: {
-          settings: physicsConfig,
-          gravityPoints: gravityPoints.map(toSerializableGravityPoint),
-          particles: particles.map(toSerializableParticle),
-          paths: paths.map(toSerializableSimulatorPath),
-        },
-      };
+      const scenario = getCurrentScenario();
+      scenario.name = name;
       saveScenario(scenario);
       setIsSaveModalOpen(false);
     },
-    [physicsConfig, gravityPoints, particles, paths, saveScenario]
+    [getCurrentScenario, saveScenario]
   );
 
   const handleSelectScenario = useCallback(
@@ -197,5 +193,6 @@ export const useScenarioManagement = ({
     handleSelectScenario,
     handleScenarioPanelToggle,
     handleSettingsPanelToggle,
+    getCurrentScenario,
   };
 };

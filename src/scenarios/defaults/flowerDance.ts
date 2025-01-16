@@ -19,10 +19,10 @@ export const flowerDance: Scenario = {
     },
     gravityPoints: [
       {
-        x: 466,
-        y: 403,
+        position: { x: 466, y: 403 },
         label: "Brown Dwarf",
         mass: 600302.2939903878,
+        id: "brown-dwarf",
       },
     ],
     particles: [

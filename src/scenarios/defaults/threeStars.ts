@@ -18,22 +18,22 @@ export const threeStars: Scenario = {
     },
     gravityPoints: [
       {
-        x: 700,
-        y: 700,
+        position: { x: 700, y: 700 },
         label: "Heavy",
         mass: 50000,
+        id: "heavy-star",
       },
       {
-        x: 500,
-        y: 150,
+        position: { x: 500, y: 150 },
         label: "Medium",
         mass: 30000,
+        id: "medium-star",
       },
       {
-        x: 350,
-        y: 250,
+        position: { x: 350, y: 250 },
         label: "Light",
         mass: 10000,
+        id: "light-star",
       },
     ],
     particles: [

@@ -395,7 +395,22 @@ export const STAR_TEMPLATES: StarTemplate[] = [
 ];
 
 export const INITIAL_GRAVITY_POINTS: GravityPoint[] = [
-  { position: new Point(500, 400), label: "Heavy", mass: 1000000 },
-  { position: new Point(500, 150), label: "Medium", mass: 300000 },
-  { position: new Point(350, 250), label: "Light", mass: 100000 },
+  {
+    position: new Point(500, 400),
+    label: "Heavy",
+    mass: 1000000,
+    id: "initial-1",
+  },
+  {
+    position: new Point(500, 150),
+    label: "Medium",
+    mass: 300000,
+    id: "initial-2",
+  },
+  {
+    position: new Point(350, 250),
+    label: "Light",
+    mass: 100000,
+    id: "initial-3",
+  },
 ];

@@ -1,54 +1,133 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Editor, { OnChange } from "@monaco-editor/react";
 import { Scenario } from "../../types/scenario";
 import { IoClose } from "react-icons/io5";
 import { ScenarioSchema } from "../../schemas/scenario";
 import { fromZodError } from "zod-validation-error";
+import { VscSync } from "react-icons/vsc";
+import { debounce } from "lodash";
 
 interface JsonScenarioPanelProps {
   isOpen: boolean;
   onClose: () => void;
   onApplyScenario: (scenario: Scenario) => void;
+  getCurrentScenario: () => Scenario;
 }
 
 export const JsonScenarioPanel: React.FC<JsonScenarioPanelProps> = ({
   isOpen,
   onClose,
   onApplyScenario,
+  getCurrentScenario,
 }) => {
   const [jsonError, setJsonError] = useState<string | null>(null);
-  const [editorContent, setEditorContent] = useState<string>(`{
-  "id": "custom-scenario",
-  "name": "Custom Scenario",
-  "description": "A custom scenario loaded from JSON",
-  "data": {
-    "settings": {
-      "NEW_PARTICLE_MASS": 0.02,
-      "NEW_PARTICLE_ELASTICITY": 0.8,
-      "FRICTION": 1,
-      "POINTER_MASS": 500000
+  const [editorContent, setEditorContent] = useState<string>("");
+  const [scenarioDescription, setScenarioDescription] = useState<string>("");
+
+  // Create a debounced version of the prompt generator
+  const debouncedGenerateAndLogPrompt = useMemo(
+    () =>
+      debounce((description: string) => {
+        if (!description) return;
+        const prompt = generateLLMPrompt(description);
+        console.log("Generated LLM Prompt:", prompt);
+        navigator.clipboard.writeText(prompt).catch(console.error);
+      }, 100),
+    [getCurrentScenario]
+  );
+
+  // Update the prompt when description changes
+  useEffect(() => {
+    debouncedGenerateAndLogPrompt(scenarioDescription);
+    return () => {
+      debouncedGenerateAndLogPrompt.cancel();
+    };
+  }, [scenarioDescription, debouncedGenerateAndLogPrompt]);
+  useEffect(() => {
+    if (isOpen) {
+      handleLoadCurrentState();
+    }
+  }, [isOpen]);
+
+  const generateLLMPrompt = (description: string) => {
+    // Get current simulator dimensions
+    const simulatorElement = document.querySelector(".gravity-simulator");
+    const width = simulatorElement?.clientWidth || 1000;
+    const height = simulatorElement?.clientHeight || 800;
+
+    // Get current scenario state
+    const currentScenario = getCurrentScenario();
+
+    return `You are a scenario generator for a gravity simulator. Your task is to create a JSON scenario based on the user's description.
+
+Environment Context:
+- Simulator dimensions: ${width}x${height} pixels
+- Center position: x=${width / 2}, y=${height / 2}
+- Current physics settings: ${JSON.stringify(
+      currentScenario.data.settings,
+      null,
+      2
+    )}
+
+Scenario Requirements:
+1. All positions must be within the simulator bounds (0 to ${width} for x, 0 to ${height} for y)
+2. Each gravity point must have:
+   - position (x, y)
+   - mass (typical range: 100,000 to 2,000,000)
+   - label (descriptive name)
+3. Each particle must have:
+   - position (x, y)
+   - velocity (x, y) (typical range: -50 to 50)
+   - mass (typical range: 0.01 to 0.1)
+   - elasticity (0 to 1, typically 0.8)
+   - id (unique string)
+4. Settings can include:
+   - NEW_PARTICLE_MASS (default: ${
+     currentScenario.data.settings.NEW_PARTICLE_MASS
+   })
+   - NEW_PARTICLE_ELASTICITY (default: ${
+     currentScenario.data.settings.NEW_PARTICLE_ELASTICITY
+   })
+   - FRICTION (default: ${currentScenario.data.settings.FRICTION})
+   - POINTER_MASS (default: ${currentScenario.data.settings.POINTER_MASS})
+
+User's Description: "${description}"
+
+Generate a valid JSON scenario that matches this description. The JSON must follow this structure:
+${JSON.stringify(
+  {
+    id: "example-id",
+    name: "Example Name",
+    description: "Example Description",
+    data: {
+      settings: {},
+      gravityPoints: [],
+      particles: [],
+      paths: [],
     },
-    "gravityPoints": [
-      {
-        "x": 300,
-        "y": 300,
-        "label": "Custom Point",
-        "mass": 1000000
-      }
-    ],
-    "particles": [
-      {
-        "id": "particle-1",
-        "position": { "x": 200, "y": 200 },
-        "velocity": { "x": 0, "y": 30 },
-        "mass": 0.03,
-        "elasticity": 0.8
-      }
-    ],
-    "paths": []
-  }
-}`);
+  },
+  null,
+  2
+)}
+
+Consider:
+- Relative positions (e.g., "center" means x=${width / 2}, y=${height / 2})
+- Physical accuracy (e.g., orbits need appropriate velocity vectors)
+- Visual balance within the simulator dimensions
+- Realistic mass and velocity ranges for stable simulation
+
+Return only the valid JSON with no additional text.`;
+  };
+
+  const handleDescriptionChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
+    setScenarioDescription(e.target.value);
+    if (e.target.value) {
+      generateLLMPrompt(e.target.value);
+    }
+  };
 
   const handleEditorChange: OnChange = (value) => {
     setEditorContent(value || "");
@@ -72,6 +151,18 @@ export const JsonScenarioPanel: React.FC<JsonScenarioPanelProps> = ({
     } catch (error) {
       setJsonError(
         error instanceof Error ? error.message : "Invalid JSON format"
+      );
+    }
+  };
+
+  const handleLoadCurrentState = () => {
+    try {
+      const currentScenario = getCurrentScenario();
+      setEditorContent(JSON.stringify(currentScenario, null, 2));
+      setJsonError(null);
+    } catch (error) {
+      setJsonError(
+        error instanceof Error ? error.message : "Failed to load current state"
       );
     }
   };
@@ -102,22 +193,41 @@ export const JsonScenarioPanel: React.FC<JsonScenarioPanelProps> = ({
               }}
             >
               <h3 style={{ margin: 0 }}>Load JSON Scenario</h3>
-              <motion.button
-                onClick={onClose}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "white",
-                  cursor: "pointer",
-                  padding: 0,
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <IoClose size={24} />
-              </motion.button>
+              <div style={{ display: "flex", gap: "12px" }}>
+                <motion.button
+                  onClick={handleLoadCurrentState}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "white",
+                    cursor: "pointer",
+                    padding: 0,
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                  title="Load Current State"
+                >
+                  <VscSync size={20} />
+                </motion.button>
+                <motion.button
+                  onClick={onClose}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "white",
+                    cursor: "pointer",
+                    padding: 0,
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <IoClose size={24} />
+                </motion.button>
+              </div>
             </div>
           </div>
 
@@ -131,6 +241,34 @@ export const JsonScenarioPanel: React.FC<JsonScenarioPanelProps> = ({
               maxHeight: "calc(90vh - 200px)",
             }}
           >
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+            >
+              <label
+                htmlFor="scenario-description"
+                style={{ color: "#fff", fontSize: "14px" }}
+              >
+                Describe the scenario you want to create:
+              </label>
+              <textarea
+                id="scenario-description"
+                value={scenarioDescription}
+                onChange={handleDescriptionChange}
+                placeholder="Example: Create a solar system with a large star in the center and three planets orbiting around it at different distances..."
+                style={{
+                  width: "100%",
+                  height: "80px",
+                  padding: "8px 12px",
+                  backgroundColor: "#2d2d2d",
+                  color: "#fff",
+                  border: "1px solid #404040",
+                  borderRadius: "4px",
+                  fontSize: "14px",
+                  resize: "vertical",
+                }}
+              />
+            </div>
+
             <div style={{ flex: 1, minHeight: 0 }}>
               <Editor
                 height="100%"

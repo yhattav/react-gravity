@@ -301,6 +301,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     handleSelectScenario,
     handleScenarioPanelToggle,
     handleSettingsPanelToggle,
+    getCurrentScenario,
   } = useScenarioManagement({
     physicsConfig,
     gravityPoints,
@@ -611,6 +612,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
               isOpen={isJsonPanelOpen}
               onClose={() => setIsJsonPanelOpen(false)}
               onApplyScenario={handleSelectScenario}
+              getCurrentScenario={getCurrentScenario}
             />
 
             <SaveScenarioModal
