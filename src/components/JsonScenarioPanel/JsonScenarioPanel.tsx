@@ -22,7 +22,7 @@ interface AIServiceConfig {
   apiKey: string;
 }
 
-export const JsonScenarioPanel: React.FC<JsonScenarioPanelProps> = ({
+const JsonScenarioPanelComponent: React.FC<JsonScenarioPanelProps> = ({
   isOpen,
   onClose,
   onApplyScenario,
@@ -559,3 +559,5 @@ Return only the valid JSON with no additional text.`;
     </AnimatePresence>
   );
 };
+
+export const JsonScenarioPanel = React.memo(JsonScenarioPanelComponent);
