@@ -42,6 +42,38 @@ export const JsonScenarioPanel: React.FC<JsonScenarioPanelProps> = ({
     localStorage.setItem("aiServiceConfig", JSON.stringify(aiConfig));
   }, [aiConfig]);
 
+  // Load current state when panel opens
+  useEffect(() => {
+    if (isOpen) {
+      const currentScenario = getCurrentScenario();
+      setEditorContent(JSON.stringify(currentScenario, null, 2));
+      setJsonError(null);
+    }
+  }, [isOpen]);
+
+  const handleLoadCurrentState = () => {
+    try {
+      const currentScenario = getCurrentScenario();
+      setEditorContent(JSON.stringify(currentScenario, null, 2));
+      setJsonError(null);
+    } catch (error) {
+      setJsonError(
+        error instanceof Error ? error.message : "Failed to load current state"
+      );
+    }
+  };
+
+  // Stream the response and update content
+  const updateStreamContent = (content: string) => {
+    // Only update if the content is different to prevent unnecessary rerenders
+    setEditorContent((prev) => {
+      if (prev !== content) {
+        return content;
+      }
+      return prev;
+    });
+  };
+
   const generateWithAI = async (prompt: string) => {
     if (aiConfig.service === "none" || !aiConfig.apiKey) {
       console.log("No AI service configured. Prompt copied to clipboard.");
@@ -72,7 +104,7 @@ export const JsonScenarioPanel: React.FC<JsonScenarioPanelProps> = ({
           accumulatedJson += content;
 
           // Update editor content in real-time with the accumulated text
-          setEditorContent(accumulatedJson);
+          updateStreamContent(accumulatedJson);
 
           // Only try to validate if we think we have complete JSON
           if (accumulatedJson.includes("}")) {
@@ -100,7 +132,7 @@ export const JsonScenarioPanel: React.FC<JsonScenarioPanelProps> = ({
           const parsed = JSON.parse(cleanJson);
           const result = ScenarioSchema.safeParse(parsed);
           if (result.success) {
-            setEditorContent(JSON.stringify(parsed, null, 2));
+            updateStreamContent(JSON.stringify(parsed, null, 2));
             setJsonError(null);
           } else {
             setJsonError("Generated JSON is not a valid scenario");
@@ -285,18 +317,6 @@ Return only the valid JSON with no additional text.`;
     } catch (error) {
       setJsonError(
         error instanceof Error ? error.message : "Invalid JSON format"
-      );
-    }
-  };
-
-  const handleLoadCurrentState = () => {
-    try {
-      const currentScenario = getCurrentScenario();
-      setEditorContent(JSON.stringify(currentScenario, null, 2));
-      setJsonError(null);
-    } catch (error) {
-      setJsonError(
-        error instanceof Error ? error.message : "Failed to load current state"
       );
     }
   };
