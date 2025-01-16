@@ -310,6 +310,18 @@ Return only the valid JSON with no additional text.`;
     }
   };
 
+  const handleLoadCurrentState = () => {
+    try {
+      const currentScenario = getCurrentScenario();
+      setEditorContent(JSON.stringify(currentScenario, null, 2));
+      setJsonError(null);
+    } catch (error) {
+      setJsonError(
+        error instanceof Error ? error.message : "Failed to load current state"
+      );
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
