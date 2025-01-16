@@ -22,7 +22,7 @@ import { Point } from "paper";
 interface UseScenarioManagementProps {
   physicsConfig: PhysicsSettings;
   gravityPoints: GravityPoint[];
-  particles: Particle[];
+  particlesRef: React.MutableRefObject<Particle[]>;
   paths: SimulatorPath[];
   setIsPaused: (paused: boolean) => void;
   setGravityPoints: (points: GravityPoint[]) => void;
@@ -53,7 +53,7 @@ interface UseScenarioManagementReturn {
 export const useScenarioManagement = ({
   physicsConfig,
   gravityPoints,
-  particles,
+  particlesRef,
   paths,
   setIsPaused,
   setGravityPoints,
@@ -77,11 +77,11 @@ export const useScenarioManagement = ({
       data: {
         settings: physicsConfig,
         gravityPoints: gravityPoints.map(toSerializableGravityPoint),
-        particles: particles.map(toSerializableParticle),
+        particles: particlesRef.current?.map(toSerializableParticle),
         paths: paths.map(toSerializableSimulatorPath),
       },
     };
-  }, [physicsConfig, gravityPoints, particles, paths]);
+  }, [physicsConfig, gravityPoints, particlesRef, paths]);
 
   const handleExportScenario = useCallback(
     (e: React.MouseEvent) => {

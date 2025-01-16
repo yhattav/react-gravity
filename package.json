@@ -36,6 +36,7 @@
     "html2canvas": "^1.4.1",
     "lodash": "^4.17.21",
     "lz-string": "^1.5.0",
+    "openai": "^4.78.1",
     "paper": "^0.12.18",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
