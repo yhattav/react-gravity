@@ -52,15 +52,9 @@ export const JsonScenarioPanel: React.FC<JsonScenarioPanelProps> = ({
   }, [isOpen]);
 
   const handleLoadCurrentState = () => {
-    try {
-      const currentScenario = getCurrentScenario();
-      setEditorContent(JSON.stringify(currentScenario, null, 2));
-      setJsonError(null);
-    } catch (error) {
-      setJsonError(
-        error instanceof Error ? error.message : "Failed to load current state"
-      );
-    }
+    const currentScenario = getCurrentScenario();
+    setEditorContent(JSON.stringify(currentScenario, null, 2));
+    setJsonError(null);
   };
 
   // Stream the response and update content
@@ -210,11 +204,6 @@ export const JsonScenarioPanel: React.FC<JsonScenarioPanelProps> = ({
       debouncedGenerateAndLogPrompt.cancel();
     };
   }, [scenarioDescription, debouncedGenerateAndLogPrompt]);
-  useEffect(() => {
-    if (isOpen) {
-      handleLoadCurrentState();
-    }
-  }, [isOpen]);
 
   const generateLLMPrompt = (description: string) => {
     // Get current simulator dimensions

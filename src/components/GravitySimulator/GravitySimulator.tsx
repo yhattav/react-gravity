@@ -305,7 +305,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
   } = useScenarioManagement({
     physicsConfig,
     gravityPoints,
-    particles,
+    particlesRef,
     paths,
     setIsPaused,
     setGravityPoints,
