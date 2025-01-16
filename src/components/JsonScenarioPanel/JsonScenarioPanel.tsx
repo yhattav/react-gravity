@@ -58,15 +58,58 @@ export const JsonScenarioPanel: React.FC<JsonScenarioPanelProps> = ({
           dangerouslyAllowBrowser: true,
         });
 
-        const completion = await openai.chat.completions.create({
+        let accumulatedJson = "";
+        const stream = await openai.chat.completions.create({
           model: "gpt-4o-mini",
           store: true,
           messages: [{ role: "user", content: prompt }],
+          stream: true,
         });
 
-        generatedJson = (completion.choices[0]?.message?.content || "")
-          .replace(/^```json\n/, "")
-          .replace(/\n```$/, "");
+        // Stream the response
+        for await (const chunk of stream) {
+          const content = chunk.choices[0]?.delta?.content || "";
+          accumulatedJson += content;
+
+          // Update editor content in real-time with the accumulated text
+          setEditorContent(accumulatedJson);
+
+          // Only try to validate if we think we have complete JSON
+          if (accumulatedJson.includes("}")) {
+            try {
+              // Remove markdown code block markers if present
+              const cleanJson = accumulatedJson
+                .replace(/^```json\n/, "")
+                .replace(/\n```$/, "");
+              const parsed = JSON.parse(cleanJson);
+              const result = ScenarioSchema.safeParse(parsed);
+              if (result.success) {
+                setJsonError(null);
+              }
+            } catch {
+              // Ignore parsing errors during streaming
+            }
+          }
+        }
+
+        // Final validation after streaming is complete
+        try {
+          const cleanJson = accumulatedJson
+            .replace(/^```json\n/, "")
+            .replace(/\n```$/, "");
+          const parsed = JSON.parse(cleanJson);
+          const result = ScenarioSchema.safeParse(parsed);
+          if (result.success) {
+            setEditorContent(JSON.stringify(parsed, null, 2));
+            setJsonError(null);
+          } else {
+            setJsonError("Generated JSON is not a valid scenario");
+          }
+        } catch (e: unknown) {
+          const errorMessage =
+            e instanceof Error ? e.message : "Unknown error parsing JSON";
+          setJsonError("Generated content is not valid JSON: " + errorMessage);
+        }
       } else if (aiConfig.service === "anthropic") {
         const response = await fetch("https://api.anthropic.com/v1/messages", {
           method: "POST",
@@ -124,8 +167,8 @@ export const JsonScenarioPanel: React.FC<JsonScenarioPanelProps> = ({
         const prompt = generateLLMPrompt(description);
         console.log("Generated LLM Prompt:", prompt);
         navigator.clipboard.writeText(prompt).catch(console.error);
-      }, 100),
-    [getCurrentScenario]
+      }, 1000),
+    []
   );
 
   // Update the prompt when description changes
