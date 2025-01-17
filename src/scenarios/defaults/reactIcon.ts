@@ -16,6 +16,7 @@ export const reactIcon: Scenario = {
       CONSTANT_FORCE: { x: 0, y: 0 },
       SOLID_BOUNDARIES: false,
       PARTICLES_EXERT_GRAVITY: false,
+      SHOW_D3_GRAVITY_VISION: false,
     },
     gravityPoints: [
       {
