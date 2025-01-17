@@ -94,24 +94,31 @@ Physics Model Information:
 Scenario Requirements:
 1. All positions must be within the simulator bounds (0 to ${width} for x, 0 to ${height} for y)
 2. Each gravity point must have:
-   - position (x, y)
+   - position (x, y) as numeric values only
    - mass (use ranges from Physics Model section)
    - label (descriptive name)
 3. Each particle must have:
-   - position (x, y)
-   - velocity (x, y) (calculate based on orbit guidelines)
+   - position (x, y) as numeric values only (no Math.* expressions)
+   - velocity (x, y) as numeric values calculated from orbit guidelines
    - mass (0.01 to 0.1)
    - elasticity (0 to 1, typically 0.8)
    - id (unique string)
-4. Settings can include:
-   - NEW_PARTICLE_MASS (default: ${
-     currentScenario.data.settings.NEW_PARTICLE_MASS
-   })
-   - NEW_PARTICLE_ELASTICITY (default: ${
-     currentScenario.data.settings.NEW_PARTICLE_ELASTICITY
-   })
-   - FRICTION (default: ${currentScenario.data.settings.FRICTION})
-   - POINTER_MASS (default: ${currentScenario.data.settings.POINTER_MASS})
+
+IMPORTANT JSON FORMAT RULES:
+- Use only numeric values for positions and velocities
+- DO NOT use JavaScript expressions (Math.cos, Math.sin, etc.)
+- For circular orbits at angle θ:
+  * x = centerX + r * cos(θ) [pre-calculate this value]
+  * y = centerY + r * sin(θ) [pre-calculate this value]
+  * vx = -v * sin(θ) [pre-calculate this value]
+  * vy = v * cos(θ) [pre-calculate this value]
+  where v is the orbital velocity from the formula v = sqrt(0.1 * M / r)
+
+Example position calculations for r=200, θ=90°:
+- x = 500 (center) + 0 = 500
+- y = 400 (center) + 200 = 600
+- vx = -180 (calculated v) * 1 = -180
+- vy = 180 * 0 = 0
 
 User's Description: "${description}"
 
