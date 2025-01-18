@@ -3,12 +3,11 @@ import { motion } from "framer-motion";
 import { MdFullscreen, MdFullscreenExit, MdInvertColors } from "react-icons/md";
 import { BiReset } from "react-icons/bi";
 import { BsPlayFill, BsPauseFill, BsFillCameraFill } from "react-icons/bs";
-import { AiOutlineExport } from "react-icons/ai";
+import { AiOutlineExport, AiOutlineClose } from "react-icons/ai";
 import { VscLibrary } from "react-icons/vsc";
 import { SettingOutlined } from "@ant-design/icons";
 import { MusicPlayer } from "../MusicPlayer/MusicPlayer";
 import { IoCode } from "react-icons/io5";
-import { AiOutlineClose } from "react-icons/ai";
 
 interface SimulatorControlsProps {
   onPause: () => void;

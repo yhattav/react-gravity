@@ -296,7 +296,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     isJsonPanelOpen,
     setIsJsonPanelOpen,
     isSaveModalOpen,
-    setIsSaveModalOpen,
     shareableLink,
     handleExportScenario,
     handleSaveScenario,
@@ -518,10 +517,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     setIsJsonPanelOpen(false);
   }, [setIsJsonPanelOpen]);
 
-  const handleSaveModalClose = useCallback(() => {
-    setIsSaveModalOpen(false);
-  }, []);
-
   const content = (
     <>
       <div
@@ -631,7 +626,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
             <SaveScenarioModal
               isOpen={isSaveModalOpen}
-              onClose={handleSaveModalClose}
               onSave={handleSaveScenario}
               shareableLink={shareableLink}
             />
