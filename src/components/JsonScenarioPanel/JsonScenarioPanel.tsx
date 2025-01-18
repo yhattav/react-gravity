@@ -12,6 +12,7 @@ import {
   validateScenarioJson,
   formatScenarioJson,
 } from "../../utils/validation/jsonValidation";
+import { IoCode } from "react-icons/io5";
 
 interface JsonScenarioPanelProps {
   isOpen: boolean;
@@ -123,21 +124,42 @@ const JsonScenarioPanelComponent: React.FC<JsonScenarioPanelProps> = ({
           style={{
             width: "500px",
             maxWidth: "90vw",
-            padding: "20px",
           }}
         >
           <div
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "15px",
+              padding: "20px 20px 0px",
+              borderBottom: "1px solid rgba(255, 255, 255, 0.15)",
+              background: "rgba(0, 0, 0, 0.2)",
+              borderTopLeftRadius: "12px",
+              borderTopRightRadius: "12px",
             }}
           >
-            <h3 style={{ margin: 0, fontSize: "1.2rem" }}>
+            <h3
+              style={{
+                margin: "0 0 20px",
+                fontSize: "1.2rem",
+                fontWeight: 500,
+                color: "rgb(255, 255, 255)",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              <IoCode style={{ opacity: 0.7 }} />
               Create and Edit Scenario
             </h3>
-            <div style={{ display: "flex", gap: "12px" }}>
+          </div>
+
+          <div style={{ padding: "20px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "12px",
+                marginBottom: "15px",
+              }}
+            >
               <motion.button
                 onClick={handleLoadCurrentState}
                 whileHover={{ scale: 1.1 }}
@@ -155,67 +177,27 @@ const JsonScenarioPanelComponent: React.FC<JsonScenarioPanelProps> = ({
               >
                 <VscSync size={20} />
               </motion.button>
-              <motion.button
-                onClick={onClose}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px",
+                height: "500px",
+                maxHeight: "calc(90vh - 200px)",
+              }}
+            >
+              <div
                 style={{
-                  background: "none",
-                  border: "none",
-                  color: "white",
-                  cursor: "pointer",
-                  padding: 0,
                   display: "flex",
-                  alignItems: "center",
+                  gap: "16px",
+                  alignItems: "flex-start",
                 }}
               >
-                <IoClose size={24} />
-              </motion.button>
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "16px",
-              height: "500px",
-              maxHeight: "calc(90vh - 200px)",
-            }}
-          >
-            <div
-              style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}
-            >
-              <div style={{ flex: 1 }}>
-                <label
-                  htmlFor="ai-service"
-                  style={{
-                    color: "rgba(255, 255, 255, 0.9)",
-                    fontSize: "14px",
-                    display: "block",
-                    marginBottom: "8px",
-                  }}
-                >
-                  AI Service:
-                </label>
-                <Select
-                  id="ai-service"
-                  value={aiConfig.service}
-                  onChange={(value) =>
-                    setAIConfig((prev) => ({ ...prev, service: value }))
-                  }
-                  style={{ width: "100%" }}
-                  options={[
-                    { value: "none", label: "None (Copy Prompt)" },
-                    { value: "openai", label: "OpenAI GPT-4" },
-                    { value: "anthropic", label: "Anthropic Claude" },
-                  ]}
-                />
-              </div>
-              {aiConfig.service !== "none" && (
                 <div style={{ flex: 1 }}>
                   <label
-                    htmlFor="api-key"
+                    htmlFor="ai-service"
                     style={{
                       color: "rgba(255, 255, 255, 0.9)",
                       fontSize: "14px",
@@ -223,130 +205,161 @@ const JsonScenarioPanelComponent: React.FC<JsonScenarioPanelProps> = ({
                       marginBottom: "8px",
                     }}
                   >
-                    API Key:
+                    AI Service:
                   </label>
-                  <input
-                    id="api-key"
-                    type="password"
-                    value={aiConfig.apiKey}
-                    onChange={(e) =>
-                      setAIConfig((prev) => ({
-                        ...prev,
-                        apiKey: e.target.value,
-                      }))
+                  <Select
+                    id="ai-service"
+                    value={aiConfig.service}
+                    onChange={(value) =>
+                      setAIConfig((prev) => ({ ...prev, service: value }))
                     }
-                    placeholder={`Enter your ${
-                      aiConfig.service === "openai" ? "OpenAI" : "Anthropic"
-                    } API key`}
+                    style={{ width: "100%" }}
+                    options={[
+                      { value: "none", label: "None (Copy Prompt)" },
+                      { value: "openai", label: "OpenAI GPT-4" },
+                      { value: "anthropic", label: "Anthropic Claude" },
+                    ]}
+                  />
+                </div>
+                {aiConfig.service !== "none" && (
+                  <div style={{ flex: 1 }}>
+                    <label
+                      htmlFor="api-key"
+                      style={{
+                        color: "rgba(255, 255, 255, 0.9)",
+                        fontSize: "14px",
+                        display: "block",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      API Key:
+                    </label>
+                    <input
+                      id="api-key"
+                      type="password"
+                      value={aiConfig.apiKey}
+                      onChange={(e) =>
+                        setAIConfig((prev) => ({
+                          ...prev,
+                          apiKey: e.target.value,
+                        }))
+                      }
+                      placeholder={`Enter your ${
+                        aiConfig.service === "openai" ? "OpenAI" : "Anthropic"
+                      } API key`}
+                      style={{
+                        width: "100%",
+                        padding: "8px 12px",
+                        background: "rgba(255, 255, 255, 0.1)",
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
+                        borderRadius: "4px",
+                        color: "white",
+                        fontSize: "14px",
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+              >
+                <label
+                  htmlFor="scenario-description"
+                  style={{
+                    color: "rgba(255, 255, 255, 0.9)",
+                    fontSize: "14px",
+                  }}
+                >
+                  Describe the scenario you want to create:
+                </label>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <textarea
+                    id="scenario-description"
+                    value={scenarioDescription}
+                    onChange={handleDescriptionChange}
+                    placeholder="Example: Create a solar system with a large star in the center and three planets orbiting around it at different distances..."
                     style={{
-                      width: "100%",
+                      flex: 1,
+                      height: "80px",
                       padding: "8px 12px",
                       background: "rgba(255, 255, 255, 0.1)",
                       border: "1px solid rgba(255, 255, 255, 0.2)",
                       borderRadius: "4px",
                       color: "white",
                       fontSize: "14px",
+                      resize: "vertical",
                     }}
                   />
+                  {scenarioDescription && (
+                    <motion.button
+                      onClick={() =>
+                        generateContent(generateLLMPrompt(scenarioDescription))
+                      }
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      disabled={isGenerating}
+                      className="action-button"
+                      style={{
+                        background: "rgba(78, 205, 196, 0.2)",
+                        whiteSpace: "nowrap",
+                        padding: "8px 16px",
+                        opacity: isGenerating ? 0.7 : 1,
+                        alignSelf: "stretch",
+                      }}
+                    >
+                      {isGenerating ? "Generating..." : "Generate"}
+                    </motion.button>
+                  )}
                 </div>
-              )}
-            </div>
+              </div>
 
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "8px" }}
-            >
-              <label
-                htmlFor="scenario-description"
-                style={{ color: "rgba(255, 255, 255, 0.9)", fontSize: "14px" }}
-              >
-                Describe the scenario you want to create:
-              </label>
-              <div style={{ display: "flex", gap: "8px" }}>
-                <textarea
-                  id="scenario-description"
-                  value={scenarioDescription}
-                  onChange={handleDescriptionChange}
-                  placeholder="Example: Create a solar system with a large star in the center and three planets orbiting around it at different distances..."
-                  style={{
-                    flex: 1,
-                    height: "80px",
-                    padding: "8px 12px",
-                    background: "rgba(255, 255, 255, 0.1)",
-                    border: "1px solid rgba(255, 255, 255, 0.2)",
-                    borderRadius: "4px",
-                    color: "white",
-                    fontSize: "14px",
-                    resize: "vertical",
+              <div style={{ flex: 1, minHeight: 0 }}>
+                <Editor
+                  height="100%"
+                  defaultLanguage="json"
+                  theme="vs-dark"
+                  value={editorContent}
+                  onChange={handleEditorChange}
+                  options={{
+                    minimap: { enabled: false },
+                    scrollBeyondLastLine: false,
+                    fontSize: 14,
+                    wordWrap: "on",
                   }}
                 />
-                {scenarioDescription && (
-                  <motion.button
-                    onClick={() =>
-                      generateContent(generateLLMPrompt(scenarioDescription))
-                    }
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    disabled={isGenerating}
-                    className="action-button"
-                    style={{
-                      background: "rgba(78, 205, 196, 0.2)",
-                      whiteSpace: "nowrap",
-                      padding: "8px 16px",
-                      opacity: isGenerating ? 0.7 : 1,
-                      alignSelf: "stretch",
-                    }}
-                  >
-                    {isGenerating ? "Generating..." : "Generate"}
-                  </motion.button>
-                )}
               </div>
-            </div>
 
-            <div style={{ flex: 1, minHeight: 0 }}>
-              <Editor
-                height="100%"
-                defaultLanguage="json"
-                theme="vs-dark"
-                value={editorContent}
-                onChange={handleEditorChange}
-                options={{
-                  minimap: { enabled: false },
-                  scrollBeyondLastLine: false,
-                  fontSize: 14,
-                  wordWrap: "on",
-                }}
-              />
-            </div>
+              {jsonError && (
+                <div
+                  style={{
+                    color: "#ff4d4f",
+                    background: "rgba(255, 77, 79, 0.1)",
+                    padding: "8px 12px",
+                    borderRadius: "4px",
+                    fontSize: "14px",
+                  }}
+                >
+                  {jsonError}
+                </div>
+              )}
 
-            {jsonError && (
-              <div
+              <motion.button
+                onClick={handleApply}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="action-button"
                 style={{
-                  color: "#ff4d4f",
-                  background: "rgba(255, 77, 79, 0.1)",
-                  padding: "8px 12px",
-                  borderRadius: "4px",
-                  fontSize: "14px",
+                  background: "rgba(78, 205, 196, 0.2)",
+                  whiteSpace: "nowrap",
+                  padding: "12px",
+                  fontSize: "16px",
+                  fontWeight: "500",
                 }}
               >
-                {jsonError}
-              </div>
-            )}
-
-            <motion.button
-              onClick={handleApply}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="action-button"
-              style={{
-                background: "rgba(78, 205, 196, 0.2)",
-                whiteSpace: "nowrap",
-                padding: "12px",
-                fontSize: "16px",
-                fontWeight: "500",
-              }}
-            >
-              Apply Scenario
-            </motion.button>
+                Apply Scenario
+              </motion.button>
+            </div>
           </div>
         </motion.div>
       )}
