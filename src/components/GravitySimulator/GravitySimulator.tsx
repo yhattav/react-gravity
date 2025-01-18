@@ -293,6 +293,8 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     setIsScenarioPanelOpen,
     isSettingsPanelOpen,
     setIsSettingsPanelOpen,
+    isJsonPanelOpen,
+    setIsJsonPanelOpen,
     isSaveModalOpen,
     shareableLink,
     handleExportScenario,
@@ -300,6 +302,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     handleSelectScenario,
     handleScenarioPanelToggle,
     handleSettingsPanelToggle,
+    handleJsonPanelToggle,
     getCurrentScenario,
   } = useScenarioManagement({
     physicsConfig,
@@ -315,12 +318,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     setShouldResetRenderer,
     saveScenario,
   });
-
-  const [isJsonPanelOpen, setIsJsonPanelOpen] = useState(false);
-
-  const handleJsonPanelToggle = useCallback(() => {
-    setIsJsonPanelOpen((prev) => !prev);
-  }, []);
 
   // Audio files definition
   const audioFiles = useMemo(
@@ -518,7 +515,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
   const handleJsonPanelClose = useCallback(() => {
     setIsJsonPanelOpen(false);
-  }, []);
+  }, [setIsJsonPanelOpen]);
 
   const content = (
     <>

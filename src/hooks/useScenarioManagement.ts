@@ -39,6 +39,8 @@ interface UseScenarioManagementReturn {
   setIsScenarioPanelOpen: (open: boolean) => void;
   isSettingsPanelOpen: boolean;
   setIsSettingsPanelOpen: (open: boolean) => void;
+  isJsonPanelOpen: boolean;
+  setIsJsonPanelOpen: (open: boolean) => void;
   isSaveModalOpen: boolean;
   setIsSaveModalOpen: (open: boolean) => void;
   shareableLink: string;
@@ -47,6 +49,7 @@ interface UseScenarioManagementReturn {
   handleSelectScenario: (scenario: Scenario) => void;
   handleScenarioPanelToggle: (e: React.MouseEvent) => void;
   handleSettingsPanelToggle: (e: React.MouseEvent) => void;
+  handleJsonPanelToggle: (e: React.MouseEvent) => void;
   getCurrentScenario: () => Scenario;
 }
 
@@ -66,6 +69,7 @@ export const useScenarioManagement = ({
 }: UseScenarioManagementProps): UseScenarioManagementReturn => {
   const [isScenarioPanelOpen, setIsScenarioPanelOpen] = useState(false);
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
+  const [isJsonPanelOpen, setIsJsonPanelOpen] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [shareableLink, setShareableLink] = useState("");
 
@@ -176,12 +180,21 @@ export const useScenarioManagement = ({
     e.stopPropagation();
     setIsScenarioPanelOpen((prev) => !prev);
     setIsSettingsPanelOpen(false);
+    setIsJsonPanelOpen(false);
   }, []);
 
   const handleSettingsPanelToggle = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     setIsSettingsPanelOpen((prev) => !prev);
     setIsScenarioPanelOpen(false);
+    setIsJsonPanelOpen(false);
+  }, []);
+
+  const handleJsonPanelToggle = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsJsonPanelOpen((prev) => !prev);
+    setIsScenarioPanelOpen(false);
+    setIsSettingsPanelOpen(false);
   }, []);
 
   return {
@@ -189,6 +202,8 @@ export const useScenarioManagement = ({
     setIsScenarioPanelOpen,
     isSettingsPanelOpen,
     setIsSettingsPanelOpen,
+    isJsonPanelOpen,
+    setIsJsonPanelOpen,
     isSaveModalOpen,
     setIsSaveModalOpen,
     shareableLink,
@@ -197,6 +212,7 @@ export const useScenarioManagement = ({
     handleSelectScenario,
     handleScenarioPanelToggle,
     handleSettingsPanelToggle,
+    handleJsonPanelToggle,
     getCurrentScenario,
   };
 };

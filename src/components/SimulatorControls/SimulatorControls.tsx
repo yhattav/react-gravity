@@ -25,7 +25,7 @@ interface SimulatorControlsProps {
   isAudioLoaded?: boolean;
   onAudioToggle?: (e: React.MouseEvent) => void;
   disableSound?: boolean;
-  isSaveModalOpen?: boolean;
+  isSaveModalOpen: boolean;
 }
 
 interface ControlButton {
