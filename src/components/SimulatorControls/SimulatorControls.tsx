@@ -8,6 +8,7 @@ import { VscLibrary } from "react-icons/vsc";
 import { SettingOutlined } from "@ant-design/icons";
 import { MusicPlayer } from "../MusicPlayer/MusicPlayer";
 import { IoCode } from "react-icons/io5";
+import { AiOutlineClose } from "react-icons/ai";
 
 interface SimulatorControlsProps {
   onPause: () => void;
@@ -25,6 +26,7 @@ interface SimulatorControlsProps {
   isAudioLoaded?: boolean;
   onAudioToggle?: (e: React.MouseEvent) => void;
   disableSound?: boolean;
+  isSaveModalOpen: boolean;
 }
 
 interface ControlButton {
@@ -71,6 +73,7 @@ export const SimulatorControls: React.FC<SimulatorControlsProps> = ({
   isAudioLoaded,
   onAudioToggle,
   disableSound,
+  isSaveModalOpen,
 }) => {
   const handleClick = useCallback(
     <T extends Element>(handler: (e: React.MouseEvent<T>) => void) =>
@@ -124,8 +127,14 @@ export const SimulatorControls: React.FC<SimulatorControlsProps> = ({
     },
     {
       icon: <AiOutlineExport size={20} />,
-      title: "Export Scenario",
+      title: isSaveModalOpen ? "Close Export" : "Export Scenario",
       onClick: handleClick(onExport),
+      dynamicIcon: true,
+      alternateIcon: isSaveModalOpen ? (
+        <AiOutlineClose size={20} />
+      ) : (
+        <AiOutlineExport size={20} />
+      ),
     },
     {
       icon: <MdInvertColors size={20} />,
