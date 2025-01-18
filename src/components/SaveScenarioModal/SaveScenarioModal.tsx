@@ -4,14 +4,12 @@ import { CopyOutlined, CheckOutlined } from "@ant-design/icons";
 
 interface SaveScenarioModalProps {
   isOpen: boolean;
-  onClose: () => void;
   onSave: (name: string) => void;
   shareableLink: string;
 }
 
 export const SaveScenarioModal: React.FC<SaveScenarioModalProps> = ({
   isOpen,
-  onClose,
   onSave,
   shareableLink,
 }) => {
@@ -123,22 +121,6 @@ export const SaveScenarioModal: React.FC<SaveScenarioModalProps> = ({
               Save
             </button>
           </form>
-
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              marginTop: "15px",
-            }}
-          >
-            <button
-              onClick={onClose}
-              className="action-button"
-              style={{ background: "rgba(255, 255, 255, 0.1)" }}
-            >
-              Close
-            </button>
-          </div>
         </motion.div>
       )}
     </AnimatePresence>

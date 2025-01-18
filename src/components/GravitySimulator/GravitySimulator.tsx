@@ -294,7 +294,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     isSettingsPanelOpen,
     setIsSettingsPanelOpen,
     isSaveModalOpen,
-    setIsSaveModalOpen,
     shareableLink,
     handleExportScenario,
     handleSaveScenario,
@@ -521,10 +520,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     setIsJsonPanelOpen(false);
   }, []);
 
-  const handleSaveModalClose = useCallback(() => {
-    setIsSaveModalOpen(false);
-  }, []);
-
   const content = (
     <>
       <div
@@ -577,6 +572,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
             isAudioLoaded={isAudioLoaded}
             onAudioToggle={handleAudioToggle}
             disableSound={disableSound}
+            isSaveModalOpen={isSaveModalOpen}
           />
         )}
 
@@ -633,7 +629,6 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
 
             <SaveScenarioModal
               isOpen={isSaveModalOpen}
-              onClose={handleSaveModalClose}
               onSave={handleSaveScenario}
               shareableLink={shareableLink}
             />
