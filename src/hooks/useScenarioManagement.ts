@@ -86,12 +86,16 @@ export const useScenarioManagement = ({
   const handleExportScenario = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      const scenario = getCurrentScenario();
-      setShareableLink(createShareableLink(scenario));
-      setIsPaused(true);
-      setIsSaveModalOpen(true);
+      if (isSaveModalOpen) {
+        setIsSaveModalOpen(false);
+      } else {
+        const scenario = getCurrentScenario();
+        setShareableLink(createShareableLink(scenario));
+        setIsPaused(true);
+        setIsSaveModalOpen(true);
+      }
     },
-    [getCurrentScenario, setIsPaused]
+    [getCurrentScenario, setIsPaused, isSaveModalOpen]
   );
 
   const handleSaveScenario = useCallback(
