@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Editor, { OnChange } from "@monaco-editor/react";
 import { Scenario } from "../../types/scenario";
-import { IoClose } from "react-icons/io5";
 import { VscSync } from "react-icons/vsc";
 import { debounce } from "lodash";
 import { Select } from "antd";
@@ -30,6 +29,7 @@ const JsonScenarioPanelComponent: React.FC<JsonScenarioPanelProps> = ({
   const [jsonError, setJsonError] = useState<string | null>(null);
   const [editorContent, setEditorContent] = useState<string>("");
   const [scenarioDescription, setScenarioDescription] = useState<string>("");
+  const [hasBeenOpened, setHasBeenOpened] = useState(false);
 
   // Use the AI service hook
   const { aiConfig, setAIConfig, isGenerating, generateContent } = useAIService(
@@ -40,14 +40,15 @@ const JsonScenarioPanelComponent: React.FC<JsonScenarioPanelProps> = ({
     }
   );
 
-  // Load current state when panel opens
+  // Load current state only on first open
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !hasBeenOpened) {
       const currentScenario = getCurrentScenario();
       setEditorContent(formatScenarioJson(currentScenario));
       setJsonError(null);
+      setHasBeenOpened(true);
     }
-  }, [isOpen, getCurrentScenario]);
+  }, [isOpen, hasBeenOpened, getCurrentScenario]);
 
   // Create a debounced version of the prompt generator
   const debouncedGenerateAndLogPrompt = useMemo(
@@ -173,7 +174,7 @@ const JsonScenarioPanelComponent: React.FC<JsonScenarioPanelProps> = ({
                   display: "flex",
                   alignItems: "center",
                 }}
-                title="Load Current State"
+                title="Sync with Current Simulator State"
               >
                 <VscSync size={20} />
               </motion.button>
