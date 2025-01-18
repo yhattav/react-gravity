@@ -41,6 +41,7 @@ export const SaveScenarioModal: React.FC<SaveScenarioModalProps> = ({
           exit={{ opacity: 0, y: -20 }}
           transition={{ type: "spring", damping: 20, stiffness: 300 }}
           onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
           className="floating-panel"
           style={{
             position: "absolute",
