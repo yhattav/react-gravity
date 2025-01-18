@@ -24,6 +24,7 @@ interface UseScenarioManagementProps {
   gravityPoints: GravityPoint[];
   particlesRef: React.MutableRefObject<Particle[]>;
   paths: SimulatorPath[];
+  isPaused: boolean;
   setIsPaused: (paused: boolean) => void;
   setGravityPoints: (points: GravityPoint[]) => void;
   setParticles: (particles: Particle[]) => void;
@@ -58,6 +59,7 @@ export const useScenarioManagement = ({
   gravityPoints,
   particlesRef,
   paths,
+  isPaused,
   setIsPaused,
   setGravityPoints,
   setParticles,
@@ -115,7 +117,7 @@ export const useScenarioManagement = ({
   const handleSelectScenario = useCallback(
     (scenario: Scenario) => {
       // First pause the simulation
-      const isCurrentlyPaused = true;
+      const isCurrentlyPaused = isPaused;
       setIsPaused(true);
 
       // Trigger reset for all renderers
@@ -166,6 +168,7 @@ export const useScenarioManagement = ({
       });
     },
     [
+      isPaused,
       setIsPaused,
       setShouldResetRenderer,
       setParticles,

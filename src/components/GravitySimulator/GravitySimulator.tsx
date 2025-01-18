@@ -309,6 +309,7 @@ export const GravitySimulator: React.FC<GravitySimulatorProps> = ({
     gravityPoints,
     particlesRef,
     paths,
+    isPaused,
     setIsPaused,
     setGravityPoints,
     setParticles,
