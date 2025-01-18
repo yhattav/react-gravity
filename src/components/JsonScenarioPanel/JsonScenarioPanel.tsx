@@ -123,59 +123,59 @@ const JsonScenarioPanelComponent: React.FC<JsonScenarioPanelProps> = ({
           style={{
             width: "500px",
             maxWidth: "90vw",
+            padding: "20px",
           }}
         >
-          <div className="panel-header">
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "20px",
-              }}
-            >
-              <h3 style={{ margin: 0 }}>Load JSON Scenario</h3>
-              <div style={{ display: "flex", gap: "12px" }}>
-                <motion.button
-                  onClick={handleLoadCurrentState}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "white",
-                    cursor: "pointer",
-                    padding: 0,
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                  title="Load Current State"
-                >
-                  <VscSync size={20} />
-                </motion.button>
-                <motion.button
-                  onClick={onClose}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "white",
-                    cursor: "pointer",
-                    padding: 0,
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  <IoClose size={24} />
-                </motion.button>
-              </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "15px",
+            }}
+          >
+            <h3 style={{ margin: 0, fontSize: "1.2rem" }}>
+              Create and Edit Scenario
+            </h3>
+            <div style={{ display: "flex", gap: "12px" }}>
+              <motion.button
+                onClick={handleLoadCurrentState}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "white",
+                  cursor: "pointer",
+                  padding: 0,
+                  display: "flex",
+                  alignItems: "center",
+                }}
+                title="Load Current State"
+              >
+                <VscSync size={20} />
+              </motion.button>
+              <motion.button
+                onClick={onClose}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "white",
+                  cursor: "pointer",
+                  padding: 0,
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <IoClose size={24} />
+              </motion.button>
             </div>
           </div>
 
           <div
             style={{
-              padding: "20px",
               display: "flex",
               flexDirection: "column",
               gap: "16px",
@@ -190,7 +190,7 @@ const JsonScenarioPanelComponent: React.FC<JsonScenarioPanelProps> = ({
                 <label
                   htmlFor="ai-service"
                   style={{
-                    color: "#fff",
+                    color: "rgba(255, 255, 255, 0.9)",
                     fontSize: "14px",
                     display: "block",
                     marginBottom: "8px",
@@ -217,7 +217,7 @@ const JsonScenarioPanelComponent: React.FC<JsonScenarioPanelProps> = ({
                   <label
                     htmlFor="api-key"
                     style={{
-                      color: "#fff",
+                      color: "rgba(255, 255, 255, 0.9)",
                       fontSize: "14px",
                       display: "block",
                       marginBottom: "8px",
@@ -240,11 +240,11 @@ const JsonScenarioPanelComponent: React.FC<JsonScenarioPanelProps> = ({
                     } API key`}
                     style={{
                       width: "100%",
-                      padding: "4px 11px",
-                      backgroundColor: "#2d2d2d",
-                      color: "#fff",
-                      border: "1px solid #404040",
+                      padding: "8px 12px",
+                      background: "rgba(255, 255, 255, 0.1)",
+                      border: "1px solid rgba(255, 255, 255, 0.2)",
                       borderRadius: "4px",
+                      color: "white",
                       fontSize: "14px",
                     }}
                   />
@@ -257,7 +257,7 @@ const JsonScenarioPanelComponent: React.FC<JsonScenarioPanelProps> = ({
             >
               <label
                 htmlFor="scenario-description"
-                style={{ color: "#fff", fontSize: "14px" }}
+                style={{ color: "rgba(255, 255, 255, 0.9)", fontSize: "14px" }}
               >
                 Describe the scenario you want to create:
               </label>
@@ -271,10 +271,10 @@ const JsonScenarioPanelComponent: React.FC<JsonScenarioPanelProps> = ({
                     flex: 1,
                     height: "80px",
                     padding: "8px 12px",
-                    backgroundColor: "#2d2d2d",
-                    color: "#fff",
-                    border: "1px solid #404040",
+                    background: "rgba(255, 255, 255, 0.1)",
+                    border: "1px solid rgba(255, 255, 255, 0.2)",
                     borderRadius: "4px",
+                    color: "white",
                     fontSize: "14px",
                     resize: "vertical",
                   }}
@@ -287,14 +287,11 @@ const JsonScenarioPanelComponent: React.FC<JsonScenarioPanelProps> = ({
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     disabled={isGenerating}
+                    className="action-button"
                     style={{
-                      background: "#1a90ff",
-                      color: "white",
-                      border: "none",
+                      background: "rgba(78, 205, 196, 0.2)",
+                      whiteSpace: "nowrap",
                       padding: "8px 16px",
-                      borderRadius: "4px",
-                      cursor: isGenerating ? "wait" : "pointer",
-                      fontSize: "14px",
                       opacity: isGenerating ? 0.7 : 1,
                       alignSelf: "stretch",
                     }}
@@ -339,13 +336,11 @@ const JsonScenarioPanelComponent: React.FC<JsonScenarioPanelProps> = ({
               onClick={handleApply}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              className="action-button"
               style={{
-                background: "#4CAF50",
-                color: "white",
-                border: "none",
+                background: "rgba(78, 205, 196, 0.2)",
+                whiteSpace: "nowrap",
                 padding: "12px",
-                borderRadius: "6px",
-                cursor: "pointer",
                 fontSize: "16px",
                 fontWeight: "500",
               }}
