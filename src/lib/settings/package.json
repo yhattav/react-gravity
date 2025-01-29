@@ -1,0 +1,31 @@
+{
+  "name": "react-settings-panel",
+  "version": "0.1.0",
+  "description": "A flexible and customizable settings panel for React applications",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0",
+    "framer-motion": ">=4.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "typescript": "^4.9.0"
+  },
+  "keywords": [
+    "react",
+    "settings",
+    "panel",
+    "configuration",
+    "ui",
+    "component"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
